@@ -1,0 +1,9 @@
+#Ignorar todos os arquivos
+*
+#Liberar os seguintes arquivos:
+#-Este arquivo (.gitignore)
+!.gitignore
+#-Arquivos de código do Python
+!*.py
+#-Arquivos de script em Bash
+!*.sh
