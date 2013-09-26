@@ -14,10 +14,11 @@ class EnviaMensagem(Thread):
         Parâmetros de entrada:
         ip_destino -- IP destino da mensagem
         porta_destino -- porta destino da mensagem
-        estacao -- tipo de estação destino ('servidor', 'replica',
-        'cliente')
+        estacao -- tipo de estação destino ('servidor', 'replica', 'cliente')
         opcao -- tipo de operação a ser realizada
-        cabecalho (opcional) -- resto do cabeçalho da mensagem
+        cabecalho (opcional) -- resto do cabeçalho da mensagem; caso seja
+        enviado algum arquivo, o nome do mesmo deve ser passado como primeira
+        entrada do cabeçalho
 
         """
 
@@ -48,7 +49,10 @@ class EnviaMensagem(Thread):
             sys.exit('Valor de entrada inválida')
 
     def run(self):
-        """Envia a mensagem e o arquivo"""
+        """Envia a mensagem e o arquivo. Retorna 0 em caso de sucesso, -1 no
+        caso contrário.
+        
+        """
 
         # Cria o socket
         try:
