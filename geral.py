@@ -38,7 +38,7 @@ class EnviaMensagem(Thread):
         try:
             self.nome_arquivo = cabecalho[0]
         except IndexError:
-            pass
+            self.nome_arquivo = None
 
         # Inicializando variáveis da classe
         self.header = header
@@ -71,23 +71,24 @@ class EnviaMensagem(Thread):
             sys.exit(err)
 
         # Abre o arquivo caso ele exista
-        try:
-            caminho = os.path.abspath(self.nome_arquivo)
-            nome = os.path.basename(caminho)
-            arquivo = open(caminho).read()
-            tamanho_arquivo = len(arquivo)
+        if self.nome_arquivo is not None:
+            try:
+                caminho = os.path.abspath(self.nome_arquivo)
+                nome = os.path.basename(caminho)
+                arquivo = open(caminho).read()
+                tamanho_arquivo = len(arquivo)
 
-            # E envia o arquivo
-            totalsent = 0
-            while(totalsent < len(arquivo)):
-                sent = sock.send(arquivo[totalsent:])
-                if sent == 0:
-                    err = 'Não conseguiu enviar o arquivo'
-                    sys.exit(err)
-                totalsent = totalsent + sent
+                # E envia o arquivo
+                totalsent = 0
+                while(totalsent < len(arquivo)):
+                    sent = sock.send(arquivo[totalsent:])
+                    if sent == 0:
+                        err = 'Não conseguiu enviar o arquivo'
+                        sys.exit(err)
+                    totalsent = totalsent + sent
 
-        except IOError:
-            pass
+            except IOError:
+                pass
 
         # Fecha o socket e retorna que tudo deu certo
         sock.close()
