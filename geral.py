@@ -165,4 +165,36 @@ class Ping(Thread):
         """
         return self.minimo, self.media, self.maximo, self.jitter
 
+def limpar_string(string_suja, nao_remover, split, index):
+    """Manipulação de string.
+
+    Parâmetros de entrada:
+    string_suja -- string de entrada a ser limpa
+    nao_remover -- informações que não deverão ser removidas da string
+    split -- divide a string nesse caracter
+    index -- define opção de limpeza: caso seja 1, retira informações depois
+    da introdução; caso seja 0, retira informações antes da introdução
+
+    Retorno:
+    string_limpa -- string com as modificações pertinentes
+
+    """
+    string_suja = str(string_suja)
+
+    if split != 'none':
+        antes, depois = string_suja.split(split)
+    else:
+        depois = string_suja
+
+    safe_chars = string.ascii_letters + string.digits + nao_remover
+    #Retira informação depois da introdução
+    #Ex: interface:en0 = index 0: interface, index 1: en0
+    if index == '1': 
+        string_limpa = ''.join([char if char in safe_chars else '' 
+            for char in depois])
+    elif index == '0':
+        string_limpa = ''.join([char if char in safe_chars else '' 
+            for char in antes])
+    return string_limpa
+
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
