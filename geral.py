@@ -26,10 +26,10 @@ class EnviaMensagem(Thread):
         Thread.__init__(self)
         # Criando cabeçalho padrão
         header = '<div>' + str(estacao) + '#' +  str(opcao) + '#'
-        # Adicionando o resto do cabeçalho
-        for i in cabecalho[:-1]:
-            header = header + i + '#'
-        # Último item da lista não adiciona '#'
+        # Adicionando o resto do cabeçalho excluindo o último elemento
+        for campo in cabecalho[:-1]:
+            header = header + campo + '#'
+        # Último item da lista não adiciona '#', só o '<div>'
         header = header + cabecalho[-1] + '<div>'
         
         # Se o nome do arquivo for passado ele é o primeiro item do
