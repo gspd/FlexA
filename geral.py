@@ -69,8 +69,8 @@ class EnviaMensagem(Thread):
             dest = (self.ip_destino, int(self.porta_destino))
             sock.connect(dest)
         except IOError:
-            err = "Falha ao criar o socket para o IP " + self.ip_destino + \
-            " na porta " + self.porta_destino
+            err = ("Falha ao criar o socket para o IP " + self.ip_destino +
+            " na porta " + self.porta_destino)
             sys.exit(err)
 
         # Envia o cabeçalho e seu tamanho
