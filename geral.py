@@ -59,9 +59,9 @@ class EnviaMensagem(Thread):
 
     def run(self):
         """Envia a mensagem e o arquivo.
-        
+
         Retorna 0 em caso de sucesso, -1 caso falhe.
-        
+
         """
         # Cria o socket
         try:
@@ -107,7 +107,7 @@ class EnviaMensagem(Thread):
 
 class Ping(Thread):
     """Classe para envio de pings entre nós da rede
-    
+
     Variáveis da classe:
     status -- número de pacotes recebidos de volta com sucesso
     minimo -- menor RTT retornado
@@ -174,7 +174,7 @@ class ConfigDat:
     faixa_varredura -- faixa de varredura de IPs na busca
     local_cache -- diretório de localização da cache
     caminho -- caminho do arquivo de configuração
-    
+
     """
     interface = ''
     ip = ''
@@ -215,17 +215,17 @@ class ConfigDat:
 
         Parâmetros de entrada:
         nome_arquivo -- salva o arquivo de configuração em outro lugar
-        
+
         """
         # Se nome_arquivo não for passado, usa o caminho original
         if not nome_arquivo:
             nome_arquivo = self.caminho
         # Monta o texto que será salvo no arquivo
-        texto = ('interface: ' + self.interface + '\nip: ' + self.ip + 
+        texto = ('interface: ' + self.interface + '\nip: ' + self.ip +
                 '\nnetmask: ' + self.netmask + '\nfaixa_varredura: ' +
                 self.faixa_varredura + '\nlocal_cache: ' + self.local_cache)
         # Salva no arquivo
         with open(nome_arquivo, 'w') as arquivo:
             arquivo.write(texto)
-        
+
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
