@@ -49,8 +49,9 @@ class EnviaMensagem(Thread):
             sys.exit('Valor de entrada inválida')
 
     def run(self):
-        """Envia a mensagem e o arquivo. Retorna 0 em caso de sucesso, -1 no
-        caso contrário.
+        """Envia a mensagem e o arquivo.
+        
+        Retorna 0 em caso de sucesso, -1 no caso contrário.
         
         """
 
@@ -81,7 +82,7 @@ class EnviaMensagem(Thread):
                 tamanho_arquivo = len(arquivo)
                 # E envia o arquivo
                 totalsent = 0
-                while(totalsent < len(arquivo)):
+                while(totalsent < tamanho_arquivo):
                     sent = sock.send(arquivo[totalsent:])
                     if sent == 0:
                         err = 'Não conseguiu enviar o arquivo'
