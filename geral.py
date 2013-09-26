@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import socket
+import re
+import subprocess
 from threading import Thread
 
 class EnviaMensagem(Thread):
@@ -100,5 +103,58 @@ class EnviaMensagem(Thread):
         # Fecha o socket e retorna que tudo deu certo
         sock.close()
         return 0
+
+class Ping(Thread):
+    """Classe para envio de pings entre nós da rede"""
+
+    def __init__(self, host, numero = 4):
+        """Construtor da classe Ping
+
+        Parâmetros de entrada:
+        host -- endereço de IP do host destino do ping
+        numero -- número de pings a serem feitos
+
+        """
+        Thread.__init__(self)
+        self.host = host
+        self.numero = numero
+        self.status = -1
+        self.minimo = None
+        self.maximo = None
+        self.media = None
+        self.jitter = None
+
+    def run(self):
+        """Verifica se o ping retorna resposta. Se não retorna o método é
+        encerrado.
+
+        """
+        # Por enquanto só funciona no Linux com o ping do iputils, não sei se a
+        # gente irá suportar outra plataforma
+        if sys.platform == 'linux2':
+            lifeline = r'(\d) received'
+            ping_regex = r'(\d+.\d+)/(\d+.\d+)/(\d+.\d+)/(\d+.\d+)'
+
+        ping = subprocess.Popen(
+            ["ping", "-c", str(self.numero), self.host],
+            stdout = subprocess.PIPE,
+            stderr = subprocess.PIPE
+        )
+
+        while True:
+            try:
+                saida, erro = ping.communicate()
+            except ValueError:
+                break
+            matcher = re.compile(lifeline)
+            self.status = re.findall(lifeline, saida)
+
+            matcher = re.compile(ping_regex)
+            self.minimo, self.media, self.maximo, self.jitter = \
+            matcher.search(saida).groups()
+
+    def ping(self):
+        """Retorna os resultados do Ping. Use somente após o .join()!"""
+        return self.minimo, self.media, self.maximo, self.jitter
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
