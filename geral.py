@@ -125,7 +125,7 @@ class Ping(Thread):
         self.jitter = None
 
     def run(self):
-        """Verifica se o ping retorna resposta. Se não retorna o método é
+        """Verifica se o ping retorna resposta. Se não retornar o método é
         encerrado.
 
         """
@@ -154,7 +154,15 @@ class Ping(Thread):
             matcher.search(str(saida)).groups()
 
     def ping(self):
-        """Retorna os resultados do Ping. Use somente após o .join()!"""
+        """Retorna os resultados do Ping. Use somente após o .join()!
+        
+        Retorno:
+        minimo -- menor RTT retornado
+        media -- media entre todos os RTTs retornados
+        maximo -- maior RTT retornado
+        jitter -- variação entre os RTTs retornados
+
+        """
         return self.minimo, self.media, self.maximo, self.jitter
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
