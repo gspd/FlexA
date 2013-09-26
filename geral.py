@@ -7,6 +7,7 @@ import os
 import sys
 import socket
 import re
+import string
 import subprocess
 from threading import Thread
 
@@ -31,7 +32,6 @@ class EnviaMensagem(Thread):
         para cada campo adicional
 
         """
-
         # Inicia a classe thread
         Thread.__init__(self)
         # Criando cabeçalho padrão
@@ -63,7 +63,6 @@ class EnviaMensagem(Thread):
         Retorna 0 em caso de sucesso, -1 caso falhe.
         
         """
-
         # Cria o socket
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -123,7 +122,7 @@ class Ping(Thread):
     maximo = None
     jitter = None
 
-    def __init__(self, host, numero = 4):
+    def __init__(self, host, numero=4):
         """Construtor da classe Ping
 
         Parâmetros de entrada:
@@ -165,36 +164,68 @@ class Ping(Thread):
             self.minimo, self.media, self.maximo, self.jitter = \
             matcher.search(str(saida)).groups()
 
-def limpar_string(string_suja, nao_remover, split, index):
-    """Manipulação de string.
+class ConfigDat:
+    """Classe para gerenciar o arquivo de configuração do sistema
 
-    Parâmetros de entrada:
-    string_suja -- string de entrada a ser limpa
-    nao_remover -- informações que não deverão ser removidas da string
-    split -- divide a string nesse caracter
-    index -- define opção de limpeza: caso seja 1, retira informações depois
-    da introdução; caso seja 0, retira informações antes da introdução
-
-    Retorno:
-    string_limpa -- string com as modificações pertinentes
-
+    Variáveis da classe:
+    interface -- interface de rede da máquina
+    ip -- IP da máquina
+    netmask -- máscara de rede da máquina
+    faixa_varredura -- faixa de varredura de IPs na busca
+    local_cache -- diretório de localização da cache
+    caminho -- caminho do arquivo de configuração
+    
     """
-    string_suja = str(string_suja)
+    interface = ''
+    ip = ''
+    netmask = ''
+    faixa_varredura = ''
+    local_cache = ''
+    caminho = ''
 
-    if split != 'none':
-        antes, depois = string_suja.split(split)
-    else:
-        depois = string_suja
+    def __init__(self, nome_arquivo=None):
+        """Construtor da classe ConfigDat
 
-    safe_chars = string.ascii_letters + string.digits + nao_remover
-    #Retira informação depois da introdução
-    #Ex: interface:en0 = index 0: interface, index 1: en0
-    if index == '1': 
-        string_limpa = ''.join([char if char in safe_chars else '' 
-            for char in depois])
-    elif index == '0':
-        string_limpa = ''.join([char if char in safe_chars else '' 
-            for char in antes])
-    return string_limpa
+        Parâmetros de entrada:
+        nome_arquivo -- nome/caminho do arquivo de configuração
 
+        """
+        if nome_arquivo:
+            self.caminho = os.path.abspath(nome_arquivo)
+            self.carregar()
+
+    def carregar(self):
+        """Recarrega o arquivo de configuração"""
+        if os.path.exists(self.caminho):
+            # Usa expressão regular para pegar o que a gente quer
+            regex = re.compile("\S+:.+$")
+            # Abre o arquivo linha por linha
+            lista = []
+            for campo in open(self.caminho):
+                aux = regex.match(campo)
+                # Se existir configuração, guarda na lista
+                if aux:
+                    lista.append(aux.group(0).split(":"))
+            # Armazena nas variáveis
+            for attr, valor in lista:
+                setattr(self, attr.strip(), valor.strip())
+
+    def salvar(self, nome_arquivo=None):
+        """Salva o arquivo de configuração
+
+        Parâmetros de entrada:
+        nome_arquivo -- salva o arquivo de configuração em outro lugar
+        
+        """
+        # Se nome_arquivo não for passado, usa o caminho original
+        if not nome_arquivo:
+            nome_arquivo = self.caminho
+        # Monta o texto que será salvo no arquivo
+        texto = ('interface: ' + self.interface + '\nip: ' + self.ip + 
+                '\nnetmask: ' + self.netmask + '\nfaixa_varredura: ' +
+                self.faixa_varredura + '\nlocal_cache: ' + self.local_cache)
+        # Salva no arquivo
+        with open(nome_arquivo, 'w') as arquivo:
+            arquivo.write(texto)
+        
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
