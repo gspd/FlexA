@@ -1,12 +1,17 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+"""Provê funções de uso geral para os diversos módulos do Novo FlexA."""
+
 import os
 import sys
 import socket
 import re
 import subprocess
 from threading import Thread
+
+__author__ = "Thiago Kenji Okada"""
+__copyright__ = "Copyright 2013, Grupo de Sistemas Paralelos e Distribuídos"
 
 class EnviaMensagem(Thread):
     """Classe para envio de mensagens e arquivos entre nós da rede"""
