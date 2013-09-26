@@ -11,7 +11,8 @@ from threading import Thread
 class EnviaMensagem(Thread):
     """Classe para envio de mensagens e arquivos entre nós da rede"""
 
-    def __init__ (self, ip_destino, porta_destino, estacao, opcao, *cabecalho):
+    def __init__ (self, ip_destino, porta_destino, estacao, opcao, nome_arquivo,
+            *cabecalho):
         """Construtor da classe EnviaMensagem
 
         Parâmetros de entrada:
@@ -19,6 +20,8 @@ class EnviaMensagem(Thread):
         porta_destino -- porta destino da mensagem
         estacao -- tipo de estação destino ('servidor', 'replica', 'cliente')
         opcao -- tipo de operação a ser realizada
+        nome_arquivo -- nome do arquivo a ser transferido, ou False caso não
+        tenha arquivo a ser transferido
         cabecalho (opcional) -- resto do cabeçalho da mensagem; caso seja
         enviado algum arquivo, o nome do mesmo deve ser passado como primeira
         entrada do cabeçalho
@@ -39,22 +42,16 @@ class EnviaMensagem(Thread):
             header = header + cabecalho[-1] + '<div>'
         except IndexError:
             header = header + '<div>'
-        
-        # Se o nome do arquivo for passado ele é o primeiro item do
-        # cabeçalho
-        try:
-            self.nome_arquivo = cabecalho[0]
-        except IndexError:
-            self.nome_arquivo = None
-        
+
         # Inicializando variáveis da classe
+        self.nome_arquivo = nome_arquivo
         self.header = header
         self.tamanho_header = str(len(header)).zfill(3)
         try:
             self.ip_destino = str(ip_destino)
             self.porta_destino = str(porta_destino)
         except ValueError:
-            sys.exit('Valor de entrada inválida')
+            sys.exit("Valor de entrada inválida")
 
     def run(self):
         """Envia a mensagem e o arquivo.
@@ -82,7 +79,7 @@ class EnviaMensagem(Thread):
             sys.exit(err)
 
         # Abre o arquivo caso ele exista
-        if self.nome_arquivo is not None:
+        if self.nome_arquivo:
             try:
                 caminho = os.path.abspath(self.nome_arquivo)
                 nome = os.path.basename(caminho)
@@ -93,12 +90,13 @@ class EnviaMensagem(Thread):
                 while(totalsent < tamanho_arquivo):
                     sent = sock.send(arquivo[totalsent:])
                     if sent == 0:
-                        err = 'Não conseguiu enviar o arquivo'
+                        err = "Não conseguiu enviar o arquivo"
                         sys.exit(err)
                     totalsent = totalsent + sent
             # Caso o arquivo não exista, ignora
             except IOError:
-                pass
+                err = "Arquivo " + nome_arquivo + " não encontrado"
+                sys.exit(err)
 
         # Fecha o socket e retorna que tudo deu certo
         sock.close()
