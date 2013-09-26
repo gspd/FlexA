@@ -75,10 +75,10 @@ class EnviaMensagem(Thread):
 
         # Envia o cabeçalho e seu tamanho
         try:
-            sock.send(tamanho_header)
-            sock.send(header)
+            sock.send(self.tamanho_header)
+            sock.send(self.header)
         except:
-            err = "Falha ao enviar o cabeçalho da mensagem: " + header
+            err = "Falha ao enviar o cabeçalho da mensagem: " + self.header
             sys.exit(err)
 
         # Abre o arquivo caso ele exista
