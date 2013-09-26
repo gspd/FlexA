@@ -23,23 +23,21 @@ class EnviaMensagem(Thread):
 
         # Inicia a classe thread
         Thread.__init__(self)
-
         # Criando cabeçalho padrão
         header = '<div>' + str(estacao) + '#' +  str(opcao) + '#'
-
         # Adicionando o resto do cabeçalho
         for i in cabecalho[:-1]:
             header = header + i + '#'
         # Último item da lista não adiciona '#'
         header = header + cabecalho[-1] + '<div>'
-
+        
         # Se o nome do arquivo for passado ele é o primeiro item do
         # cabeçalho
         try:
             self.nome_arquivo = cabecalho[0]
         except IndexError:
             self.nome_arquivo = None
-
+        
         # Inicializando variáveis da classe
         self.header = header
         self.tamanho_header = str(len(header)).zfill(3)
@@ -77,7 +75,6 @@ class EnviaMensagem(Thread):
                 nome = os.path.basename(caminho)
                 arquivo = open(caminho).read()
                 tamanho_arquivo = len(arquivo)
-
                 # E envia o arquivo
                 totalsent = 0
                 while(totalsent < len(arquivo)):
@@ -86,7 +83,6 @@ class EnviaMensagem(Thread):
                         err = 'Não conseguiu enviar o arquivo'
                         sys.exit(err)
                     totalsent = totalsent + sent
-            
             # Caso o arquivo não exista, ignora
             except IOError:
                 pass
