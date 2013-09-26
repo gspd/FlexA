@@ -7,3 +7,5 @@
 !*.py
 #-Arquivos de script em Bash
 !*.sh
+#-Arquivos de markdown
+!*.md
