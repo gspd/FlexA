@@ -86,7 +86,8 @@ class EnviaMensagem(Thread):
                         err = 'Não conseguiu enviar o arquivo'
                         sys.exit(err)
                     totalsent = totalsent + sent
-
+            
+            # Caso o arquivo não exista, ignora
             except IOError:
                 pass
 
