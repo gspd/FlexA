@@ -178,6 +178,7 @@ class ConfigDat:
     """
     interface = ''
     ip = ''
+    porta = ''
     netmask = ''
     faixa_varredura = ''
     local_cache = ''
@@ -222,8 +223,9 @@ class ConfigDat:
             nome_arquivo = self.caminho
         # Monta o texto que será salvo no arquivo
         texto = ('interface: ' + self.interface + '\nip: ' + self.ip +
-                '\nnetmask: ' + self.netmask + '\nfaixa_varredura: ' +
-                self.faixa_varredura + '\nlocal_cache: ' + self.local_cache)
+                '\nporta:' + self.porta + '\nnetmask: ' + self.netmask +
+                '\nfaixa_varredura: ' + self.faixa_varredura +
+                '\nlocal_cache: ' + self.local_cache)
         # Salva no arquivo
         with open(nome_arquivo, 'w') as arquivo:
             arquivo.write(texto)
