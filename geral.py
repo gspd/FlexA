@@ -52,7 +52,7 @@ class EnviaMensagem(Thread):
         self.tamanho_header = str(len(header)).zfill(3)
         try:
             self.ip_destino = str(ip_destino)
-            self.porta_destino = int(porta_destino)
+            self.porta_destino = str(porta_destino)
         except ValueError:
             sys.exit('Valor de entrada inválida')
 
@@ -66,7 +66,7 @@ class EnviaMensagem(Thread):
         # Cria o socket
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            dest = (self.ip_destino, self.porta_destino)
+            dest = (self.ip_destino, int(self.porta_destino))
             sock.connect(dest)
         except IOError:
             err = "Falha ao criar o socket para o IP " + self.ip_destino + \
@@ -131,7 +131,7 @@ class Ping(Thread):
         """
         # Por enquanto só funciona no Linux com o ping do iputils, não sei se a
         # gente irá suportar outra plataforma
-        if sys.platform == 'linux2':
+        if sys.platform == 'linux' or sys.platform == 'linux2':
             lifeline = r'(\d) received'
             ping_regex = r'(\d+.\d+)/(\d+.\d+)/(\d+.\d+)/(\d+.\d+)'
 
@@ -147,11 +147,11 @@ class Ping(Thread):
             except ValueError:
                 break
             matcher = re.compile(lifeline)
-            self.status = re.findall(lifeline, saida)
+            self.status = re.findall(lifeline, str(saida))
 
             matcher = re.compile(ping_regex)
             self.minimo, self.media, self.maximo, self.jitter = \
-            matcher.search(saida).groups()
+            matcher.search(str(saida)).groups()
 
     def ping(self):
         """Retorna os resultados do Ping. Use somente após o .join()!"""
