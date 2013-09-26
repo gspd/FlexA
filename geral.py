@@ -10,7 +10,7 @@ import re
 import subprocess
 from threading import Thread
 
-__author__ = "Thiago Kenji Okada"""
+__author__ = "Thiago Kenji Okada"
 __copyright__ = "Copyright 2013, Grupo de Sistemas Paralelos e Distribuídos"
 
 class EnviaMensagem(Thread):
@@ -107,7 +107,21 @@ class EnviaMensagem(Thread):
         return 0
 
 class Ping(Thread):
-    """Classe para envio de pings entre nós da rede"""
+    """Classe para envio de pings entre nós da rede
+    
+    Variáveis da classe:
+    status -- número de pacotes recebidos de volta com sucesso
+    minimo -- menor RTT retornado
+    media -- média dos RTTs retornados
+    maxima -- maior RTT retornado
+    jitter -- variação entre os RTTs retornados
+
+    """
+    status = None
+    minimo = None
+    media = None
+    maximo = None
+    jitter = None
 
     def __init__(self, host, numero = 4):
         """Construtor da classe Ping
@@ -120,11 +134,6 @@ class Ping(Thread):
         Thread.__init__(self)
         self.host = host
         self.numero = numero
-        self.status = None
-        self.minimo = None
-        self.maximo = None
-        self.media = None
-        self.jitter = None
 
     def run(self):
         """Verifica se o ping retorna resposta. Se não retornar o método é
@@ -155,21 +164,6 @@ class Ping(Thread):
             matcher = re.compile(ping_regex)
             self.minimo, self.media, self.maximo, self.jitter = \
             matcher.search(str(saida)).groups()
-
-    def ping(self):
-        """Retorna os resultados do Ping.
-        
-        Use somente após ter certeza que a thread encerrou (como por exemplo 
-        usando .join()), ou ela retornará None em todos os campos.
-        
-        Retorno:
-        minimo -- menor RTT retornado
-        media -- média entre todos os RTTs retornados
-        maximo -- maior RTT retornado
-        jitter -- variação entre os RTTs retornados
-
-        """
-        return self.minimo, self.media, self.maximo, self.jitter
 
 def limpar_string(string_suja, nao_remover, split, index):
     """Manipulação de string.
