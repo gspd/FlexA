@@ -25,11 +25,10 @@ class EnviaMensagem(Thread):
         porta_destino -- porta destino da mensagem
         estacao -- tipo de estação destino ('servidor', 'replica', 'cliente')
         opcao -- tipo de operação a ser realizada
-        nome_arquivo -- nome do arquivo a ser transferido, ou False caso não
-        tenha arquivo a ser transferido
-        cabecalho (opcional) -- resto do cabeçalho da mensagem; caso seja
-        enviado algum arquivo, o nome do mesmo deve ser passado como primeira
-        entrada do cabeçalho
+        nome_arquivo -- nome/caminho do arquivo a ser transferido, ou False caso
+        não tenha arquivo a ser transferido
+        cabecalho (opcional) -- resto do cabeçalho da mensagem, um parâmetro
+        para cada campo adicional
 
         """
 
@@ -61,7 +60,7 @@ class EnviaMensagem(Thread):
     def run(self):
         """Envia a mensagem e o arquivo.
         
-        Retorna 0 em caso de sucesso, -1 no caso contrário.
+        Retorna 0 em caso de sucesso, -1 caso falhe.
         
         """
 
@@ -115,13 +114,13 @@ class Ping(Thread):
 
         Parâmetros de entrada:
         host -- endereço de IP do host destino do ping
-        numero -- número de pings a serem feitos
+        numero -- número de pings a serem feitos; padrão é 4
 
         """
         Thread.__init__(self)
         self.host = host
         self.numero = numero
-        self.status = -1
+        self.status = None
         self.minimo = None
         self.maximo = None
         self.media = None
@@ -149,19 +148,23 @@ class Ping(Thread):
                 saida, erro = ping.communicate()
             except ValueError:
                 break
+            # Pega o número de pacotes que foram retornados
             matcher = re.compile(lifeline)
             self.status = re.findall(lifeline, str(saida))
-
+            # Pega as informações geradas pelo ping
             matcher = re.compile(ping_regex)
             self.minimo, self.media, self.maximo, self.jitter = \
             matcher.search(str(saida)).groups()
 
     def ping(self):
-        """Retorna os resultados do Ping. Use somente após o .join()!
+        """Retorna os resultados do Ping.
+        
+        Use somente após ter certeza que a thread encerrou (como por exemplo 
+        usando .join()), ou ela retornará None em todos os campos.
         
         Retorno:
         minimo -- menor RTT retornado
-        media -- media entre todos os RTTs retornados
+        media -- média entre todos os RTTs retornados
         maximo -- maior RTT retornado
         jitter -- variação entre os RTTs retornados
 
