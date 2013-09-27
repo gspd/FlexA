@@ -92,7 +92,7 @@ class RecebeHandler(socketserver.BaseRequestHandler):
         data = decodifica(self.request.recv(1024))
 
         if sys.flags.debug:
-            print("Received data: {}".format(data))
+            print("Dados recebidos: {}".format(data))
 
         if data[0] == Tipos.LISTA_ARQUIVOS:
             resp_tipo = data[0]
@@ -130,7 +130,7 @@ class Recebe:
         t_servidor.daemon = True
         t_servidor.start()
 
-class Envia():
+class Envia:
     """Classe para envio de mensagens entre nós da rede"""
 
     def __init__ (self, ip_destino=None, porta_destino=5500):
