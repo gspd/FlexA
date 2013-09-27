@@ -38,8 +38,10 @@ class Tipos:
 
 class Erros:
     EDESC = 0x0001
+    NIMPL = 0x0002
 
-    strerro_dict = {EDESC: "Tipo de mensagem desconhecido."}
+    strerro_dict = {EDESC: "Tipo de mensagem desconhecido.",
+                    NIMPL: "Requisição não implementada."}
 
     def strerro(erro):
         try:
