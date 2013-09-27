@@ -9,7 +9,7 @@ import socket
 import socketserver
 from threading import Thread
 
-# Compatibility between python2 and python3
+# Compatibilidade entre o Python 2.x e 3.x
 try:
     import cPickle
 except ImportError:
