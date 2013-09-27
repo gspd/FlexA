@@ -56,8 +56,9 @@ def codifica(tipo, dados):
     Variáveis:
     tipo -- tipo da mensagem a ser enviada. O tipo tem relação ao objetivo da
     mensagem. O tipo da mensagem influencia nos dados que deverão ser fornecidos
-    dados -- dicionário contendo os dados a serem enviados na mensagem. Os dados
-    serão convertidos da maneira corretas para uso no sistema.
+    dados -- objeto contendo os dados a serem enviados na mensagem. Os dados
+    serão convertidos da maneira corretas para uso no sistema. Pode ser qualquer
+    objeto que suporta o módulo Pickle.
 
     O processo de codificação realizado por essa função é sempre compatível
     com o processo de decodificação fornecido em uma mesma versão do FlexA.
