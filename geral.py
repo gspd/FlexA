@@ -10,6 +10,7 @@ import re
 import string
 import subprocess
 from threading import Thread
+import socketserver
 
 __author__ = "Thiago Kenji Okada"
 __copyright__ = "Copyright 2013, Grupo de Sistemas Paralelos e Distribuídos"
@@ -104,6 +105,51 @@ class EnviaMensagem(Thread):
         # Fecha o socket e retorna que tudo deu certo
         sock.close()
         return 0
+
+
+class RecebeMensagemHandler(socketserver.BaseRequestHandler):
+    """Classe que executada para cada requisição"""
+
+    def handle(self):
+        """Função a ser executada para cada requisição"""
+
+        data = str(self.request.recv(1024), 'ascii')
+        print(data)
+        response = bytes("{}".format(data), 'ascii')
+        self.request.sendall(response)
+
+class RecebeMensagemServidor(socketserver.ThreadingMixIn,
+                              socketserver.TCPServer):
+    """Classe que determinar o tipo do servidor"""
+    pass
+
+class RecebeMensagem:
+    """Classe para recebimento de mensagens e arquivos entre nós da rede
+
+    Variáveis da classe:
+    host -- endereço ip ou hostname para escuta
+    port_escuta -- porta de escuta para recebimento de conexões
+
+    """
+
+    def __init__(self, host = None, porta_escuta = None):
+        if not porta_escuta:
+            self.porta_escuta = 5500
+        if not host:
+            self.host = socket.gethostname()
+        else:
+            self.host = host
+
+        HOST, PORT = self.host, self.porta_escuta
+
+        servidor = RecebeMensagemServidor((HOST, PORT),
+                                                RecebeMensagemHandler)
+        ip, porta = servidor.server_address
+        print("Escutando em {}:{}".format(ip, porta))
+        # thread do servidor
+        t_servidor = Thread(target=servidor.serve_forever)
+        t_servidor.daemon = True
+        t_servidor.start()
 
 class Ping(Thread):
     """Classe para envio de pings entre nós da rede
