@@ -96,10 +96,27 @@ class RecebeHandler(socketserver.BaseRequestHandler):
         if sys.flags.debug:
             print("Dados recebidos: {}".format(data))
 
-        if data[0] == Tipos.LISTA_ARQUIVOS:
+        # Primeiro membro da tupla é sempre o tipo de mensagem
+        if data[0] == Tipos.ENVIA_ARQUIVO:
+            resp_tipo = Tipos.ERRO
+            resp_dados = Erros.NIMPL
+        elif data[0] == Tipos.LISTA_ARQUIVOS:
             resp_tipo = data[0]
             resp_dados = ",".join(
                 [f for f in os.listdir('.') if os.path.isfile(f)])
+        elif data[0] == Tipos.REQUISITA_ARQUIVO:
+            resp_tipo = Tipos.ERRO
+            resp_dados = Erros.NIMPL
+        elif data[0] == Tipos.EXCECAO:
+            resp_tipo = Tipos.ERRO
+            resp_dados = Erros.NIMPL
+        elif data[0] == Tipos.ERRO:
+            resp_tipo = Tipos.ERRO
+            resp_dados = Erros.NIMPL
+        else:
+            # Caso o tipo não esteja presente, retorna erro
+            resp_tipo = Tipos.ERRO
+            resp_dados = Erros.EDESC
 
         resposta = codifica(resp_tipo, resp_dados)
         self.request.sendall(resposta)
@@ -164,6 +181,9 @@ class Envia:
 
         if sys.flags.debug:
             print(resposta)
+
+        if resposta[0] == Tipos.ERRO:
+            print(Erros.strerro(resposta[1]))
 
     def close(self):
         self.sock.close()
