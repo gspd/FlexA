@@ -192,7 +192,6 @@ class Envia__versao_thread__(Thread):
     """Classe para envio de mensagens entre nós da rede"""
     dados = None
     tipo = None
-    trava = None
     terminar = False
 
     def __init__ (self, ip_destino=None, porta_destino=5500):
@@ -228,13 +227,18 @@ class Envia__versao_thread__(Thread):
             while not self.dados:
                 self.trava.wait()
 
-            if self.terminar: break
+            if self.terminar:
+                self.sock.close()
+                break
 
             self.sock.sendall(codifica(self.tipo, self.dados))
             resposta = decodifica(self.sock.recv(1024))
 
             if sys.flags.debug:
                 print(resposta)
+
+            if resposta[0] == Tipos.ERRO:
+                print(Erros.strerro(resposta[1]))
 
             self.tipo = None
             self.dados = None
