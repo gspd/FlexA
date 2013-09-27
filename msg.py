@@ -18,6 +18,17 @@ class Tipos:
     EXCECAO = 0x0008
     ERRO = 0x0016
 
+class Erros:
+    EDESC = 0x0001
+
+    strerro_dict = {EDESC: "Tipo de mensagem desconhecida."}
+
+    def strerro(erro):
+        try:
+            return Erros.strerro_dict[erro]
+        except KeyError:
+            return "Código de erro desconhecido"
+
 def codifica(tipo, dados):
     """Codifica uma mensagem e retorna um objeto a ser usado diretamente pelo
     socket para enviar uma mensagem.
