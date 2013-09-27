@@ -5,12 +5,10 @@
 
 import os
 import sys
-import socket
 import re
 import string
 import subprocess
 from threading import Thread
-import socketserver
 
 __author__ = "Thiago Kenji Okada"
 __copyright__ = "Copyright 2013, Grupo de Sistemas Paralelos e Distribuídos"
