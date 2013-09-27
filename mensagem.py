@@ -7,7 +7,7 @@ import os
 import sys
 import socket
 import socketserver
-from threading import Thread
+from threading import Thread, Condition
 
 # Compatibilidade entre o Python 2.x e 3.x
 try:
@@ -165,5 +165,70 @@ class Envia:
 
     def close(self):
         self.sock.close()
+
+class Envia__versao_thread__(Thread):
+    """Classe para envio de mensagens entre nós da rede"""
+    dados = None
+    tipo = None
+    trava = None
+    terminar = False
+
+    def __init__ (self, ip_destino=None, porta_destino=5500):
+        """Construtor da classe Envia
+
+        Variáveis:
+        ip_destino -- IP destino da mensagem
+        porta_destino -- porta destino da mensagem
+
+        """
+
+        Thread.__init__(self)
+        if not ip_destino:
+            ip_destino = socket.gethostname()
+
+        self.dest = (ip_destino, porta_destino)
+        self.trava = Condition()
+
+    def run(self):
+        # Inicia a conexão com o servidor
+        try:
+            self.sock = socket.socket(socket.AF_INET,
+                                      socket.SOCK_STREAM)
+            self.sock.connect(self.dest)
+        except IOError:
+            err = ("Falha ao criar o socket para o IP " +
+                   ip_destino +
+                   " na porta " + porta_destino)
+            sys.exit(err)
+
+        while True:
+            self.trava.acquire()
+            while not self.dados:
+                self.trava.wait()
+
+            if self.terminar: break
+
+            self.sock.sendall(codifica(self.tipo, self.dados))
+            resposta = decodifica(self.sock.recv(1024))
+
+            if sys.flags.debug:
+                print(resposta)
+
+            self.tipo = None
+            self.dados = None
+            self.trava.release()
+
+    def envia(self, tipo, dados):
+        self.trava.acquire()
+        self.tipo = tipo
+        self.dados = dados
+        self.trava.notify()
+        self.trava.release()
+
+    def close(self):
+        self.trava.acquire()
+        self.terminar = True
+        self.trava.notify()
+        self.trava.release()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
