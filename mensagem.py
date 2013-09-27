@@ -246,15 +246,21 @@ class Envia__versao_thread__(Thread):
 
     def envia(self, tipo, dados):
         self.trava.acquire()
-        self.tipo = tipo
-        self.dados = dados
-        self.trava.notify()
+
+        if not self.dados:
+            self.tipo = tipo
+            self.dados = dados
+        else:
+            if sys.flags.debug:
+                print ("Mensagem anterior não enviada")
+
         self.trava.release()
+        self.trava.notify()
 
     def close(self):
         self.trava.acquire()
         self.terminar = True
-        self.trava.notify()
         self.trava.release()
+        self.trava.notify()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
