@@ -10,8 +10,7 @@ import string
 import subprocess
 from threading import Thread
 
-__author__ = "Thiago Kenji Okada"
-__copyright__ = "Copyright 2013, Grupo de Sistemas Paralelos e Distribuídos"
+__authors__ = ["Thiago Kenji Okada", "Leandro Moreira Barbosa"]
 
 class Ping(Thread):
     """Classe para envio de pings entre nós da rede

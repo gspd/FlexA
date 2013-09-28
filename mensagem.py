@@ -15,7 +15,7 @@ try:
 except ImportError:
     import pickle
 
-__copyright__ = "Copyright 2013, Grupo de Sistemas Paralelos e Distribuídos"
+__authors__ = ["Thiago Kenji Okada", "Leandro Moreira Barbosa"]
 
 class Tipos:
     ENVIA_ARQUIVO = 0x0001
