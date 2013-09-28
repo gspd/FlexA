@@ -39,8 +39,8 @@ class Ping(Thread):
 
         """
         Thread.__init__(self)
-        self.host = host
-        self.numero = numero
+        self.__host = host
+        self.__numero = numero
 
     def run(self):
         """Verifica se o ping retorna resposta. Se não retornar o método é
@@ -54,7 +54,7 @@ class Ping(Thread):
             ping_regex = r'(\d+.\d+)/(\d+.\d+)/(\d+.\d+)/(\d+.\d+)'
 
         ping = subprocess.Popen(
-            ["ping", "-c", str(self.numero), self.host],
+            ["ping", "-c", str(self.__numero), self.__host],
             stdout = subprocess.PIPE,
             stderr = subprocess.PIPE
         )
@@ -100,17 +100,17 @@ class ConfigDat:
 
         """
         if nome_arquivo:
-            self.caminho = os.path.abspath(nome_arquivo)
+            self.__caminho = os.path.abspath(nome_arquivo)
             self.carregar()
 
     def carregar(self):
         """Recarrega o arquivo de configuração"""
-        if os.path.exists(self.caminho):
+        if os.path.exists(self.__caminho):
             # Usa expressão regular para pegar o que a gente quer
             regex = re.compile("\S+:.+$")
             # Abre o arquivo linha por linha
             lista = []
-            for campo in open(self.caminho):
+            for campo in open(self.__caminho):
                 aux = regex.match(campo)
                 # Se existir configuração, guarda na lista
                 if aux:
@@ -128,7 +128,7 @@ class ConfigDat:
         """
         # Se nome_arquivo não for passado, usa o caminho original
         if not nome_arquivo:
-            nome_arquivo = self.caminho
+            nome_arquivo = self.__caminho
         # Monta o texto que será salvo no arquivo
         texto = ('interface: ' + self.interface + '\nip: ' + self.ip +
                 '\nporta:' + self.porta + '\nnetmask: ' + self.netmask +
@@ -146,33 +146,33 @@ class BancoDados__prototipo__:
         novo_banco = True
         if os.path.exists(caminho): novo_banco = False
 
-        self.conn = sqlite3.connect(caminho)
-        self.db = self.conn.cursor()
+        self.__conn = sqlite3.connect(caminho)
+        self.__db = self.__conn.cursor()
 
         if novo_banco:
             # TODO: colocando um banco simples aqui, provavelmente vai mudar
             query = ("CREATE TABLE arquivos_sad (hash_arquivo VARCHAR "
             "PRIMARY KEY, nome_arquivo VARCHAR, diretorio VARCHAR, id_ver "
             "INTEGER)")
-            self.db.execute(query)
+            self.__db.execute(query)
 
     def adicionar_arquivo(self, hash_arquivo, nome_arquivo, diretorio, id_ver):
         query = ("INSERT INTO arquivos_sad VALUES (?, ?, ?, ?)")
         param = (hash_arquivo, nome_arquivo, diretorio, id_ver)
-        self.db.execute(query, param)
-        self.conn.commit()
+        self.__db.execute(query, param)
+        self.__conn.commit()
 
     def remover_arquivo(self, hash_arquivo):
         query = ("DELETE FROM arquivos_sad WHERE hash_arquivo = ?")
-        self.db.execute(query, (hash_arquivo,))
-        self.conn.commit()
+        self.__db.execute(query, (hash_arquivo,))
+        self.__conn.commit()
 
     def info_arquivo(self, hash_arquivo):
         query = ("SELECT * from arquivos_sad WHERE hash_arquivo = ?")
-        self.db.execute(query, (hash_arquivo,))
-        return self.db.fetchone()
+        self.__db.execute(query, (hash_arquivo,))
+        return self.__db.fetchone()
 
     def sair(self):
-        self.conn.close()
+        self.__conn.close()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

@@ -181,10 +181,10 @@ class Envia:
             ip_destino = socket.gethostname()
 
         try:
-            self.sock = socket.socket(socket.AF_INET,
+            self.__sock = socket.socket(socket.AF_INET,
                                       socket.SOCK_STREAM)
             dest = (ip_destino, porta_destino)
-            self.sock.connect(dest)
+            self.__sock.connect(dest)
         except IOError:
             err = ("Falha ao criar o socket para o IP " +
                    ip_destino +
@@ -192,9 +192,9 @@ class Envia:
             sys.exit(err)
 
     def envia(self, tipo, dados):
-        self.sock.sendall(codifica(tipo, dados))
+        self.__sock.sendall(codifica(tipo, dados))
         try:
-            resposta = decodifica(self.sock.recv(1024))
+            resposta = decodifica(self.__sock.recv(1024))
         except EOFError:
             if sys.flags.debug:
                 print('Conexão fechada pelo servidor remoto.')
@@ -207,13 +207,10 @@ class Envia:
             print(Erros.strerro(resposta[1]))
 
     def close(self):
-        self.sock.close()
+        self.__sock.close()
 
 class Envia__versao_thread__(Thread):
     """Classe para envio de mensagens entre nós da rede"""
-    dados = None
-    tipo = None
-    terminar = False
 
     def __init__ (self, ip_destino=None, porta_destino=5500):
         """Construtor da classe Envia
@@ -228,15 +225,18 @@ class Envia__versao_thread__(Thread):
         if not ip_destino:
             ip_destino = socket.gethostname()
 
-        self.dest = (ip_destino, porta_destino)
-        self.trava = Condition()
+        self.__dest = (ip_destino, porta_destino)
+        self.__trava = Condition()
+        self.__terminar = False
+        self.__dados = None
+        self.__tipo = None
 
     def run(self):
         # Inicia a conexão com o servidor
         try:
-            self.sock = socket.socket(socket.AF_INET,
+            self.__sock = socket.socket(socket.AF_INET,
                                       socket.SOCK_STREAM)
-            self.sock.connect(self.dest)
+            self.__sock.connect(self.__dest)
         except IOError:
             err = ("Falha ao criar o socket para o IP " +
                    ip_destino +
@@ -244,16 +244,16 @@ class Envia__versao_thread__(Thread):
             sys.exit(err)
 
         while True:
-            self.trava.acquire()
-            while not self.dados:
-                self.trava.wait()
+            self.__trava.acquire()
+            while not self.__dados:
+                self.__trava.wait()
 
-            if self.terminar:
-                self.sock.close()
+            if self.__terminar:
+                self.__sock.close()
                 break
 
-            self.sock.sendall(codifica(self.tipo, self.dados))
-            resposta = decodifica(self.sock.recv(1024))
+            self.__sock.sendall(codifica(self.__tipo, self.__dados))
+            resposta = decodifica(self.__sock.recv(1024))
 
             if sys.flags.debug:
                 print(resposta)
@@ -261,30 +261,30 @@ class Envia__versao_thread__(Thread):
             if resposta[0] == Tipos.ERRO:
                 print(Erros.strerro(resposta[1]))
 
-            self.tipo = None
-            self.dados = None
-            self.trava.release()
+            self.__tipo = None
+            self.__dados = None
+            self.__trava.release()
 
     def envia(self, tipo, dados):
-        self.trava.acquire()
+        self.__trava.acquire()
 
-        if self.terminar:
+        if self.__terminar:
             if sys.flags.debug:
                 print ("Thread desativada")
-        if not self.dados:
-            self.tipo = tipo
-            self.dados = dados
+        if not self.__dados:
+            self.__tipo = tipo
+            self.__dados = dados
         else:
             if sys.flags.debug:
                 print ("Mensagem anterior não enviada")
 
-        self.trava.notify()
-        self.trava.release()
+        self.__trava.notify()
+        self.__trava.release()
 
     def close(self):
-        self.trava.acquire()
-        self.terminar = True
-        self.trava.notify()
-        self.trava.release()
+        self.__trava.acquire()
+        self.__terminar = True
+        self.__trava.notify()
+        self.__trava.release()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
