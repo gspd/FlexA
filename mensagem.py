@@ -248,6 +248,9 @@ class Envia__versao_thread__(Thread):
     def envia(self, tipo, dados):
         self.trava.acquire()
 
+        if self.terminar:
+            if.sys.flags.debug:
+                print ("Thread desativada")
         if not self.dados:
             self.tipo = tipo
             self.dados = dados
