@@ -8,6 +8,7 @@ import sys
 import re
 import string
 import subprocess
+import sqlite3
 from threading import Thread
 
 __author__ = "Thiago Kenji Okada"
@@ -137,5 +138,42 @@ class ConfigDat:
         # Salva no arquivo
         with open(nome_arquivo, 'w') as arquivo:
             arquivo.write(texto)
+
+class BancoDados__prototipo__:
+
+    def __init__(self, nome_arquivo):
+        caminho = os.path.abspath(nome_arquivo)
+
+        novo_banco = True
+        if os.path.exists(caminho): novo_banco = False
+
+        self.conn = sqlite3.connect(caminho)
+        self.db = self.conn.cursor()
+
+        if novo_banco:
+            # TODO: colocando um banco simples aqui, provavelmente vai mudar
+            query = ("CREATE TABLE arquivos_sad (hash_arquivo VARCHAR "
+            "PRIMARY KEY, nome_arquivo VARCHAR, diretorio VARCHAR, id_ver "
+            "INTEGER)")
+            self.db.execute(query)
+
+    def adicionar_arquivo(self, hash_arquivo, nome_arquivo, diretorio, id_ver):
+        query = ("INSERT INTO arquivos_sad VALUES (?, ?, ?, ?)")
+        param = (hash_arquivo, nome_arquivo, diretorio, id_ver)
+        self.db.execute(query, param)
+        self.conn.commit()
+
+    def remover_arquivo(self, hash_arquivo):
+        query = ("DELETE FROM arquivos_sad WHERE hash_arquivo = ?")
+        self.db.execute(query, (hash_arquivo,))
+        self.conn.commit()
+
+    def info_arquivo(self, hash_arquivo):
+        query = ("SELECT * from arquivos_sad WHERE hash_arquivo = ?")
+        self.db.execute(query, (hash_arquivo,))
+        return self.db.fetchone()
+
+    def sair(self):
+        self.conn.close()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
