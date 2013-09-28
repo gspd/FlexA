@@ -231,8 +231,6 @@ class Envia__versao_thread__(Thread):
             if self.terminar:
                 self.sock.close()
                 break
-≡jedi=0, ≡                 (*value*, sep = ' ', end = '\n', file = sys.stdout) ≡jedi≡
-            print (self.tipo + self.dados)
 
             self.sock.sendall(codifica(self.tipo, self.dados))
             resposta = decodifica(self.sock.recv(1024))
