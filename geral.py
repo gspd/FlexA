@@ -90,7 +90,6 @@ class ConfigDat:
     netmask = ''
     faixa_varredura = ''
     local_cache = ''
-    caminho = ''
 
     def __init__(self, nome_arquivo=None):
         """Construtor da classe ConfigDat
@@ -100,17 +99,17 @@ class ConfigDat:
 
         """
         if nome_arquivo:
-            self.__caminho = os.path.abspath(nome_arquivo)
+            self.__nome_arquivo = nome_arquivo
             self.carregar()
 
     def carregar(self):
         """Recarrega o arquivo de configuração"""
-        if os.path.exists(self.__caminho):
+        if os.path.exists(self.__nome_arquivo):
             # Usa expressão regular para pegar o que a gente quer
             regex = re.compile("\S+:.+$")
             # Abre o arquivo linha por linha
             lista = []
-            for campo in open(self.__caminho):
+            for campo in open(self.__nome_arquivo):
                 aux = regex.match(campo)
                 # Se existir configuração, guarda na lista
                 if aux:
@@ -128,7 +127,7 @@ class ConfigDat:
         """
         # Se nome_arquivo não for passado, usa o caminho original
         if not nome_arquivo:
-            nome_arquivo = self.__caminho
+            nome_arquivo = self.__nome_arquivo
         # Monta o texto que será salvo no arquivo
         texto = ('interface: ' + self.interface + '\nip: ' + self.ip +
                 '\nporta:' + self.porta + '\nnetmask: ' + self.netmask +
@@ -141,12 +140,10 @@ class ConfigDat:
 class BancoDados__prototipo__:
 
     def __init__(self, nome_arquivo):
-        caminho = os.path.abspath(nome_arquivo)
-
         novo_banco = True
-        if os.path.exists(caminho): novo_banco = False
+        if os.path.exists(nome_arquivo): novo_banco = False
 
-        self.__conn = sqlite3.connect(caminho)
+        self.__conn = sqlite3.connect(nome_arquivo)
         self.__db = self.__conn.cursor()
 
         if novo_banco:
