@@ -148,28 +148,43 @@ class BancoDados__prototipo__:
 
         if novo_banco:
             # TODO: colocando um banco simples aqui, provavelmente vai mudar
-            query = ("CREATE TABLE arquivos_sad (hash_arquivo VARCHAR "
-            "PRIMARY KEY, nome_arquivo VARCHAR, diretorio VARCHAR, id_ver "
-            "INTEGER)")
+            query = ("CREATE TABLE arquivos_sad (hash_unica VARCHAR "
+            "PRIMARY KEY, hash_arquivo VARCHAR, nome_arquivo VARCHAR "
+            "diretorio VARCHAR, uuid VARCHAR, propridades VARCHAR, id_ver "
+            "INTEGER, chunks VARCHAR)")
             self.__db.execute(query)
 
-    def adicionar_arquivo(self, hash_arquivo, nome_arquivo, diretorio, id_ver):
-        query = ("INSERT INTO arquivos_sad VALUES (?, ?, ?, ?)")
-        param = (hash_arquivo, nome_arquivo, diretorio, id_ver)
+    def adicionar_arquivo(self, hash_unica, hash_arquivo, nome_arquivo,
+            diretorio, uuid, propriedades, id_ver, chunks):
+        query = ("INSERT INTO arquivos_sad VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+        param = (hash_unica, hash_arquivo, nome_arquivo, diretorio, uuid,
+                propriedades, id_ver, chunks)
         self.__db.execute(query, param)
         self.__conn.commit()
 
     def remover_arquivo(self, hash_arquivo):
         query = ("DELETE FROM arquivos_sad WHERE hash_arquivo = ?")
-        self.__db.execute(query, (hash_arquivo,))
+        param = (hash_unica,)
+        self.__db.execute(query, param)
         self.__conn.commit()
 
     def info_arquivo(self, hash_arquivo):
         query = ("SELECT * from arquivos_sad WHERE hash_arquivo = ?")
-        self.__db.execute(query, (hash_arquivo,))
+        param = (hash_unica,)
+        self.__db.execute(query, param)
         return self.__db.fetchone()
 
+    def listar_arquivos(self, uuid):
+        query = ("SELECT nome_arquivo from arquivos_sad WHERE uuid = ?")
+        param = (uuid,)
+        self.__db.execute(query, param)
+        return self.__db.fetchall()
+
+    def salvar(self):
+        self.__conn.commit()
+
     def sair(self):
+        self.salvar()
         self.__conn.close()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
