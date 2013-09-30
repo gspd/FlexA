@@ -14,9 +14,9 @@ def encriptar(chave, arquivo_entrada, arquivo_saida=None,
 
     Parâmetros de entrada:
     chave -- A chave de encriptação - uma string que deve ter 16, 24 ou 32
-    bytes. Chaves longas são mais seguras
+    bytes. Chaves longas são mais seguras.
 
-    arquivo_entrada -- Caminho para o arquivo que será encriptado
+    arquivo_entrada -- Caminho para o arquivo que será encriptado.
 
     arquivo_saida -- Caso não seja fornecido, '<arquivo_entrada>.enc' será
     usado.
@@ -24,6 +24,7 @@ def encriptar(chave, arquivo_entrada, arquivo_saida=None,
     tam_porcao -- seta o tamanho da porção que a função usa para ler e
     encriptar o arquivo. Porções maiores podem ser mais rápidas.
     tam_porcao tem que ser divisível por 16.
+
     """
     if not arquivo_saida:
         arquivo_saida = arquivo_entrada + '.enc'
@@ -48,12 +49,22 @@ def encriptar(chave, arquivo_entrada, arquivo_saida=None,
 
 def decriptar(chave, arquivo_entrada, arquivo_saida=None,
 		tam_porcao=24*1024):
-    """ Decrypts a file using AES (CBC mode) with the
-        given chave. Parameters are similar to encrypt_file,
-        with one difference: arquivo_saida, if not supplied
-        will be arquivo_entrada without its last extension
-        (i.e. if arquivo_entrada is 'aaa.zip.enc' then
-        arquivo_saida will be 'aaa.zip')
+    """Decripta um arquivo usando o AES (modo CBC) com determinada chave
+
+    Parâmetros de entrada:
+    chave -- A chave de encriptação - uma string que deve ter 16, 24 ou 32
+    bytes. Chaves longas são mais seguras.
+
+    arquivo_entrada -- Caminho para o arquivo encriptado.
+
+    arquivo_saida -- Caso não seja fornecido, será usado o nome do
+    arquivo_entrada sem sua extensão (que deverá ser .enc caso seja usado o
+    padrão)
+
+    tam_porcao -- seta o tamanho da porção que a função usa para ler e
+    encriptar o arquivo. Porções maiores podem ser mais rápidas.
+    tam_porcao tem que ser divisível por 16.
+
     """
     if not arquivo_saida:
         arquivo_saida = os.path.splitext(arquivo_entrada)[0]
