@@ -6,12 +6,16 @@
 import os
 import sys
 import socket
-import socketserver
 from threading import Thread, Condition
 
 # Compatibilidade entre o Python 2.x e 3.x
 try:
-    import cPickle
+    import SocketServer as socketserver
+except ImportError:
+    import socketserver
+
+try:
+    import cPickle as pickle
 except ImportError:
     import pickle
 
