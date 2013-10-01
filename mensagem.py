@@ -60,10 +60,11 @@ def codifica(tipo, dados):
 
     Variáveis:
     tipo -- tipo da mensagem a ser enviada. O tipo tem relação ao objetivo da
-    mensagem. O tipo da mensagem influencia nos dados que deverão ser fornecidos
+    mensagem. O tipo da mensagem influencia nos dados que deverão ser
+    fornecidos
     dados -- objeto contendo os dados a serem enviados na mensagem. Os dados
-    serão convertidos da maneira corretas para uso no sistema. Pode ser qualquer
-    objeto que suporta o módulo Pickle.
+    serão convertidos da maneira corretas para uso no sistema. Pode ser
+    qualquer objeto que suporta o módulo Pickle.
 
     O processo de codificação realizado por essa função é sempre compatível
     com o processo de decodificação fornecido em uma mesma versão do FlexA.
@@ -141,8 +142,7 @@ class RecebeHandler(socketserver.BaseRequestHandler):
         if sys.flags.debug:
             print('{}:{} desconectado'.format(*self.client_address))
 
-class Servidor(socketserver.ThreadingMixIn,
-               socketserver.TCPServer):
+class Servidor(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """Classe que determinar o tipo do servidor"""
     pass
 
@@ -159,8 +159,7 @@ class Recebe:
         if not host:
             host = socket.gethostname()
 
-        servidor = Servidor((host, porta_escuta),
-                            RecebeHandler)
+        servidor = Servidor((host, porta_escuta), RecebeHandler)
         ip, porta = servidor.server_address
         if sys.flags.debug:
             print("Escutando em {}:{}".format(ip, porta))
@@ -185,13 +184,10 @@ class Envia:
             ip_destino = socket.gethostname()
 
         try:
-            self.__sock = socket.socket(socket.AF_INET,
-                                      socket.SOCK_STREAM)
             dest = (ip_destino, porta_destino)
-            self.__sock.connect(dest)
+            self.__sock = socket.create_connection(dest, timeout=10)
         except IOError:
-            err = ("Falha ao criar o socket para o IP " +
-                   ip_destino +
+            err = ("Falha ao criar o socket para o IP " + ip_destino +
                    " na porta " + porta_destino)
             sys.exit(err)
 
@@ -213,7 +209,7 @@ class Envia:
     def close(self):
         self.__sock.close()
 
-class Envia__versao_thread__(Thread):
+class EnviaThread(Thread):
     """Classe para envio de mensagens entre nós da rede"""
 
     def __init__ (self, ip_destino=None, porta_destino=5500):
@@ -226,26 +222,25 @@ class Envia__versao_thread__(Thread):
         """
 
         Thread.__init__(self)
+
         if not ip_destino:
             ip_destino = socket.gethostname()
 
-        self.__dest = (ip_destino, porta_destino)
+        try:
+            dest = (ip_destino, porta_destino)
+            self.__sock = socket.create_connection(dest, timeout=10)
+        except IOError:
+            err = ("Falha ao criar o socket para o IP " + ip_destino +
+                   " na porta " + porta_destino)
+            sys.exit(err)
+
         self.__trava = Condition()
         self.__terminar = False
         self.__dados = None
         self.__tipo = None
 
     def run(self):
-        # Inicia a conexão com o servidor
-        try:
-            self.__sock = socket.socket(socket.AF_INET,
-                                      socket.SOCK_STREAM)
-            self.__sock.connect(self.__dest)
-        except IOError:
-            err = ("Falha ao criar o socket para o IP " +
-                   ip_destino +
-                   " na porta " + porta_destino)
-            sys.exit(err)
+        """Inicia a Thread para envio de mensagens"""
 
         while True:
             self.__trava.acquire()
@@ -270,6 +265,10 @@ class Envia__versao_thread__(Thread):
             self.__trava.release()
 
     def envia(self, tipo, dados):
+        """Acorda a Thread principal e envia uma mensagem caso a anterior
+        tenha sido enviada
+
+        """
         self.__trava.acquire()
 
         if self.__terminar:
@@ -286,6 +285,7 @@ class Envia__versao_thread__(Thread):
         self.__trava.release()
 
     def close(self):
+        """Termina a execução da Thread principal"""
         self.__trava.acquire()
         self.__terminar = True
         self.__trava.notify()
