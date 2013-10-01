@@ -239,6 +239,9 @@ class EnviaThread(Thread):
         self.__dados = None
         self.__tipo = None
 
+    def __enter__(self):
+        return self
+
     def run(self):
         """Inicia a Thread para envio de mensagens"""
 
@@ -264,11 +267,14 @@ class EnviaThread(Thread):
             self.__dados = None
             self.__trava.release()
 
+        self.__sock.close()
+
     def envia(self, tipo, dados):
         """Acorda a Thread principal e envia uma mensagem caso a anterior
         tenha sido enviada
 
         """
+
         self.__trava.acquire()
 
         if self.__terminar:
@@ -284,11 +290,13 @@ class EnviaThread(Thread):
         self.__trava.notify()
         self.__trava.release()
 
-    def close(self):
+    def __exit__(self, exc_type, exc_value, traceback):
         """Termina a execução da Thread principal"""
+
         self.__trava.acquire()
         self.__terminar = True
         self.__trava.notify()
         self.__trava.release()
+        self.join()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
