@@ -9,6 +9,7 @@ import re
 import string
 import subprocess
 import sqlite3
+import uuid
 from threading import Thread
 
 __authors__ = ["Thiago Kenji Okada", "Leandro Moreira Barbosa"]
@@ -90,6 +91,7 @@ class ConfigDat:
     netmask = ''
     faixa_varredura = ''
     local_cache = ''
+    uuid = ''
 
     def __init__(self, nome_arquivo=None):
         """Construtor da classe ConfigDat
@@ -101,6 +103,10 @@ class ConfigDat:
         if nome_arquivo:
             self.__nome_arquivo = nome_arquivo
             self.carregar()
+        else:
+            # Por hora gerando um UUID completamente aleatório, depois pode
+            # ser interessante usar algo como semente para geração dele
+            self.uuid = uuid.uuid4()
 
     def carregar(self):
         """Recarrega o arquivo de configuração"""
@@ -132,7 +138,7 @@ class ConfigDat:
         texto = ('interface: ' + self.interface + '\nip: ' + self.ip +
                 '\nporta:' + self.porta + '\nnetmask: ' + self.netmask +
                 '\nfaixa_varredura: ' + self.faixa_varredura +
-                '\nlocal_cache: ' + self.local_cache)
+                '\nlocal_cache: ' + self.local_cache + '\nuuid: ' + self.uuid)
         # Salva no arquivo
         with open(nome_arquivo, 'w') as arquivo:
             arquivo.write(texto)
