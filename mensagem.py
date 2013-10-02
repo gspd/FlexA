@@ -238,6 +238,7 @@ class EnviaThread(Thread):
         self.__tipo = None
 
     def __enter__(self):
+        self.start()
         return self
 
     def run(self):
@@ -245,11 +246,13 @@ class EnviaThread(Thread):
 
         while True:
             self.__trava.acquire()
-            while not self.__dados:
+            # Esperamos até um comando para enviar ou terminar
+            while not (self.__dados or self.__terminar):
                 self.__trava.wait()
 
-            if self.__terminar:
-                self.__sock.close()
+            # Só terminamos quando acabarmos de enviar os dados
+            if self.__terminar and not self.__dados:
+                self.__trava.release()
                 break
 
             self.__sock.sendall(codifica(self.__tipo, self.__dados))
