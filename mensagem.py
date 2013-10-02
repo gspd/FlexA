@@ -111,32 +111,32 @@ class RecebeHandler(socketserver.BaseRequestHandler):
             if sys.flags.debug:
                 print("Dados recebidos: {}".format(data))
 
-                # Primeiro membro da tupla é sempre o tipo de mensagem
-                if data[0] == Tipos.ENVIA_ARQUIVO:
-                    resp_tipo = Tipos.ERRO
-                    resp_dados = Erros.NIMPL
-                elif data[0] == Tipos.LISTA_ARQUIVOS:
-                    resp_tipo = data[0]
-                    resp_dados = ",".join(
-                        [f for f in os.listdir('.') if os.path.isfile(f)])
-                elif data[0] == Tipos.REQUISITA_ARQUIVO:
-                    resp_tipo = Tipos.ERRO
-                    resp_dados = Erros.NIMPL
-                elif data[0] == Tipos.EXCECAO:
-                    resp_tipo = Tipos.ERRO
-                    resp_dados = Erros.NIMPL
-                elif data[0] == Tipos.ERRO:
-                    resp_tipo = Tipos.ERRO
-                    resp_dados = Erros.NIMPL
-                elif data[0] == Tipos.CLOSE:
-                    break
-                else:
-                    # Caso o tipo não esteja presente, retorna erro
-                    resp_tipo = Tipos.ERRO
-                    resp_dados = Erros.EDESC
+            # Primeiro membro da tupla é sempre o tipo de mensagem
+            if data[0] == Tipos.ENVIA_ARQUIVO:
+                resp_tipo = Tipos.ERRO
+                resp_dados = Erros.NIMPL
+            elif data[0] == Tipos.LISTA_ARQUIVOS:
+                resp_tipo = data[0]
+                resp_dados = ",".join(
+                    [f for f in os.listdir('.') if os.path.isfile(f)])
+            elif data[0] == Tipos.REQUISITA_ARQUIVO:
+                resp_tipo = Tipos.ERRO
+                resp_dados = Erros.NIMPL
+            elif data[0] == Tipos.EXCECAO:
+                resp_tipo = Tipos.ERRO
+                resp_dados = Erros.NIMPL
+            elif data[0] == Tipos.ERRO:
+                resp_tipo = Tipos.ERRO
+                resp_dados = Erros.NIMPL
+            elif data[0] == Tipos.CLOSE:
+                break
+            else:
+                # Caso o tipo não esteja presente, retorna erro
+                resp_tipo = Tipos.ERRO
+                resp_dados = Erros.EDESC
 
-                resposta = codifica(resp_tipo, resp_dados)
-                self.request.sendall(resposta)
+            resposta = codifica(resp_tipo, resp_dados)
+            self.request.sendall(resposta)
 
     def finish(self):
         if sys.flags.debug:
