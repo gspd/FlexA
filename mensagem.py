@@ -187,8 +187,8 @@ class Envia:
             dest = (ip_destino, porta_destino)
             self.__sock = socket.create_connection(dest, timeout=10)
         except IOError:
-            err = ("Falha ao criar o socket para o IP " + ip_destino +
-                   " na porta " + porta_destino)
+            err = ('Falha ao criar o socket para {}:{}.'.format(*dest))
+            logger.critial(err)
             sys.exit(err)
 
     def envia(self, tipo, dados):
@@ -228,8 +228,8 @@ class EnviaThread(Thread):
             dest = (ip_destino, porta_destino)
             self.__sock = socket.create_connection(dest, timeout=10)
         except IOError:
-            err = ("Falha ao criar o socket para o IP " + ip_destino +
-                   " na porta " + porta_destino)
+            err = ('Falha ao criar o socket para {}:{}.'.format(*dest))
+            logger.critical(err)
             sys.exit(err)
 
         self.__trava = Condition()
