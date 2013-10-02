@@ -9,6 +9,9 @@ import socket
 from threading import Thread, Condition
 import logging
 
+# Cria o objeto logger a ser utilizado neste módulo
+logger = logging.getLogger(__name__)
+
 # Compatibilidade entre o Python 2.x e 3.x
 try:
     import SocketServer as socketserver
@@ -97,7 +100,7 @@ class RecebeHandler(socketserver.BaseRequestHandler):
     """Classe que executada para cada requisição"""
 
     def setup(self):
-        logging.info('{}:{} conectado'.format(*self.client_address))
+        logger.info('{}:{} conectado'.format(*self.client_address))
 
     def handle(self):
         """Função a ser executada para cada requisição"""
@@ -108,7 +111,7 @@ class RecebeHandler(socketserver.BaseRequestHandler):
             except EOFError:
                 break
 
-            logging.debug('Dados recebidos: {}'.format(data))
+            logger.debug('Dados recebidos: {}'.format(data))
 
             # Primeiro membro da tupla é sempre o tipo de mensagem
             if data[0] == Tipos.ENVIA_ARQUIVO:
@@ -138,7 +141,7 @@ class RecebeHandler(socketserver.BaseRequestHandler):
             self.request.sendall(resposta)
 
     def finish(self):
-        logging.info('{}:{} desconectado'.format(*self.client_address))
+        logger.info('{}:{} desconectado'.format(*self.client_address))
 
 class Servidor(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """Classe que determinar o tipo do servidor"""
@@ -159,7 +162,7 @@ class Recebe:
 
         servidor = Servidor((host, porta_escuta), RecebeHandler)
         ip, porta = servidor.server_address
-        logging.info("Escutando em {}:{}".format(ip, porta))
+        logger.info("Escutando em {}:{}".format(ip, porta))
         # thread do servidor
         t_servidor = Thread(target=servidor.serve_forever)
         t_servidor.daemon = True
@@ -193,13 +196,13 @@ class Envia:
         try:
             resposta = decodifica(self.__sock.recv(1024))
         except EOFError:
-            logging.warning('Conexão fechada pelo servidor remoto.')
+            logger.warning('Conexão fechada pelo servidor remoto.')
             return
 
-        logging.debug(resposta)
+        logger.debug(resposta)
 
         if resposta[0] == Tipos.ERRO:
-            logging.warning(Erros.strerro(resposta[1]))
+            logger.warning(Erros.strerro(resposta[1]))
 
     def close(self):
         self.__sock.close()
@@ -252,10 +255,10 @@ class EnviaThread(Thread):
             self.__sock.sendall(codifica(self.__tipo, self.__dados))
             resposta = decodifica(self.__sock.recv(1024))
 
-            logging.debug(resposta)
+            logger.debug(resposta)
 
             if resposta[0] == Tipos.ERRO:
-                logging.warning(Erros.strerro(resposta[1]))
+                logger.warning(Erros.strerro(resposta[1]))
 
             self.__tipo = None
             self.__dados = None
@@ -272,12 +275,12 @@ class EnviaThread(Thread):
         self.__trava.acquire()
 
         if self.__terminar:
-            logging.info("Thread desativada")
+            logger.info("Thread desativada")
         if not self.__dados:
             self.__tipo = tipo
             self.__dados = dados
         else:
-            logging.warning("Mensagem anterior não enviada")
+            logger.warning("Mensagem anterior não enviada")
 
         self.__trava.notify()
         self.__trava.release()
