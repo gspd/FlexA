@@ -31,13 +31,14 @@ class Tipos:
     REQUISITA_ARQUIVO = 0x0004
     EXCECAO = 0x0008
     ERRO = 0x0016
-    CLOSE = 0x0032
+    EXIT = 0x0032
 
     strtipos_dict = {ENVIA_ARQUIVO: "Envia um arquivo ao servidor.",
                      LISTA_ARQUIVOS: "Lista arquivos disponíveis.",
                      REQUISITA_ARQUIVO: "Requista download de arquivo.",
                      EXCECAO: "Exceção ocorreu.",
-                     ERRO: "Erro ocorreu."}
+                     ERRO: "Erro ocorreu.",
+                     EXIT: "Encerrar comunicação sem erros."}
 
     def strtipos(tipo):
         try:
@@ -130,7 +131,7 @@ class RecebeHandler(socketserver.BaseRequestHandler):
             elif data[0] == Tipos.ERRO:
                 resp_tipo = Tipos.ERRO
                 resp_dados = Erros.NIMPL
-            elif data[0] == Tipos.CLOSE:
+            elif data[0] == Tipos.EXIT:
                 break
             else:
                 # Caso o tipo não esteja presente, retorna erro
