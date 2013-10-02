@@ -100,29 +100,31 @@ class ConfigDat:
         nome_arquivo -- nome/caminho do arquivo de configuração
 
         """
-        if nome_arquivo:
+        if not nome_arquivo:
+            self.__nome_arquivo = 'flexa.dat'
+        else:
             self.__nome_arquivo = nome_arquivo
+
+        if os.path.exists(self.__nome_arquivo):
             self.carregar()
         else:
-            # Por hora gerando um UUID completamente aleatório, depois pode
-            # ser interessante usar algo como semente para geração dele
-            self.uuid = uuid.uuid4()
+            self.gerar_config_padrao()
 
     def carregar(self):
         """Recarrega o arquivo de configuração"""
-        if os.path.exists(self.__nome_arquivo):
-            # Usa expressão regular para pegar o que a gente quer
-            regex = re.compile("\S+:.+$")
-            # Abre o arquivo linha por linha
-            lista = []
-            for campo in open(self.__nome_arquivo):
-                aux = regex.match(campo)
-                # Se existir configuração, guarda na lista
-                if aux:
-                    lista.append(aux.group(0).split(":"))
-            # Armazena nas variáveis
-            for attr, valor in lista:
-                setattr(self, attr.strip(), valor.strip())
+
+        # Usa expressão regular para pegar o que a gente quer
+        regex = re.compile("\S+:.+$")
+        # Abre o arquivo linha por linha
+        lista = []
+        for campo in open(self.__nome_arquivo):
+            aux = regex.match(campo)
+            # Se existir configuração, guarda na lista
+            if aux:
+                lista.append(aux.group(0).split(":"))
+        # Armazena nas variáveis
+        for attr, valor in lista:
+            setattr(self, attr.strip(), valor.strip())
 
     def salvar(self, nome_arquivo=None):
         """Salva o arquivo de configuração
@@ -134,14 +136,28 @@ class ConfigDat:
         # Se nome_arquivo não for passado, usa o caminho original
         if not nome_arquivo:
             nome_arquivo = self.__nome_arquivo
-        # Monta o texto que será salvo no arquivo
-        texto = ('interface: ' + self.interface + '\nip: ' + self.ip +
-                '\nporta:' + self.porta + '\nnetmask: ' + self.netmask +
-                '\nfaixa_varredura: ' + self.faixa_varredura +
-                '\nlocal_cache: ' + self.local_cache + '\nuuid: ' + self.uuid)
+        # Monta a lista de opcoes para ser salva no arquivo
+        opcoes = [('interface', self.interface),
+                  ('ip', self.ip),
+                  ('porta', self.porta),
+                  ('netmask', self.netmask),
+                  ('faixa_varredura', self.faixa_varredura),
+                  ('local_cache', self.local_cache),
+                  ('uuid', self.uuid)]
         # Salva no arquivo
         with open(nome_arquivo, 'w') as arquivo:
-            arquivo.write(texto)
+            for i in opcoes:
+                arquivo.write('{}: {}\n'.format(*i))
+
+    def gerar_config_padrao(self):
+        """Gera uma configuração padrão. Usada quando um arquivo de
+        configuração não for especificado
+
+        """
+
+        # Por hora gerando um UUID completamente aleatório, depois pode
+        # ser interessante usar algo como semente para geração dele
+        self.uuid = str(uuid.uuid4())
 
 class BancoDados__prototipo__:
 
