@@ -26,12 +26,12 @@ except ImportError:
 __authors__ = ["Thiago Kenji Okada", "Leandro Moreira Barbosa"]
 
 class Tipos:
-    ENVIA_ARQUIVO = 0x0001
-    LISTA_ARQUIVOS = 0x0002
-    REQUISITA_ARQUIVO = 0x0004
-    EXCECAO = 0x0008
-    ERRO = 0x0016
-    EXIT = 0x0032
+    ENVIA_ARQUIVO = 0x1
+    LISTA_ARQUIVOS = 0x2
+    REQUISITA_ARQUIVO = 0x4
+    EXCECAO = 0x8
+    ERRO = 0x10
+    EXIT = 0x20
 
     strtipos_dict = {ENVIA_ARQUIVO: "Envia um arquivo ao servidor.",
                      LISTA_ARQUIVOS: "Lista arquivos disponíveis.",
@@ -47,8 +47,8 @@ class Tipos:
             return "Tipo de mensagem desconhecido."
 
 class Erros:
-    EDESC = 0x0001
-    NIMPL = 0x0002
+    EDESC = 0x1
+    NIMPL = 0x2
 
     strerro_dict = {EDESC: "Tipo de mensagem desconhecido.",
                     NIMPL: "Requisição não implementada."}
