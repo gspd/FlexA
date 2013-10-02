@@ -291,10 +291,14 @@ class EnviaThread(Thread):
     def __exit__(self, exc_type, exc_value, traceback):
         """Termina a execução da Thread principal"""
 
+        self.desconecta()
+        self.join()
+
+    def desconecta(self):
+        # TODO: avisa o servidor da desconecção com uma mensagem EXIT
         self.__trava.acquire()
         self.__terminar = True
         self.__trava.notify()
         self.__trava.release()
-        self.join()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
