@@ -12,18 +12,20 @@ from Crypto import Random
 __author__ = "Thiago Kenji Okada"
 
 def encrypt_file(key, in_filename, out_filename=None, chunksize=64*1024):
-    """ Encrypts a file using AES (CBC mode) with the given key.
+    """Encrypts a file using AES (CBC mode) with the given key.
 
-    key -- The encryption key - a string that must be either 16, 24 or 32
+    Parameters:
+
+    key -- the encryption key - a string that must be either 16, 24 or 32
     bytes long. Longer keys are more secure.
 
-    in_filename -- Name of the input file
+    in_filename -- name of the input file
 
-    out_filename -- If None, '<in_filename>.enc' will be used.
+    out_filename -- if None, '<in_filename>.enc' will be used.
 
-    chunksize -- Sets the size of the chunk which the function uses to read
-    and encrypt the file. Larger chunk sizes can be faster for some files and
-    machines.
+    chunksize -- sets the size of the chunk which the function uses to read
+    and encrypt the file. Larger chunk sizes can be faster for some files
+    and machines.
     chunksize must be divisible by 16.
 
     Based on: http://goo.gl/jJuYe8
@@ -51,12 +53,25 @@ def encrypt_file(key, in_filename, out_filename=None, chunksize=64*1024):
                 outfile.write(encryptor.encrypt(chunk))
 
 def decrypt_file(key, in_filename, out_filename=None, chunksize=24*1024):
-    """ Decrypts a file using AES (CBC mode) with the
-        given key. Parameters are similar to encrypt_file,
-        with one difference: out_filename, if not supplied
-        will be in_filename without its last extension
-        (i.e. if in_filename is 'aaa.zip.enc' then
-        out_filename will be 'aaa.zip')
+    """Decrypts a file using AES (CBC mode) with the given key.
+
+    Parameters:
+
+    key -- the encryption key - a string that must be either 16, 24 or 32
+    bytes long. Longer keys are more secure.
+
+    in_filename -- name of the input file
+
+    out_filename -- if None, it will be in_filename without its last
+    extension; i.e. if in_filename is 'aaa.zip.enc' then out_filename will
+    be 'aaa.zip'.
+
+    chunksize -- sets the size of the chunk which the function uses to read
+    and encrypt the file. Larger chunk sizes can be faster for some files
+    and machines.
+    chunksize must be divisible by 16.
+
+    Based on: http://goo.gl/jJuYe8
 
     """
     if not out_filename:
@@ -76,16 +91,35 @@ def decrypt_file(key, in_filename, out_filename=None, chunksize=24*1024):
 
             outfile.truncate(origsize)
 
-def generate_rsa_key(in_filename, passphrase = None, bits = 2048):
+def generate_rsa_key(out_filename, passphrase = None, bits = 2048):
+    """Generate RSA private and public key
+
+    Paramaters:
+
+    out_filename -- name of the output file; the public key will be named
+    <in_filename>.pub
+    passphrase -- if used, the resulting file is encrypted
+    bits -- number of bits used by RSA
+
+    """
+
     key = RSA.generate(bits)
 
-    with open(in_filename, 'wb') as infile:
+    with open(out_filename, 'wb') as outfile:
         infile.write(key.exportKey('PEM', passphrase))
 
-    with open(in_filename + '.pub', 'wb') as infile:
+    with open(out_filename + '.pub', 'wb') as outfile:
         infile.write(key.publickey().exportKey('PEM', passphrase))
 
 def open_rsa_key(in_filename, passphrase = None):
+    """Open RSA private key and returns a RSA object
+
+    Paramaters:
+
+    out_filename -- name of the output file
+    passphrase -- if used, the resulting file is encrypted
+
+    """
     with open(in_filename, 'rb') as infile:
         return RSA.importKey(infile.read(), passphrase)
 
