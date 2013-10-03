@@ -9,12 +9,13 @@ adaptável desenvolvido no Grupo de Sistemas Distribuídos e Adaptável (GSPD)
 localizado em São José do Rio Preto.
 
 A versão original do FlexA tem como autores:
-	1. Silas Evandro Nachif Fernandes
-	2. Danilo Costa Marim Segura
-	3. Matheus Della Croce Oliveira
-	4. Leandro Moreira Barbosa
-	5. Lúcio Rodrigo de Carvalho
-	6. Thiago Kenji Okada
+
+1. Silas Evandro Nachif Fernandes
+2. Danilo Costa Marim Segura
+3. Matheus Della Croce Oliveira
+4. Leandro Moreira Barbosa
+5. Lúcio Rodrigo de Carvalho
+6. Thiago Kenji Okada
 
 O FlexA original é um sistema de arquivos disitribuído rodando em espaço de
 usuário e escrito na linguagem de programação Python 2. Para mais detalhes
@@ -23,8 +24,8 @@ assim como outras publicações geradas a partir do desenvolvimento desse
 sistema de arquivos [3].
 
 Infelizmente, o código original desse sistema estava um caos, e a correria
-para terminar os trabalhos tornou o código ainda pior. A ideia de reescrita do
-código vem de longa data e só agora rendeu alguns frutos.
+para terminar os trabalhos tornou o código ainda pior. A ideia de reescrita
+do código vem de longa data e só agora rendeu alguns frutos.
 
 Objetivos
 ---------
@@ -36,9 +37,10 @@ mais simples.
 
 Para isso, um dos objetivos é tentar seguir o PEP 8 [4], que fala sobre um
 guia de estilos para o Python, ao máximo. Com o objetivo de manter uma boa
-documentação, é importante que cada função/classe/etc. seja documentada usando 
-docstrings. Uma boa introdução sobre docstrings, assim como uma convenção de
-como usá-las para manter um padrão pode ser encontrada no PEP 257 [5].
+documentação, é importante que cada função/classe/etc. seja documentada
+usando  docstrings. Uma boa introdução sobre docstrings, assim como uma
+convenção de como usá-las para manter um padrão pode ser encontrada no
+PEP 257 [5].
 
 Lembrando que ao usar o docstrings a geração de documentação do código pode
 ser automatizada, além de permitir um desenvolvimento mais rápido de código
@@ -64,13 +66,9 @@ explícita entre variáveis ajuda a garantir que o código atual rode no Python
 3, porém novas dependências podem ser introduzidas no código que o tornem
 apenas compatível com a versão mais antiga do Python.
 
-Notas
------
-[1]: A homepage do grupo está localizada em http://www.dcce.ibilce.unesp.br/spd
-[2]: A monografia descrevendo a versão original do FlexA pode ser encontrada em
-http://www.dcce.ibilce.unesp.br/spd/pubs/FlexA_PDPTA.pdf
-[3]: Uma página com as publicações do grupo se encontra em
-http://www.dcce.ibilce.unesp.br/spd/publication.php
+[1]: http://www.dcce.ibilce.unesp.br/spd
+[2]: http://www.dcce.ibilce.unesp.br/spd/pubs/FlexA_PDPTA.pdf
+[3]: http://www.dcce.ibilce.unesp.br/spd/publication.php
 [4]: http://www.python.org/dev/peps/pep-0008
 [5]: http://www.python.org/dev/peps/pep-0257
 [6]: https://wiki.python.org/moin/Python2orPython3
