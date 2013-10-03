@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os, struct
 from Crypto.Cipher import AES
 from Crypto import Random
