@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import os, struct
+from array import array
 from Crypto.Cipher import AES
+from Crypto.PublicKey import RSA
 from Crypto import Random
 
 """Functions to manipulate files on FlexA
@@ -75,3 +77,17 @@ def decrypt_file(key, in_filename, out_filename=None, chunksize=24*1024):
 
             outfile.truncate(origsize)
 
+def generate_rsa_key(in_filename, passphrase = None, bits = 2048):
+    key = RSA.generate(bits)
+
+    with open(in_filename, 'wb') as infile:
+        infile.write(key.exportKey('PEM', passphrase))
+
+    with open(in_filename + '.pub', 'wb') as infile:
+        infile.write(key.publickey().exportKey('PEM', passphrase))
+
+def open_rsa_key(in_filename, passphrase = None):
+    with open(in_filename, 'rb') as infile:
+        return RSA.importKey(infile.read(), passphrase)
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
