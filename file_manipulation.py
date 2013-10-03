@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os, struct
-from array import array
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 from Crypto import Random
