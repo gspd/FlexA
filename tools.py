@@ -71,7 +71,7 @@ class Ping(Thread):
             self.minimum, self.average, self.maximum, self.jitter = \
             matcher.search(str(out)).groups()
 
-class ConfigDat:
+class ConfigDat(object):
     """Class to manipulate configuration files
 
     Public variables:
@@ -145,7 +145,7 @@ class ConfigDat:
         netmask = None
 
 
-class DataBase:
+class DataBase(object):
 
     def __init__(self, filepath):
         newdb = True

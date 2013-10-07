@@ -144,7 +144,7 @@ class Server(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """Class to create the server"""
     pass
 
-class Receive:
+class Receive(object):
     """Class to receive messages from hosts"""
 
     def __init__(self, host=None, port=5500):
@@ -166,7 +166,7 @@ class Receive:
         t_server.daemon = True
         t_server.start()
 
-class Send:
+class Send(object):
     """Class to send messages to hosts"""
 
     def __init__ (self, ip=None, port=5500):
