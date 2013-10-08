@@ -118,7 +118,7 @@ class ReceiveHandler(socketserver.BaseRequestHandler):
                 answ_type = data[0]
                 answ_data = ",".join(
                     [f for f in os.listdir('.') if os.path.isfile(f)])
-            elif data[0] == Typos.REQUEST_FILE:
+            elif data[0] == Types.REQUEST_FILE:
                 answ_type = Types.ERROR
                 resp_data = Error.NOTIFY
             elif data[0] == Types.EXCEPTION:
@@ -198,8 +198,8 @@ class Send(object):
 
         logger.debug(answer)
 
-        if answer[0] == Types.ERRO:
-            logger.warning(Erros.strerro(answer[1]))
+        if answer[0] == Types.ERROR:
+            logger.warning(Error.strerror(answer[1]))
 
     def close(self):
         self.__sock.close()
@@ -257,7 +257,7 @@ class SendThread(Thread):
             logger.debug(answer)
 
             if answer[0] == Types.ERROR:
-                logger.warning(Erros.strerro(answer[1]))
+                logger.warning(Error.strerror(answer[1]))
 
             self.__type = None
             self.__data = None
@@ -273,9 +273,9 @@ class SendThread(Thread):
 
         if self.__finish:
             logger.info("Thread already finished.")
-        if not self.data:
+        if not self.__data:
             self.__type = mtype
-            self.data = data
+            self.__data = data
         else:
             logger.warning("Previous message not sent.")
 
