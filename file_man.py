@@ -106,10 +106,10 @@ def generate_rsa_key(out_filename, passphrase = None, bits = 2048):
     key = RSA.generate(bits)
 
     with open(out_filename, 'wb') as outfile:
-        infile.write(key.exportKey('PEM', passphrase))
+        outfile.write(key.exportKey('PEM', passphrase))
 
     with open(out_filename + '.pub', 'wb') as outfile:
-        infile.write(key.publickey().exportKey('PEM', passphrase))
+        outfile.write(key.publickey().exportKey('PEM', passphrase))
 
 def open_rsa_key(in_filename, passphrase = None):
     """Open RSA private key and returns a RSA object
