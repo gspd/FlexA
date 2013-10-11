@@ -3,6 +3,7 @@
 import argparse
 import sys
 import os
+import getpass
 
 import file_man
 import tools
@@ -73,7 +74,7 @@ if __name__ == '__main__':
 
     #Generate a new user key
     if args.newkey:
-        if config.has_option('User', 'private key'):
+        if config.get('User', 'private key') is not 'None':
             confirm = tools.query_yes_no("There is already a generated key, "
                     "generate another one?", default='no')
             if not confirm:
@@ -82,7 +83,7 @@ if __name__ == '__main__':
         filename = os.path.abspath(filename)
         if not filename:
             sys.exit('Needs a filename!')
-        password = input('Password? ')
+        password = getpass.getpass('Password? ')
         file_man.generate_rsa_key(filename, password)
         config.set('User', 'private key', filename)
         print('RSA key generated!')
