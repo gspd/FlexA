@@ -7,8 +7,20 @@ import sys
 import re
 import string
 import subprocess
-import sqlite3
+import logging
+
 from threading import Thread
+from distutils.util import strtobool
+
+#Fix for Python 2 old 'raw_input'
+try:
+    import __builtin__
+    input = getattr(__builtin__, 'raw_input')
+except (ImportError, AttributeError):
+    pass
+
+# Create local logging object
+logger = logging.getLogger(__name__)
 
 __authors__ = ["Thiago Kenji Okada", "Leandro Moreira Barbosa"]
 
@@ -63,85 +75,43 @@ class Ping(Thread):
                 out, err = ping.communicate()
             except ValueError:
                 break
-            # Pega o número de pacotes que foram retornados
+            # Get the number of received packages from ping
             matcher = re.compile(lifeline)
             self.received = re.findall(lifeline, str(out))
-            # Pega as informações geradas pelo ping
+            # Get the rest of information
             matcher = re.compile(ping_regex)
             self.minimum, self.average, self.maximum, self.jitter = \
             matcher.search(str(out)).groups()
 
-class ConfigDat(object):
-    """Class to manipulate configuration files
+def query_yes_no(question, default="yes"):
+    """Ask a yes/no question via input() and return their answer.
 
-    Public variables:
-    interface -- network interface from machine
-    hostname -- IP/hostname from machine
-    port -- port used on machine
-    netmask -- netmask from machine
+    question -- is a string that is presented to the user.
+    default -- is the presumed answer if the user just hits <Enter>.
+    It must be "yes" (the default), "no" or None (meaning an answer is
+    required of the user).
+
+    The "answer" return value is one of "yes" or "no".
 
     """
-    interface = ''
-    hostname = ''
-    port = ''
-    netmask = ''
+    if default == None:
+        prompt = " [y/n] "
+    elif default == "yes":
+        prompt = " [Y/n] "
+    elif default == "no":
+        prompt = " [y/N] "
+    else:
+        raise ValueError("invalid default answer: '%s'" % default)
 
-    def __init__(self, filepath='flexa.dat'):
-        """Construtor da classe ConfigDat
-
-        Parâmetros de entrada:
-        filepath -- filepath to the configuration file
-
-        """
-        self.__filepath = filepath
-
-        if os.path.exists(self.__filepath):
-            self.load()
+    while True:
+        print(question + prompt)
+        choice = input().lower()
+        if default is not None and choice == '':
+            return strtobool(default)
+        elif choice:
+            return strtobool(choice)
         else:
-            self.default_config()
+            print("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
 
-    def load(self):
-        """(Re)load configuration file"""
-
-        # Using the following pattern: <option: value>
-        regex = re.compile("\S+:.+$")
-        result = []
-
-        with open(self.__filepath, 'r') as infile:
-            for line in infile:
-                aux = regex.match(line)
-                if aux:
-                    result.append(aux.group(0).split(":"))
-
-        for attr, value in result:
-            setattr(self, attr.strip(), value.strip())
-
-    def save(self, filepath=None):
-        """Save config file
-
-        Input paramters:
-        filepath -- saves config file in another place
-
-        """
-
-        if not filepath:
-            filepath = self.__filepath
-
-        options = [('interface', self.interface),
-                  ('hostname', self.hostname),
-                  ('port', self.port),
-                  ('netmask', self.netmask)]
-
-        with open(filepath, 'w') as outfile:
-            for i in options:
-                outfile.write('{}: {}\n'.format(*i))
-
-    def default_config(self):
-        """Generate default configuration"""
-
-        interface = None
-        hostname = None
-        port = None
-        netmask = None
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
