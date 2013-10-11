@@ -103,15 +103,19 @@ def query_yes_no(question, default="yes"):
     else:
         raise ValueError("invalid default answer: '%s'" % default)
 
-    while True:
-        print(question + prompt)
-        choice = input().lower()
-        if default is not None and choice == '':
-            return strtobool(default)
-        elif choice:
-            return strtobool(choice)
-        else:
-            print("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
+    try:
+        while True:
+            print(question + prompt)
+            choice = input().lower()
+            try:
+                if default is not None and choice == '':
+                    return strtobool(default)
+                elif choice:
+                    return strtobool(choice)
+            except ValueError:
+                print("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
+    except KeyboardInterrupt:
+        sys.exit(2)
 
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
