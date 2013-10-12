@@ -35,8 +35,7 @@ documentation unless otherwise stated.
 Requirements
 ------------
 - The officially supported version is the latest version of Python 3.x. The
-code should run on Python 2.7.x and Python 3.2.x but not garanteed. Obviously,
-compatibility patches are always well received.
+  code should work on Python 3.2 and forward, but it's not guarantee.
 
 - PyCrypto
 

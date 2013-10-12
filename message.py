@@ -5,22 +5,13 @@
 import os
 import sys
 import socket
-from threading import Thread, Condition
+import socketserver
 import logging
+import pickle
+from threading import Thread, Condition
 
 # Create local logging object
 logger = logging.getLogger(__name__)
-
-# Compatible imports for and Python 2.x e 3.x
-try:
-    import SocketServer as socketserver
-except ImportError:
-    import socketserver
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 
 __authors__ = ["Thiago Kenji Okada", "Leandro Moreira Barbosa"]
 

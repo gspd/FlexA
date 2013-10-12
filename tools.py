@@ -8,16 +8,8 @@ import re
 import string
 import subprocess
 import logging
-
 from threading import Thread
 from distutils.util import strtobool
-
-#Fix for Python 2 old 'raw_input'
-try:
-    import __builtin__
-    input = getattr(__builtin__, 'raw_input')
-except (ImportError, AttributeError):
-    pass
 
 # Create local logging object
 logger = logging.getLogger(__name__)

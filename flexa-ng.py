@@ -4,22 +4,10 @@ import argparse
 import sys
 import os
 import getpass
+import configparser
 
 import file_man
 import tools
-
-#Python 2.x and 3.x compatibility
-try:
-    import ConfigParser as configparser
-except ImportError:
-    import configparser
-
-#Fix for Python 2 old 'raw_input'
-try:
-    import __builtin__
-    input = getattr(__builtin__, 'raw_input')
-except (ImportError, AttributeError):
-    pass
 
 def usage():
     """Generate user help and parser user choices"""

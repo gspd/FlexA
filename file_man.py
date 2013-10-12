@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-import os, struct
+import os
+import struct
+
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 from Crypto import Random
