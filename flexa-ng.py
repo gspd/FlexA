@@ -42,30 +42,26 @@ def usage():
 
     return parser
 
-def default_config(config):
-    """Generate default config"""
-
-    config.add_section('Network')
-    config.set('Network', 'interface', None)
-    config.set('Network', 'hostname', None)
-    config.set('Network', 'port', None)
-    config.set('Network', 'netmask', None)
-
-    config.add_section('User')
-    config.set('User', 'private key', None)
-
-    return config
-
 def main():
     """The function called when this program is executed"""
+
+    default_config = """
+    #All network configuration goes here
+    [Network]
+        interface
+        hostname
+        port
+        netmask
+    #User related configuration
+    [User]
+        private key
+    """
 
     #Read user configuration
     config_path = 'flexa-ng.ini'
     config = configparser.SafeConfigParser(allow_no_value=True)
-    if os.path.exists(config_path):
-        config.read(config_path)
-    else:
-        config = default_config(config)
+    config.read_string(default_config)
+    config.read(config_path)
 
     #If no option is given, show help and exit
     parser = usage()
