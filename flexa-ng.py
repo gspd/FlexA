@@ -46,13 +46,13 @@ def default_config(config):
     """Generate default config"""
 
     config.add_section('Network')
-    config.set('Network', 'interface', 'None')
-    config.set('Network', 'hostname', 'None')
-    config.set('Network', 'port', 'None')
-    config.set('Network', 'netmask', 'None')
+    config.set('Network', 'interface', None)
+    config.set('Network', 'hostname', None)
+    config.set('Network', 'port', None)
+    config.set('Network', 'netmask', None)
 
     config.add_section('User')
-    config.set('User', 'private key', 'None')
+    config.set('User', 'private key', None)
 
     return config
 
@@ -61,7 +61,7 @@ def main():
 
     #Read user configuration
     config_path = 'flexa-ng.ini'
-    config = configparser.SafeConfigParser()
+    config = configparser.SafeConfigParser(allow_no_value=True)
     if os.path.exists(config_path):
         config.read(config_path)
     else:
@@ -79,7 +79,7 @@ def main():
     #Generate a new user key
     if args.newkey:
         #Checks if the user already has a key
-        if config.get('User', 'private key') is not 'None':
+        if config.get('User', 'private key'):
             confirm = tools.query_yes_no("There is already a generated key, "
                     "generate another one?", default='no')
             if not confirm:
