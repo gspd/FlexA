@@ -56,7 +56,9 @@ def default_config(config):
 
     return config
 
-if __name__ == '__main__':
+def main():
+    """The function called when this program is executed"""
+
     #Read user configuration
     config_path = 'flexa-ng.ini'
     config = configparser.SafeConfigParser()
@@ -102,5 +104,8 @@ if __name__ == '__main__':
     #Write configuration file
     with open(config_path, 'w') as outfile:
         config.write(outfile)
+
+if __name__ == '__main__':
+    main()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
