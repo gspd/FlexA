@@ -48,8 +48,10 @@ def main():
     #Read user configuration
     config_path = 'flexa-ng.ini'
     config = configparser.SafeConfigParser(allow_no_value=True)
+    #This generate a list of default configs
     config.read_string(default_config)
-    config.read(config_path)
+    #If no file is found or it is empty, it is ignored
+    config.read(config_path, encoding='utf-8')
 
     #If no option is given, show help and exit
     parser = usage()
@@ -86,7 +88,7 @@ def main():
         print('RSA key generated!')
 
     #Write configuration file
-    with open(config_path, 'w') as outfile:
+    with open(config_path, mode='w', encoding='utf-8') as outfile:
         config.write(outfile)
 
 if __name__ == '__main__':
