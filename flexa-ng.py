@@ -30,6 +30,31 @@ def usage():
 
     return parser
 
+def generate_new_key():
+    #Checks if the user already has a key
+    if os.path.exists(config.get('User', 'private key')):
+        confirm = tools.query_yes_no("There is already a generated key, "
+                "generate another one?", default='no')
+        if not confirm:
+            sys.exit(2)
+    #Ask the desired name and password to the file
+    try:
+        filename = input('Filename? ')
+    except KeyboardInterrupt:
+        sys.exit(2)
+    if not filename:
+        sys.exit('Needs a filename!')
+    filename = os.path.abspath(filename)
+    try:
+        password = getpass.getpass('Password? ')
+    except KeyboardInterrupt:
+        sys.exit(2)
+    #Generate the RSA key and store it's path on config file
+    crypto.generate_rsa_key(filename, password)
+    config.set('User', 'private key', filename)
+    print('RSA key generated!')
+
+
 def main():
     """The function called when this program is executed"""
 
@@ -64,28 +89,7 @@ def main():
 
     #Generate a new user key
     if args.newkey:
-        #Checks if the user already has a key
-        if config.get('User', 'private key'):
-            confirm = tools.query_yes_no("There is already a generated key, "
-                    "generate another one?", default='no')
-            if not confirm:
-                sys.exit(2)
-        #Ask the desired name and password to the file
-        try:
-            filename = input('Filename? ')
-        except KeyboardInterrupt:
-            sys.exit(2)
-        if not filename:
-            sys.exit('Needs a filename!')
-        filename = os.path.abspath(filename)
-        try:
-            password = getpass.getpass('Password? ')
-        except KeyboardInterrupt:
-            sys.exit(2)
-        #Generate the RSA key and store it's path on config file
-        crypto.generate_rsa_key(filename, password)
-        config.set('User', 'private key', filename)
-        print('RSA key generated!')
+        generate_new_key()
 
     #Write configuration file
     with open(config_path, mode='w', encoding='utf-8') as outfile:
