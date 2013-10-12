@@ -30,13 +30,19 @@ def usage():
 
     return parser
 
-def generate_new_key():
-    #Checks if the user already has a key
-    if os.path.exists(config.get('User', 'private key')):
+def generate_new_key(check_file = ''):
+    """Generate a new RSA key and returns it's filename
+
+    Input parameters:
+    check_file -- name of the file to check if exists
+    """
+
+    if os.path.exists(check_file):
         confirm = tools.query_yes_no("There is already a generated key, "
                 "generate another one?", default='no')
         if not confirm:
             sys.exit(2)
+
     #Ask the desired name and password to the file
     try:
         filename = input('Filename? ')
@@ -51,8 +57,9 @@ def generate_new_key():
         sys.exit(2)
     #Generate the RSA key and store it's path on config file
     crypto.generate_rsa_key(filename, password)
-    config.set('User', 'private key', filename)
     print('RSA key generated!')
+
+    return filename
 
 
 def main():
@@ -89,7 +96,9 @@ def main():
 
     #Generate a new user key
     if args.newkey:
-        generate_new_key()
+        #Checks if the user already has a key
+        filename = generate_new_key(config.get('User', 'private key'))
+        config.set('User', 'private key', filename)
 
     #Write configuration file
     with open(config_path, mode='w', encoding='utf-8') as outfile:
