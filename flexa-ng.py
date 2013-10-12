@@ -30,6 +30,29 @@ def usage():
 
     return parser
 
+def load_config(config_path = ''):
+    """Load default config and user config"""
+
+    default_config = """
+    #All network configuration goes here
+    [Network]
+        interface
+        hostname
+        port
+        netmask
+    #User related configuration
+    [User]
+        private key
+    """
+
+    config = configparser.SafeConfigParser(allow_no_value=True)
+    #This generate a list of default configs
+    config.read_string(default_config)
+    #If no file is found or it is empty, it is ignored
+    config.read(config_path, encoding='utf-8')
+
+    return config
+
 def generate_new_key(check_file = ''):
     """Generate a new RSA key and returns it's filename
 
@@ -61,30 +84,8 @@ def generate_new_key(check_file = ''):
 
     return filename
 
-
 def main():
     """The function called when this program is executed"""
-
-    default_config = """
-    #All network configuration goes here
-    [Network]
-        interface
-        hostname
-        port
-        netmask
-    #User related configuration
-    [User]
-        private key
-    """
-
-    #Read user configuration
-    config_path = 'flexa-ng.ini'
-    config = configparser.SafeConfigParser(allow_no_value=True)
-    #This generate a list of default configs
-    config.read_string(default_config)
-    #If no file is found or it is empty, it is ignored
-    config.read(config_path, encoding='utf-8')
-
     #If no option is given, show help and exit
     parser = usage()
     if len(sys.argv) == 1:
@@ -93,6 +94,8 @@ def main():
 
     #Parse the user choices
     args = parser.parse_args()
+    #Load user config
+    config = load_config('flexa-ng.ini')
 
     #Generate a new user key
     if args.newkey:
