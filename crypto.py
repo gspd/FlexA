@@ -7,7 +7,7 @@ from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 from Crypto import Random
 
-"""Functions to manipulate files on FlexA
+"""Functions to manipulate cryptography on FlexA
 
 """
 

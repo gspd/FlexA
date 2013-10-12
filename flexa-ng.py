@@ -6,7 +6,7 @@ import os
 import getpass
 import configparser
 
-import file_man
+import crypto
 import tools
 
 def usage():
@@ -81,7 +81,7 @@ def main():
         except KeyboardInterrupt:
             sys.exit(2)
         #Generate the RSA key and store it's path on config file
-        file_man.generate_rsa_key(filename, password)
+        crypto.generate_rsa_key(filename, password)
         config.set('User', 'private key', filename)
         print('RSA key generated!')
 
