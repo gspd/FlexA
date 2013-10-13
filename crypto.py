@@ -128,7 +128,7 @@ def open_rsa_key(in_filename, passphrase = None):
         return RSA.importKey(infile.read(), passphrase)
 
 def generate_salt(length=16):
-    salt = os.urandom(length)
+    salt = Random.get_random_bytes(length)
     salt = binascii.hexlify(salt)
     return salt
 
