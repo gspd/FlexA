@@ -2,6 +2,9 @@
 
 import os
 import struct
+import hashlib
+import string
+from random import SystemRandom
 
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
@@ -124,5 +127,10 @@ def open_rsa_key(in_filename, passphrase = None):
     """
     with open(in_filename, 'rb') as infile:
         return RSA.importKey(infile.read(), passphrase)
+
+def generate_salt(length=16):
+    random = SystemRandom()
+    salt = ''.join([random.choice(string.hexdigits) for i in range(length)])
+    return salt
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
