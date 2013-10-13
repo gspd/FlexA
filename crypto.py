@@ -3,8 +3,7 @@
 import os
 import struct
 import hashlib
-import string
-from random import SystemRandom
+import binascii
 
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
@@ -129,8 +128,8 @@ def open_rsa_key(in_filename, passphrase = None):
         return RSA.importKey(infile.read(), passphrase)
 
 def generate_salt(length=16):
-    random = SystemRandom()
-    salt = ''.join([random.choice(string.hexdigits) for i in range(length)])
+    salt = os.urandom(length)
+    salt = binascii.hexlify(salt)
     return salt
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
