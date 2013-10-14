@@ -95,7 +95,8 @@ def main():
     #Parse the user choices
     args = parser.parse_args()
     #Load user config
-    config = load_config('flexa-ng.ini')
+    config_path = 'flexa-ng.ini'
+    config = load_config(config_path)
 
     #Generate a new user key
     if args.newkey:
