@@ -36,13 +36,13 @@ def load_config(config_path = ''):
     default_config = """
     #All network configuration goes here
     [Network]
-        interface = ''
-        hostname = ''
-        port = ''
-        netmask = ''
+        interface =
+        hostname =
+        port =
+        netmask =
     #User related configuration
     [User]
-        private key = ''
+        private key =
     """
 
     config = configparser.SafeConfigParser()
