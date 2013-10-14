@@ -36,16 +36,16 @@ def load_config(config_path = ''):
     default_config = """
     #All network configuration goes here
     [Network]
-        interface
-        hostname
-        port
-        netmask
+        interface = ''
+        hostname = ''
+        port = ''
+        netmask = ''
     #User related configuration
     [User]
-        private key
+        private key = ''
     """
 
-    config = configparser.SafeConfigParser(allow_no_value=True)
+    config = configparser.SafeConfigParser()
     #This generate a list of default configs
     config.read_string(default_config)
     #If no file is found or it is empty, it is ignored
