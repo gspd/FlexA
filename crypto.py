@@ -128,7 +128,16 @@ def open_rsa_key(in_filename, passphrase = None):
         return RSA.importKey(infile.read(), passphrase)
 
 def generate_salt(length=16):
-    salt = Random.get_random_bytes(length)
+    """Generate a random salt in hexadecimal format.
+
+    Parameters:
+
+    length -- number of random bytes generated; the resulting hexadecimal is
+    twice as long since each byte of data is converted into the corresponding
+    2-digit hex representation
+
+    """
+    salt = os.urandom(length)
     salt = binascii.hexlify(salt)
     return salt
 
