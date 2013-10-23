@@ -10,11 +10,13 @@ import crypto
 import tools
 
 __authors__ = ["Thiago Kenji Okada"]
+__version__ = "0.1"
 
 def usage():
     """Generate user help and parser user choices"""
 
     parser = argparse.ArgumentParser(
+            prog = 'FlexA-ng',
             description='A New Flexible and Distributed File System')
     #The following options are mutually exclusive
     group = parser.add_mutually_exclusive_group()
@@ -29,6 +31,8 @@ def usage():
     #This option can be used in combination with any other
     parser.add_argument('-v', '--verbose', action='count', default=0,
             help='increase output verbosity')
+    version_info = '%(prog)s {}'.format(__version__)
+    parser.add_argument('--version', action='version', version=version_info)
 
     return parser
 
