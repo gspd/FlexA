@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 __authors__ = ["Thiago Kenji Okada", "Leandro Moreira Barbosa"]
 
-class Types:
+class Types(object):
     SEND_FILE = 0x1
     LIST_FILES = 0x2
     REQUEST_FILE = 0x4
@@ -36,7 +36,7 @@ class Types:
         except KeyError:
             return "Unknown message type."
 
-class Error:
+class Error(object):
     UNKNOWN_ERROR = 0x1
     NOT_IMPLEMENTED = 0x2
 
