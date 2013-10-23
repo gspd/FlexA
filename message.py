@@ -49,7 +49,7 @@ class Error(object):
         except KeyError:
             return "Unknown error code"
 
-class InvalidMessageException(BaseException):
+class InvalidMessageException(Exception):
     pass
 
 def encode(mtype, data):
