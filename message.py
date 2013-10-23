@@ -49,6 +49,9 @@ class Error(object):
         except KeyError:
             return "Unknown error code"
 
+class InvalidMessageException(BaseException):
+    pass
+
 def encode(mtype, data):
     """Encode a message and return an object to be send through a socket.
 
