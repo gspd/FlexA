@@ -6,6 +6,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, Column, Integer, String
 
+__authors__ = ["Thiago Kenji Okada"]
+
 Base = declarative_base()
 
 class File(Base):

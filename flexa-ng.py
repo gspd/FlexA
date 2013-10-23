@@ -9,6 +9,8 @@ import configparser
 import crypto
 import tools
 
+__authors__ = ["Thiago Kenji Okada"]
+
 def usage():
     """Generate user help and parser user choices"""
 
