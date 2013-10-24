@@ -16,7 +16,6 @@ def usage():
     """Generate user help and parser user choices"""
 
     parser = argparse.ArgumentParser(
-            prog = 'FlexA-ng',
             description='A New Flexible and Distributed File System')
     #The following options are mutually exclusive
     group = parser.add_mutually_exclusive_group()
