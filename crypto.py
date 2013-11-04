@@ -4,10 +4,12 @@ import os
 import struct
 import hashlib
 import binascii
+from array import array
 
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 from Crypto import Random
+from Crypto.Util import Counter
 
 """Functions to manipulate cryptography on FlexA
 
@@ -38,23 +40,32 @@ def encrypt_file(key, in_filename, out_filename=None, chunksize=64*1024):
     if not out_filename:
         out_filename = in_filename + '.enc'
 
-    iv = Random.new().read(AES.block_size)
-    encryptor = AES.new(key, AES.MODE_CBC, iv)
-    filesize = os.path.getsize(in_filename)
+    # generate 8 random bytes to be used uniquely
+    nonce = Random.get_random_bytes(AES.block_size // 2)
+    # create counter object
+    ctr = Counter.new(AES.block_size * 4, prefix=nonce)
+    # create cipher object
+    cipher = AES.new(key, AES.MODE_CTR, counter=ctr)
+    # number of chunks to be used such that the total size is chunksize
+    bytes_left = os.path.getsize(in_filename)
 
     with open(in_filename, 'rb') as infile:
         with open(out_filename, 'wb') as outfile:
-            outfile.write(struct.pack('<Q', filesize))
-            outfile.write(iv)
+            # write the nonce
+            outfile.write(nonce)
 
-            while True:
-                chunk = infile.read(chunksize)
-                if len(chunk) == 0:
-                    break
-                elif len(chunk) % 16 != 0:
-                    chunk += ' ' * (16 - len(chunk) % 16)
-
-                outfile.write(encryptor.encrypt(chunk))
+            while bytes_left > chunksize:
+                # read a chunk
+                plaintext = infile.read(chunksize)
+                # update current chunk count
+                bytes_left = bytes_left - chunksize
+                # encrypt and write a chunk
+                outfile.write(cipher.encrypt(plaintext))
+            else:
+                # read remaining bytes
+                plaintext = infile.read(bytes_left)
+                # encrypt and write
+                outfile.write(cipher.encrypt(plaintext))
 
 def decrypt_file(key, in_filename, out_filename=None, chunksize=24*1024):
     """Decrypts a file using AES (CBC mode) with the given key.
@@ -81,19 +92,32 @@ def decrypt_file(key, in_filename, out_filename=None, chunksize=24*1024):
     if not out_filename:
         out_filename = os.path.splitext(in_filename)[0]
 
+    nonce_size = AES.block_size // 2
+
+    # number of chunks to be used such that the total size is chunksize
+    bytes_left = (os.path.getsize(in_filename) - nonce_size)
+
     with open(in_filename, 'rb') as infile:
-        origsize = struct.unpack('<Q', infile.read(struct.calcsize('Q')))[0]
-        iv = infile.read(16)
-        decryptor = AES.new(key, AES.MODE_CBC, iv)
-
         with open(out_filename, 'wb') as outfile:
-            while True:
-                chunk = infile.read(chunksize)
-                if len(chunk) == 0:
-                    break
-                outfile.write(decryptor.decrypt(chunk))
+            # read nonce from file
+            nonce = infile.read(nonce_size)
+            # create counter object
+            ctr = Counter.new(AES.block_size * 4, prefix=nonce)
+            # create cipher object
+            cipher = AES.new(key, AES.MODE_CTR, counter=ctr)
 
-            outfile.truncate(origsize)
+            while bytes_left > chunksize:
+                # read a chunk
+                ciphertext = infile.read(chunksize)
+                # update current chunk count
+                bytes_left = bytes_left - chunksize
+                # decrypt and write a chunk
+                outfile.write(cipher.decrypt(ciphertext))
+            else:
+                # read remaining bytes
+                ciphertext = infile.read(bytes_left)
+                # decrypt and write
+                outfile.write(cipher.decrypt(ciphertext))
 
 def generate_rsa_key(out_filename, passphrase = None, bits = 2048):
     """Generate RSA private and public key
