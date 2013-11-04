@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 __authors__ = ["Thiago Kenji Okada", "Leandro Moreira Barbosa"]
 
+_BUFFER_SIZE = 4096
+
 class Types(object):
     SEND_FILE = 0x1
     LIST_FILES = 0x2
@@ -98,7 +100,7 @@ class ReceiveHandler(socketserver.BaseRequestHandler):
     def handle(self):
         while True:
             try:
-                data = decode(self.request.recv(1024))
+                data = decode(self.request.recv(_BUFFER_SIZE))
             except EOFError:
                 break
 
@@ -185,7 +187,7 @@ class Send(object):
     def send(self, mtype, data):
         self.__sock.sendall(encode(mtype, data))
         try:
-            answer = decode(self.__sock.recv(1024))
+            answer = decode(self.__sock.recv(_BUFFER_SIZE))
         except EOFError:
             logger.warning('Conection closed by the remote host.')
             return
@@ -246,7 +248,7 @@ class SendThread(Thread):
                 break
 
             self.__sock.sendall(encode(self.__type, self.__data))
-            answer = decode(self.__sock.recv(1024))
+            answer = decode(self.__sock.recv(_BUFFER_SIZE))
 
             logger.debug(answer)
 
