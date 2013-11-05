@@ -10,9 +10,6 @@ from threading import Thread
 from rpc import RPCThreadingServer
 from rpc import RPCServerHandler
 
-# Create local logging object
-logger = logging.getLogger("server")
-
 class Server(object):
     """Class to receive messages from hosts"""
 
@@ -30,7 +27,11 @@ class Server(object):
         server = RPCThreadingServer((host, port),
                                     requestHandler=RPCServerHandler)
         ip, port = server.server_address
-        logger.info("Listening on {}:{}".format(ip, port))
+
+        # Create local logging object
+        self.logger = logging.getLogger("server")
+
+        self.logger.info("Listening on {}:{}".format(ip, port))
 
         # register all functions
         self.register_operations(server)
