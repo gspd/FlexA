@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import struct
-import hashlib
 import binascii
 from array import array
 
