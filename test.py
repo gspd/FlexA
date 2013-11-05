@@ -4,8 +4,6 @@ from xmlrpc.client import ServerProxy
 import socket
 from timeit import timeit
 
-from server import Server
-
 def listdir():
     server_addr = 'http://{}:5500'.format(socket.gethostname())
     s = ServerProxy(server_addr)
@@ -18,9 +16,6 @@ def test_send(connections):
             c[i].start()
         for conn in c:
             conn.join()
-
-def test_server():
-    server = Server()
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
