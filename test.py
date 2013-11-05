@@ -1,31 +1,31 @@
-import os
-import sys
-import message
+from threading import Thread
 import logging
+from xmlrpc.client import ServerProxy
+import socket
+from timeit import timeit
 
-logging.basicConfig(level=logging.DEBUG)
+from server import Server
 
-def test_send(connections, repeat):
-    c = []
+def listdir():
+    server_addr = 'http://{}:5500'.format(socket.gethostname())
+    s = ServerProxy(server_addr)
+    s.list_directory()
 
-    for i in range(connections):
-        c.append(message.SendThread())
-        c[i].start()
-        logging.debug("Connection number {} successful!".format(i))
-
-    msg = "Hello World number {} from {}!"
-    for i in range(repeat):
-        for j in range(connections):
-            c[j].send(message.Types.SEND_FILE, msg.format(i, j))
-
-    for i in range(connections):
-        c[i].disconnect()
-
+def test_send(connections):
+        c = []
+        for i in range(connections):
+            c.append(Thread(target=listdir))
+            c[i].start()
+        for conn in c:
+            conn.join()
 
 def test_server():
-    server = message.Receive()
+    server = Server()
 
 if __name__ == '__main__':
-    test_send(100, 10)
+    logging.basicConfig(level=logging.DEBUG)
+    print(timeit(stmt="test_send(100)",
+                 setup="from __main__ import test_send",
+                 number=5))
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
