@@ -6,6 +6,7 @@ import os
 import logging
 import socket
 import argparse
+import configparser
 from threading import Thread
 
 from rpc import RPCThreadingServer
@@ -17,8 +18,8 @@ def usage():
     parser = argparse.ArgumentParser(
             description='Server for a New Flexible and Distributed File \
                     System')
-    parser.add_argument('-i', '--ip', nargs=1, help='define server IP')
-    parser.add_argument('-p', '--port', nargs=1, help='define server port')
+    parser.add_argument('-i', '--ip', nargs='1', help='define server IP')
+    parser.add_argument('-p', '--port', nargs='1', help='define server port')
     parser.add_argument('-d', '--daemon', action='store_true', 
             help='daemonize server')
     parser.add_argument('-v', '--verbose', action='count', default=0,
@@ -28,16 +29,69 @@ def usage():
 
     return parser
 
+def load_config(config_path = ''):
+    """Load default config"""
+
+    default_config = """
+    #File to save choises
+    [CLI]
+        host =
+        port = 5500
+        verbose = 0
+       """
+
+    config = configparser.SafeConfigParser()
+    #This generate a list of default configs
+    config.read_string(default_config)
+    #If no file is found or it is empty, it is ignored
+    config.read(config_path, encoding='utf-8')
+
+    return config
+
+
 def main():
+    """The funtion called when this program is executed"""
+    #Parse the user choices
     parser = usage()
     args = parser.parse_args()
-    
+
+    #Name of file wiht config
+    config_path = 'flexa.ini'
+    config = load_config(config_path)
+
+    #Compares of args and set choices
+    #Verbose -v show every informations; -vv show debug informations
     if args.verbose == 1: 
         logging.basicConfig(level=logging.INFO)
+        config.set('CLI', 'verbose', str(args.verbose))
     elif args.verbose >= 2:
         logging.basicConfig(level=logging.DEBUG)
-    
-    s = Server()
+        config.set('CLI', 'verbose', str(args.verbose))
+    else:
+        #If client don't put the arg, get from file
+        if int(config.get('CLI', 'verbose')) == 1:
+            logging.basicConfig(level=logging.INFO)
+        elif int(config.get('CLI', 'verbose')) >= 2:
+            logging.basicConfig(level=logging.INFO)
+
+    if args.ip:
+        ip = args.ip[0]
+        config.set('CLI', 'host', ip)
+    else:
+        ip = config.get('CLI','host')
+
+    if args.port:
+        port = int(args.port[0])
+        config.set('CLI', 'port', str(port))
+    else :
+        port = int(config.get('CLI','port'))
+
+    #Save configurations
+    with open(config_path, mode='w', encoding='utf-8') as outfile:
+        config.write(outfile)
+
+    s=Server(ip,port)
+
 
 class Server(object):
     """Class to receive messages from hosts"""
@@ -47,12 +101,10 @@ class Server(object):
         Variables:
         host -- ip address or hostname to listen
         port -- port to listen to requests
-
-        """
+        """ 
 
         if not host:
             host = socket.gethostname()
-
         server = RPCThreadingServer((host, port),
                                     requestHandler=RPCServerHandler)
         ip, port = server.server_address
