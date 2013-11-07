@@ -35,7 +35,7 @@ def load_config(config_path = ''):
     default_config = """
     #File to save choises
     [CLI]
-        host =
+        host = 127.0.0.1
         port = 5500
         verbose = 0
        """
