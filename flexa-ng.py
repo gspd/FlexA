@@ -6,8 +6,17 @@ import os
 import getpass
 import configparser
 
+try:
+    import fuse
+    _FUSE_AVAILABLE = True
+except ImportError:
+    _FUSE_AVAILABLE = False
+    print('Package "fuse.py" not found, --mount option will not be '
+            'available', file=sys.stderr)
+
 import crypto
 import tools
+
 
 __authors__ = ["Thiago Kenji Okada"]
 __version__ = "0.1"
@@ -27,7 +36,11 @@ def usage():
             help='list files from server')
     group.add_argument('-n', '--newkey', action='store_true',
             help='generate new user key')
-    #This option can be used in combination with any other
+    if _FUSE_AVAILABLE:
+        group.add_argument('-m', '--mount', metavar='PATH', nargs=1,
+               help='mount remote filesystem')
+
+    #These options can be used in combination with any other
     parser.add_argument('-v', '--verbose', action='count', default=0,
             help='increase output verbosity')
     version_info = '%(prog)s {}'.format(__version__)
