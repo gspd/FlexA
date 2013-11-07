@@ -18,9 +18,9 @@ def usage():
     parser = argparse.ArgumentParser(
             description='Server for a New Flexible and Distributed File \
                     System')
-    parser.add_argument('-i', '--ip', nargs='1', help='define server IP')
-    parser.add_argument('-p', '--port', nargs='1', help='define server port')
-    parser.add_argument('-d', '--daemon', action='store_true', 
+    parser.add_argument('-i', '--ip', nargs=1, help='define server IP')
+    parser.add_argument('-p', '--port', nargs=1, help='define server port')
+    parser.add_argument('-d', '--daemon', action='store_true',
             help='daemonize server')
     parser.add_argument('-v', '--verbose', action='count', default=0,
             help='increase output verbosity')
@@ -33,12 +33,11 @@ def load_config(config_path = ''):
     """Load default config"""
 
     default_config = """
-    #File to save choises
-    [CLI]
+    #Network related configuration
+    [Network]
         host = 127.0.0.1
         port = 5500
-        verbose = 0
-       """
+    """
 
     config = configparser.SafeConfigParser()
     #This generate a list of default configs
@@ -56,39 +55,25 @@ def main():
     args = parser.parse_args()
 
     #Name of file wiht config
-    config_path = 'flexa.ini'
+    config_path = 'flexa-ng.ini'
     config = load_config(config_path)
 
     #Compares of args and set choices
     #Verbose -v show every informations; -vv show debug informations
-    if args.verbose == 1: 
+    if args.verbose == 1:
         logging.basicConfig(level=logging.INFO)
-        config.set('CLI', 'verbose', str(args.verbose))
     elif args.verbose >= 2:
         logging.basicConfig(level=logging.DEBUG)
-        config.set('CLI', 'verbose', str(args.verbose))
-    else:
-        #If client don't put the arg, get from file
-        if int(config.get('CLI', 'verbose')) == 1:
-            logging.basicConfig(level=logging.INFO)
-        elif int(config.get('CLI', 'verbose')) >= 2:
-            logging.basicConfig(level=logging.INFO)
 
     if args.ip:
         ip = args.ip[0]
-        config.set('CLI', 'host', ip)
     else:
-        ip = config.get('CLI','host')
+        ip = config.get('Network','host')
 
     if args.port:
         port = int(args.port[0])
-        config.set('CLI', 'port', str(port))
-    else :
-        port = int(config.get('CLI','port'))
-
-    #Save configurations
-    with open(config_path, mode='w', encoding='utf-8') as outfile:
-        config.write(outfile)
+    else:
+        port = int(config.get('Network','port'))
 
     s=Server(ip,port)
 
@@ -101,7 +86,7 @@ class Server(object):
         Variables:
         host -- ip address or hostname to listen
         port -- port to listen to requests
-        """ 
+        """
 
         if not host:
             host = socket.gethostname()
