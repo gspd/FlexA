@@ -17,7 +17,7 @@ except ImportError:
             'available', file=sys.stderr)
 
 import crypto
-import tools
+import misc
 
 __authors__ = ["Thiago Kenji Okada"]
 __version__ = "0.1"
@@ -84,7 +84,7 @@ def generate_new_key(check_file = ''):
     """
 
     if os.path.exists(check_file):
-        confirm = tools.query_yes_no("There is already a generated key, "
+        confirm = misc.query_yes_no("There is already a generated key, "
                 "generate another one?", default='no')
         if not confirm:
             sys.exit(2)
