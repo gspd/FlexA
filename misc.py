@@ -14,8 +14,6 @@ from distutils.util import strtobool
 # Create local logging object
 logger = logging.getLogger(__name__)
 
-__authors__ = ["Thiago Kenji Okada", "Leandro Moreira Barbosa"]
-
 class Ping(Thread):
     """Class to send Ping messages to network nodes
 

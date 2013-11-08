@@ -19,7 +19,6 @@ except ImportError:
 import crypto
 import misc
 
-__authors__ = ["Thiago Kenji Okada"]
 __version__ = "0.1"
 
 def usage():
