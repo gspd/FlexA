@@ -15,6 +15,8 @@ from rpc import RPCServerHandler
 __version__ = '0.1'
 
 def usage():
+    """Generate user help and parse user choices"""
+
     parser = argparse.ArgumentParser(
             description='Server for a New Flexible and Distributed File \
                     System')
@@ -30,7 +32,11 @@ def usage():
     return parser
 
 def load_config(config_path = ''):
-    """Load default config"""
+    """Load default config and parse user config file
+
+    Input parameters:
+    config_path -- path of the configuration file
+    """
 
     default_config = """
     #Network related configuration
@@ -42,41 +48,43 @@ def load_config(config_path = ''):
     config = configparser.SafeConfigParser()
     #This generate a list of default configs
     config.read_string(default_config)
-    #If no file is found or it is empty, it is ignored
+    #If no file is found or is empty, this is ignored
     config.read(config_path, encoding='utf-8')
 
     return config
 
-
 def main():
-    """The funtion called when this program is executed"""
+    """The function called when the program is executed on a shell"""
+
     #Parse the user choices
     parser = usage()
     args = parser.parse_args()
 
-    #Name of file wiht config
+    #Name of the server config file
     config_path = 'flexa-ng.ini'
     config = load_config(config_path)
 
-    #Compares of args and set choices
-    #Verbose -v show every informations; -vv show debug informations
+    #Parse args and set the user choices
+    #Verbose -v show general information; -vv show debug information
     if args.verbose == 1:
         logging.basicConfig(level=logging.INFO)
     elif args.verbose >= 2:
         logging.basicConfig(level=logging.DEBUG)
 
+    #Override default IP
     if args.ip:
         ip = args.ip[0]
     else:
         ip = config.get('Network','host')
 
+    #Override default port
     if args.port:
         port = int(args.port[0])
     else:
         port = int(config.get('Network','port'))
 
+    #Start server
     s=Server(ip,port)
-
 
 class Server(object):
     """Class to receive messages from hosts"""
@@ -86,8 +94,8 @@ class Server(object):
         Variables:
         host -- ip address or hostname to listen
         port -- port to listen to requests
-        """
 
+        """
         if not host:
             host = socket.gethostname()
         server = RPCThreadingServer((host, port),
@@ -110,15 +118,12 @@ class Server(object):
         objects
 
         """
-
         server.register_function(self.list_directory)
-
 
     def list_directory(self):
         """Example function to list a directory and return to the caller
 
         """
-
         return os.listdir('.')
 
 if __name__ == '__main__':

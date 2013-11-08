@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Implements a client and a command line interface"""
+
 import argparse
 import sys
 import os
@@ -17,12 +19,11 @@ except ImportError:
 import crypto
 import tools
 
-
 __authors__ = ["Thiago Kenji Okada"]
 __version__ = "0.1"
 
 def usage():
-    """Generate user help and parser user choices"""
+    """Generate user help and parse user choices"""
 
     parser = argparse.ArgumentParser(
             description='A New Flexible and Distributed File System')
@@ -49,7 +50,11 @@ def usage():
     return parser
 
 def load_config(config_path = ''):
-    """Load default config and user config"""
+    """Load default config and parse user config file
+
+    Input parameters:
+    config_path -- path of the configuration file
+    """
 
     default_config = """
     #All network configuration goes here
@@ -66,7 +71,7 @@ def load_config(config_path = ''):
     config = configparser.SafeConfigParser()
     #This generate a list of default configs
     config.read_string(default_config)
-    #If no file is found or it is empty, it is ignored
+    #If no file is found or is empty, this is ignored
     config.read(config_path, encoding='utf-8')
 
     return config
@@ -75,7 +80,7 @@ def generate_new_key(check_file = ''):
     """Generate a new RSA key and returns it's filename
 
     Input parameters:
-    check_file -- name of the file to check if exists
+    check_file -- name of the file to check if it already exists
     """
 
     if os.path.exists(check_file):
@@ -103,16 +108,17 @@ def generate_new_key(check_file = ''):
     return filename
 
 def main():
-    """The function called when this program is executed"""
+    """The function called when the program is executed on a shell"""
+
     #If no option is given, show help and exit
     parser = usage()
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(2)
-
     #Parse the user choices
     args = parser.parse_args()
-    #Load user config
+
+    #Name of the user config file
     config_path = 'flexa-ng.ini'
     config = load_config(config_path)
 
