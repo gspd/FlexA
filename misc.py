@@ -2,17 +2,11 @@
 
 """Provide general tools to FlexA."""
 
-import os
 import sys
 import re
-import string
 import subprocess
-import logging
 from threading import Thread
 from distutils.util import strtobool
-
-# Create local logging object
-logger = logging.getLogger(__name__)
 
 class Ping(Thread):
     """Class to send Ping messages to network nodes
@@ -106,6 +100,5 @@ def query_yes_no(question, default="yes"):
                 print("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
     except KeyboardInterrupt:
         sys.exit(2)
-
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
