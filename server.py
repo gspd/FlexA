@@ -35,7 +35,7 @@ def load_config(config_path = ''):
     default_config = """
     #Network related configuration
     [Network]
-        host = 127.0.0.1
+        host =
         port = 5500
     """
 
