@@ -67,6 +67,29 @@ class Ping(Thread):
             self.minimum, self.average, self.maximum, self.jitter = \
             matcher.search(str(out)).groups()
 
+def split_file(file, nparts):
+    """Recive a pointer of file and how many part to aplit
+    """
+
+    #config size of file
+    size = file.seek(0,2)
+    #set in initial of file
+    file.seek(0)
+    #inicialize list of parts
+    part = []
+    #size of parts
+    chucksize = size//nparts
+
+    #get parts but not the last
+    for i in range(nparts-1):
+        part.append(file.read(chucksize))
+
+    #get the last part that can has size<chucksize
+    part.append(file.read(size - file.tell()))
+
+    return part
+
+
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via input() and return their answer.
 
