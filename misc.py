@@ -68,7 +68,9 @@ class Ping(Thread):
             matcher.search(str(out)).groups()
 
 def split_file(file, nparts):
-    """Recive a pointer of file and how many part to aplit
+    """Recive
+    pointer of file - file
+    how many part to split  - nparts
     """
 
     #config size of file
@@ -89,6 +91,20 @@ def split_file(file, nparts):
 
     return part
 
+def join_file(parts, name):
+    """Recive
+    list whith all parts of file - parts
+    name of file that will save  - name
+    """
+
+    #how many parts
+    nparts = len(parts)
+    #create file
+    file = open(name,'wb')
+    #write in file
+    for i in range(nparts):
+        file.write( parts[i].read())
+    file.close()
 
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via input() and return their answer.
