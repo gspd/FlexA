@@ -7,6 +7,7 @@ import sys
 import os
 import getpass
 import configparser
+import hashlib
 
 try:
     import fuse
@@ -65,6 +66,7 @@ def load_config(config_path = ''):
     #User related configuration
     [User]
         private key =
+        hash client = 
     """
 
     config = configparser.SafeConfigParser()
@@ -126,6 +128,10 @@ def main():
         #Checks if the user already has a key
         filename = generate_new_key(config.get('User', 'private key'))
         config.set('User', 'private key', filename)
+        cryp = crypto.open_rsa_key(filename)
+        hash = hashlib.sha256()
+        hash.update(cryp.exportKey(format='DER'))
+        config.set('User', 'hash client', hash.hexdigest())
 
     #Write configuration file
     with open(config_path, mode='w', encoding='utf-8') as outfile:
