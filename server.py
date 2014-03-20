@@ -119,12 +119,16 @@ class Server(object):
 
         """
         server.register_function(self.list_directory)
+        server.register_function(self.still_alive)
 
     def list_directory(self):
         """Example function to list a directory and return to the caller
 
         """
         return os.listdir('.')
+    
+    def still_alive(self):
+        return 1
 
 if __name__ == '__main__':
     main()

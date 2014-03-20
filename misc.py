@@ -7,65 +7,39 @@ import re
 import subprocess
 from threading import Thread
 from distutils.util import strtobool
+from xmlrpc.client import ServerProxy
 
-class Ping(Thread):
-    """Class to send Ping messages to network nodes
+class Ping(object):
+    online = []
+    offline = []
+    
+    def __init__(self):
+         self.ip_list = []
+         self.online = []
+         self.offline = []
+      
+    def scan(self, ip_list):
+         for ip in ip_list:
+            server_addr = 'http://{}:5000'.format(ip)
+            host = ServerProxy(server_addr)
+            if self.ping(host):
+                self.online.append(ip)
+            else:
+                self.offline.append(ip)
 
-    Public variables:
-    received -- count of received packages
-    minimum -- minimum RTT from Ping
-    average -- average RTT from Ping
-    maximum -- maximum RTT from Ping
-    jitter -- RTT variation from Ping
+    def ping(self, host):
+         """
+         this function 'pinging' on hosts
+         recive a xmlrpc.ServerProxy object
+         0 - offline
+         1 - online
+         """
+         try:
+            host.still_alive()
+            return 1
+         except (ConnectionRefusedError, OSError, TimeoutError):
+            return 0
 
-    """
-
-    received = None
-    minimum = None
-    average = None
-    maximum = None
-    jitter = None
-
-    def __init__(self, host, count=4):
-        """Ping constructor
-
-        Input parameters:
-        host -- hostname/IP address of the target node
-        count -- number of ping messages; default is 4
-
-        """
-        Thread.__init__(self)
-        self.__host = host
-        self.__count = count
-
-    def run(self):
-        """Runs the ping thread, if there is no answer the thread is finished.
-
-        """
-
-        # Only Linux platform for now, using ping from iputils
-        if sys.platform == 'linux' or sys.platform == 'linux2':
-            lifeline = r'(\d) received'
-            ping_regex = r'(\d+.\d+)/(\d+.\d+)/(\d+.\d+)/(\d+.\d+)'
-
-        ping = subprocess.Popen(
-            ["ping", "-c", str(self.__count), self.__host],
-            stdout = subprocess.PIPE,
-            stderr = subprocess.PIPE
-        )
-
-        while True:
-            try:
-                out, err = ping.communicate()
-            except ValueError:
-                break
-            # Get the number of received packages from ping
-            matcher = re.compile(lifeline)
-            self.received = re.findall(lifeline, str(out))
-            # Get the rest of information
-            matcher = re.compile(ping_regex)
-            self.minimum, self.average, self.maximum, self.jitter = \
-            matcher.search(str(out)).groups()
 
 def split_file(file, nparts):
     """Recive
