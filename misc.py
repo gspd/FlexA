@@ -43,16 +43,16 @@ class Ping(object):
             return 0
 
 
-def split_file(file, nparts):
+def split_file(fil, nparts):
     """Recive
-    pointer of file - file
+    pointer of file - fil
     how many part to split  - nparts
     """
 
     #config size of file
-    size = file.seek(0,2)
+    size = fil.seek(0,2)
     #set in initial of file
-    file.seek(0)
+    fil.seek(0)
     #inicialize list of parts
     part = []
     #size of parts
@@ -60,10 +60,10 @@ def split_file(file, nparts):
 
     #get parts but not the last
     for i in range(nparts-1):
-        part.append(file.read(chucksize))
+        part.append(fil.read(chucksize))
 
     #get the last part that can has size<chucksize
-    part.append(file.read(size - file.tell()))
+    part.append(fil.read(size - fil.tell()))
 
     return part
 
@@ -76,11 +76,11 @@ def join_file(parts, name):
     #how many parts
     nparts = len(parts)
     #create file
-    file = open(name,'wb')
+    fil = open(name,'wb')
     #write in file
     for i in range(nparts):
-        file.write( parts[i].read())
-    file.close()
+        fil.write( parts[i].read())
+    fil.close()
 
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via input() and return their answer.
