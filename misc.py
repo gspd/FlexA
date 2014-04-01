@@ -10,8 +10,6 @@ from distutils.util import strtobool
 from xmlrpc.client import ServerProxy
 
 class Ping(object):
-    online = []
-    offline = []
     
     def __init__(self):
          self.ip_list = []
@@ -19,6 +17,10 @@ class Ping(object):
          self.offline = []
       
     def scan(self, ip_list):
+	 """ 
+	 Recive a list of strings with ips
+	 Complete list onlines and offline hosts
+	 """
          for ip in ip_list:
             server_addr = 'http://{}:5000'.format(ip)
             host = ServerProxy(server_addr)
