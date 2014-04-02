@@ -17,10 +17,10 @@ class Ping(object):
          self.offline = []
       
     def scan(self, ip_list):
-	 """ 
-	 Recive a list of strings with ips
-	 Complete list onlines and offline hosts
-	 """
+         """ 
+         Recive a list of strings with ip
+         Complete list onlines and offline hosts
+         """
          for ip in ip_list:
             server_addr = 'http://{}:5000'.format(ip)
             host = ServerProxy(server_addr)
@@ -67,7 +67,7 @@ def split_file(fil, nparts):
 
     return part
 
-def join_file(parts, name):
+def join_file(fil, parts):
     """Recive
     list whith all parts of file - parts
     name of file that will save  - name
@@ -75,12 +75,9 @@ def join_file(parts, name):
 
     #how many parts
     nparts = len(parts)
-    #create file
-    fil = open(name,'wb')
     #write in file
     for i in range(nparts):
         fil.write( parts[i].read())
-    fil.close()
 
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via input() and return their answer.
