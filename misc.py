@@ -5,6 +5,7 @@
 import sys
 import re
 import subprocess
+import socket
 from threading import Thread
 from distutils.util import strtobool
 from xmlrpc.client import ServerProxy
@@ -112,5 +113,44 @@ def query_yes_no(question, default="yes"):
                 print("Please respond with 'yes' or 'no' (or 'y' or 'n').\n")
     except KeyboardInterrupt:
         sys.exit(2)
+
+
+def send_file(host, transf_file):
+    """ Send a file with socket to client
+        Transfer with socket because XMLRPC transfer very slower than socket
+
+        host: tuple (ip, port)
+        transf_file: object file that will  transfer
+    """       
+
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    print("CHEGANDO NO SEND_FILE")
+    client.connect(host)
+    msg = transf_file.read(1024)
+    while msg:
+        client.send(msg)
+        msg = transf_file.read(1024)
+    client.close()
+
+def recive_file(host, save_file):
+    """ Recive a file with socket 
+        Transfer with socket because XMLRPC transfer very slower than socket
+        
+        host: tuple (ip, port)
+        save_file: object file that will  transfer
+    """
+
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind(host)
+    server.listen(1)
+
+    print("trhead recive, antes do accept")
+    con, server_name  = server.accept()
+    msg = con.recv(1024)
+    while msg:
+        save_file.write(msg)
+        msg = con.recv(1024) 
+    con.close() 
+
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

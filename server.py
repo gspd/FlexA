@@ -11,6 +11,7 @@ from threading import Thread
 
 from rpc import RPCThreadingServer
 from rpc import RPCServerHandler
+import misc
 
 __version__ = '0.1'
 
@@ -120,14 +121,32 @@ class Server(object):
         """
         server.register_function(self.list_directory)
         server.register_function(self.still_alive)
+        server.register_function(self.give_file)
+        server.register_function(self.get_file)
 
     def list_directory(self):
         """Example function to list a directory and return to the caller
 
         """
         return os.listdir('.')
-    
+
     def still_alive(self):
+        return 1
+
+    def give_file(self):
+        host = ("127.0.0.1", 5001)
+
+        #next line is test 
+        #todo: search with hash file
+        save_file = open("vim","rb")
+
+        misc.send_file(host, save_file)
+        save_file.close()
+        return 1
+
+    def get_file(self):
+        host = ()
+        misc.send_file(host)
         return 1
 
 if __name__ == '__main__':

@@ -8,14 +8,8 @@ import os
 import getpass
 import configparser
 import hashlib
-
-try:
-    import fuse
-    _FUSE_AVAILABLE = True
-except ImportError:
-    _FUSE_AVAILABLE = False
-    print('Package "fuse.py" not found, --mount option will not be '
-            'available', file=sys.stderr)
+from threading import Thread
+from xmlrpc.client import ServerProxy
 
 import crypto
 import misc
@@ -37,10 +31,6 @@ def usage():
             help='list files from server')
     group.add_argument('-n', '--newkey', action='store_true',
             help='generate new user key')
-    if _FUSE_AVAILABLE:
-        group.add_argument('-m', '--mount', metavar='PATH', nargs=1,
-               help='mount remote filesystem')
-
     #These options can be used in combination with any other
     parser.add_argument('-v', '--verbose', action='count', default=0,
             help='increase output verbosity')
@@ -132,6 +122,21 @@ def main():
         hash = hashlib.sha256()
         hash.update(cryp.exportKey(format='DER'))
         config.set('User', 'hash client', hash.hexdigest())
+
+    #Give a file ----   test test test
+    if args.get:
+        f = open("vim2.pdf","wb")
+        host = ("127.0.0.1", 5001)
+
+        trea = Thread(target = misc.recive_file, args = (host, f))
+        trea.start()
+
+        server_addr = 'http://{}:5000'.format('127.0.0.1')#socket.gethostname())
+        s = ServerProxy(server_addr)
+        result = s.give_file()
+
+        trea.join()
+        f.close()
 
     #Write configuration file
     with open(config_path, mode='w', encoding='utf-8') as outfile:
