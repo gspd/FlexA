@@ -133,20 +133,30 @@ class Server(object):
     def still_alive(self):
         return 1
 
-    def give_file(self, ip):
+    def give_file(self, ip, name_file):
+        """ give files to client
+            ip: string with ip, address of client
+            name_file: in a future this is a hash of file
+        """
         host = (ip, 5001)
 
-        #next line is test 
-        #todo: search with hash file
-        save_file = open("vim","rb")
+        saved_file = open(name_file,"rb")
 
-        misc.send_file(host, save_file)
-        save_file.close()
+        misc.send_file(host, saved_file)
+        saved_file.close()
         return 1
 
-    def get_file(self):
-        host = ()
-        misc.send_file(host)
+    def get_file(self, name_file):
+        """get file from client
+           ip: string with ip, address of client
+           name_file: name of file that will save in server - future hash
+        """
+        ip = misc.my_ip()
+        host = (ip, 5002)
+        save_file = open(name_file, "wb")
+        thread = Thread(target = misc.recive_file, args = (host, save_file))
+        thread.start()
+
         return 1
 
 if __name__ == '__main__':

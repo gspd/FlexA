@@ -124,9 +124,9 @@ def send_file(host, transf_file):
     """       
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    print("Estabelecendo conexão..")
+    print("Estabelecendo conexão...")
     client.connect(host)
-    print("Conectado, \ntransferindo arquivo")
+    print("Conectado, \ntransferindo arquivo", flush = True)
     msg = transf_file.read(1024)
     while msg:
         client.send(msg)
@@ -147,7 +147,7 @@ def recive_file(host, save_file):
     server.listen(1)
 
     con, server_name  = server.accept()
-    print("Conexão estabelecidada, \nrecebendo arquivo.")
+    print("Conexão estabelecidada, \nrecebendo arquivo.", flush = True)
     msg = con.recv(1024)
     while msg:
         save_file.write(msg)
@@ -160,7 +160,7 @@ def my_ip():
     return - string with ip
     """
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(('google.com', 0))
+    s.connect(('1.1.1.1', 0))
     address = s.getsockname()[0]
     s.close()
     return address 

@@ -124,20 +124,38 @@ def main():
         hash.update(cryp.exportKey(format='DER'))
         config.set('User', 'hash client', hash.hexdigest())
 
-    #Give a file ----   test test test
+    #Send a file to server
+    if args.put:
+        name_file = "vimout" #future is a hash name
+
+        ip_server = "192.168.1.3"
+        server_addr = 'http://{}:5000'.format(ip_server)
+        server = ServerProxy(server_addr)
+ 
+        host = (ip_server, 5002)
+        if server.get_file(name_file):
+            f = open("vimput", "rb")
+            misc.send_file(host, f)
+
+        f.close()
+
+    #Get a file from server
     if args.get:
         f = open("vim2.pdf","wb")
         ip = misc.my_ip()
         host = (ip, 5001)
-        trea = Thread(target = misc.recive_file, args = (host, f))
-        trea.start()
+        #create a thread to listening in socket for a connection with file from server
+        thread = Thread(target = misc.recive_file, args = (host, f))
+        thread.start()
 
         #TODO: fazer com que pegue o numero do servidor sozinho
+        #call in rpc to server transfer a file
         server_addr = 'http://{}:5000'.format("192.168.1.3")#socket.gethostname())
-        s = ServerProxy(server_addr)
-        result = s.give_file(ip)
+        server = ServerProxy(server_addr)
+        name_file = "vim"
+        result = server.give_file(ip, name_file)
 
-        trea.join()
+        thread.join()
         f.close()
 
     #Write configuration file
