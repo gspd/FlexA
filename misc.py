@@ -124,8 +124,9 @@ def send_file(host, transf_file):
     """       
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    print("CHEGANDO NO SEND_FILE")
+    print("Estabelecendo conexão..")
     client.connect(host)
+    print("Conectado, \ntransferindo arquivo")
     msg = transf_file.read(1024)
     while msg:
         client.send(msg)
@@ -141,16 +142,27 @@ def recive_file(host, save_file):
     """
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    print("Esperando conexão...")
     server.bind(host)
     server.listen(1)
 
-    print("trhead recive, antes do accept")
     con, server_name  = server.accept()
+    print("Conexão estabelecidada, \nrecebendo arquivo.")
     msg = con.recv(1024)
     while msg:
         save_file.write(msg)
         msg = con.recv(1024) 
     con.close() 
 
+def my_ip():
+    """ this function create a socket connection
+    to get a real ip address.
+    return - string with ip
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(('google.com', 0))
+    address = s.getsockname()[0]
+    s.close()
+    return address 
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

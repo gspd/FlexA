@@ -8,6 +8,7 @@ import os
 import getpass
 import configparser
 import hashlib
+import socket
 from threading import Thread
 from xmlrpc.client import ServerProxy
 
@@ -126,14 +127,15 @@ def main():
     #Give a file ----   test test test
     if args.get:
         f = open("vim2.pdf","wb")
-        host = ("127.0.0.1", 5001)
-
+        ip = misc.my_ip()
+        host = (ip, 5001)
         trea = Thread(target = misc.recive_file, args = (host, f))
         trea.start()
 
-        server_addr = 'http://{}:5000'.format('127.0.0.1')#socket.gethostname())
+        #TODO: fazer com que pegue o numero do servidor sozinho
+        server_addr = 'http://{}:5000'.format("192.168.1.3")#socket.gethostname())
         s = ServerProxy(server_addr)
-        result = s.give_file()
+        result = s.give_file(ip)
 
         trea.join()
         f.close()

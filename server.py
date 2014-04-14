@@ -133,8 +133,8 @@ class Server(object):
     def still_alive(self):
         return 1
 
-    def give_file(self):
-        host = ("127.0.0.1", 5001)
+    def give_file(self, ip):
+        host = (ip, 5001)
 
         #next line is test 
         #todo: search with hash file
