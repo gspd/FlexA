@@ -14,6 +14,7 @@ class User(Base):
 	id = Column(String(64), primary_key=True)
 	name = Column(String(100), nullable=False)
 	home_key = Column(String(100))
+	rsa_pub = Column(String(100))
 	
 	def __init__(self, name, home_key, rsa_pub):
 		self.name = name
@@ -47,7 +48,7 @@ class File(Base):
 		self.type = type
 
 	def __repr__(self):
-		return '<File({}>'.format(self.filename)
+		return '<File(vfk "{}", salt "{}", wtk "{}", rdk "{}", name "{}", dir "{}", user "{}", type "{}")>'.format(self.verify_key, self.salt, self.write_key, self.read_key, self.file_name, self.dir_key, self.user_id, self.type)
 
 class Parts(Base):
 	__tablename__ = 'parts'

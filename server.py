@@ -7,6 +7,7 @@ import logging
 import socket
 import argparse
 import configparser
+import database
 from threading import Thread
 
 from rpc import RPCThreadingServer
@@ -102,6 +103,10 @@ class Server(object):
         server = RPCThreadingServer((host, port),
                                     requestHandler=RPCServerHandler)
         ip, port = server.server_address
+        
+        #connect database
+        #TODO verify if is same name default
+        self.db = database.init_db()
 
         # Create local logging object
         self.logger = logging.getLogger("server")
@@ -133,29 +138,36 @@ class Server(object):
     def still_alive(self):
         return 1
 
-    def give_file(self, ip, name_file):
+    def give_file(self, ip, file_name):
         """ give files to client
             ip: string with ip, address of client
-            name_file: in a future this is a hash of file
+            file_name: in a future this is a hash of file
         """
         host = (ip, 5001)
 
-        saved_file = open(name_file,"rb")
+        saved_file = open(file_name,"rb")
 
         misc.send_file(host, saved_file)
         saved_file.close()
         return 1
 
-    def get_file(self, name_file):
+    def get_file(self, file_name, verify_key, salt, write_key, read_key, dir_key, user_id, type_file):
         """get file from client
            ip: string with ip, address of client
-           name_file: name of file that will save in server - future hash
+           file_name: name of file that will save in server - future hash
         """
         ip = misc.my_ip()
-        host = (ip, 5002)
-        save_file = open(name_file, "wb")
-        thread = Thread(target = misc.recive_file, args = (host, save_file))
+        port = 5002
+        #TODO set what port will connect
+        host = (ip, port)
+        #TODO set time_out to thread socket 
+        thread = Thread(target = misc.recive_file, args = (host, file_name))
         thread.start()
+
+        new_file = database.File(verify_key, salt, write_key, read_key, file_name, dir_key, user_id, type_file)
+        self.db.add(new_file)
+        print(new_file.__repr__)
+        self.db.commit()
 
         return 1
 

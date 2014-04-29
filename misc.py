@@ -133,7 +133,7 @@ def send_file(host, transf_file):
         msg = transf_file.read(1024)
     client.close()
 
-def recive_file(host, save_file):
+def recive_file(host, file_name):
     """ Recive a file with socket 
         Transfer with socket because XMLRPC transfer very slower than socket
         
@@ -146,13 +146,15 @@ def recive_file(host, save_file):
     server.bind(host)
     server.listen(1)
 
+    file_save = open(file_name, "wb")
     con, server_name  = server.accept()
     print("Conexão estabelecidada, \nrecebendo arquivo.", flush = True)
     msg = con.recv(1024)
     while msg:
-        save_file.write(msg)
+        file_save.write(msg)
         msg = con.recv(1024) 
-    con.close() 
+    con.close()
+    file_save.close()
 
 def my_ip():
     """ this function create a socket connection

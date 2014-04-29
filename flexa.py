@@ -128,13 +128,22 @@ def main():
     if args.put:
         name_file = "vimout" #future is a hash name
 
-        ip_server = "192.168.1.3"
+        ip_server = "192.168.0.17"
         server_addr = 'http://{}:5000'.format(ip_server)
         server = ServerProxy(server_addr)
  
         host = (ip_server, 5002)
-        if server.get_file(name_file):
-            f = open("vimput", "rb")
+        name_file = "vim"
+        verify_key = "01234"
+        salt = 2
+        write_key = "01234"
+        read_key = "01234"
+        user_id = 1
+        type_file = "f"
+        dir_key = "home"
+        
+        if server.get_file(name_file, verify_key, salt, write_key, read_key, dir_key, user_id, type_file):
+            f = open("README.md", "rb")
             misc.send_file(host, f)
 
         f.close()
@@ -152,7 +161,6 @@ def main():
         #call in rpc to server transfer a file
         server_addr = 'http://{}:5000'.format("192.168.1.3")#socket.gethostname())
         server = ServerProxy(server_addr)
-        name_file = "vim"
         result = server.give_file(ip, name_file)
 
         thread.join()
