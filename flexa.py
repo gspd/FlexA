@@ -111,7 +111,7 @@ def main():
     args = parser.parse_args()
 
     #Name of the user config file
-    config_path = 'flexa-ng.ini'
+    config_path = 'flexa.ini'
     config = load_config(config_path)
 
     #Generate a new user key

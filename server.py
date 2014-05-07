@@ -63,7 +63,7 @@ def main():
     args = parser.parse_args()
 
     #Name of the server config file
-    config_path = 'flexa-ng.ini'
+    config_path = 'flexa.ini'
     config = load_config(config_path)
 
     #Parse args and set the user choices
