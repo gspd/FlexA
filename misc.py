@@ -165,6 +165,21 @@ def my_ip():
     s.connect(('1.1.1.1', 0))
     address = s.getsockname()[0]
     s.close()
-    return address 
+    return address
+
+def port_using(port):
+    """
+    test if port is in using in other transfer (thread)
+    return the next port not using
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ip = my_ip()
+    try:
+        s.bind((ip,port))
+        s.close()
+        return port
+    except OSError:
+        s.close()
+        return port_using(port+1)
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
