@@ -99,6 +99,58 @@ def generate_new_key(check_file = ''):
 
     return filename
 
+def send_file():
+    """
+    send file from client to server
+    """
+    ip_server = misc.my_ip()
+    server_addr = 'http://{}:5000'.format(ip_server)
+    server = ServerProxy(server_addr)
+
+    file_name = "vim"
+    verify_key = "dfsdfgsdrfajkfgghjdfdsfdssdfdfssd3afddx4"
+    salt = 2
+    write_key = "01234"
+    read_key = "01234"
+    dir_key = "home"
+    user_id = 1
+    type_file = "f"
+
+    #server return port where will wait a file
+    port = server.get_file(file_name, verify_key, salt, write_key,  \
+                           read_key, dir_key, user_id, type_file)
+
+    print('Arquivo {}, Porta {}'.format(file_name, port))
+
+    f = open("vimput", "rb")
+    host = (ip_server, port)
+    misc.send_file(host, f)
+
+    f.close()
+
+def recive_file():
+    """
+    recive file from server
+    """
+    f = open("vim2.pdf","wb")
+    ip = misc.my_ip()
+    port = misc.port_using(5001)#FIXME - passar o thread para o server
+    host = (ip, port)
+    #create a thread to listening in socket for a connection with file from server
+    thread = Thread(target = misc.recive_file, args = (host, f))
+    thread.start()
+
+    #TODO: fazer com que pegue o numero do servidor sozinho
+    #call in rpc to server transfer a file
+    server_addr = 'http://{}:5000'.format("192.168.1.3")#socket.gethostname())
+    server = ServerProxy(server_addr)
+    result = server.give_file(ip, name_file)
+
+    thread.join()
+    f.close()
+
+########################
+
 def main():
     """The function called when the program is executed on a shell"""
 
@@ -136,48 +188,6 @@ def main():
     with open(config_path, mode='w', encoding='utf-8') as outfile:
         config.write(outfile)
 
-def send_file():
-    ip_server = misc.my_ip()
-    server_addr = 'http://{}:5000'.format(ip_server)
-    server = ServerProxy(server_addr)
-
-    file_name = "vim2"
-    verify_key = "dfajkfgghjdfsdfssd3afddx4"
-    salt = 2
-    write_key = "01234"
-    read_key = "01234"
-    dir_key = "home"
-    user_id = 1
-    type_file = "f"
-
-    #server return port where will wait a file
-    port = server.get_file(file_name, verify_key, salt, write_key, read_key, dir_key, user_id, type_file)
-
-    print('Arquivo {}, Porta {}'.format(file_name, port))
-
-    f = open("vimput", "rb")
-    host = (ip_server, port)
-    misc.send_file(host, f)
-
-    f.close()
-
-def recive_file():
-    f = open("vim2.pdf","wb")
-    ip = misc.my_ip()
-    port = misc.port_using(5001)#FIXME - passar o thread para o server
-    host = (ip, port)
-    #create a thread to listening in socket for a connection with file from server
-    thread = Thread(target = misc.recive_file, args = (host, f))
-    thread.start()
-
-    #TODO: fazer com que pegue o numero do servidor sozinho
-    #call in rpc to server transfer a file
-    server_addr = 'http://{}:5000'.format("192.168.1.3")#socket.gethostname())
-    server = ServerProxy(server_addr)
-    result = server.give_file(ip, name_file)
-
-    thread.join()
-    f.close()
 
 if __name__ == '__main__':
     main()

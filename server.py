@@ -158,11 +158,10 @@ class Server(object):
         """
         ip = misc.my_ip()
         port = misc.port_using(5001)
-        #TODO set what port will connect
         host = (ip, port)
-        #TODO set time_out to thread socket 
         thread = Thread(target = misc.recive_file, args = (host, file_name))
         thread.start()
+        #TODO: set timout to thread
 
         new_file = database.File(verify_key, salt, write_key, read_key, file_name, dir_key, user_id, type_file)
         self.db.add(new_file)
