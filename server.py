@@ -63,7 +63,7 @@ def main():
     args = parser.parse_args()
 
     #Name of the server config file
-    config_path = 'flexa.ini'
+    config_path = 'flexa-ng.ini'
     config = load_config(config_path)
 
     #Parse args and set the user choices
@@ -157,7 +157,7 @@ class Server(object):
            file_name: name of file that will save in server - future hash
         """
         ip = misc.my_ip()
-        port = 5002
+        port = misc.port_using(5001)
         #TODO set what port will connect
         host = (ip, port)
         #TODO set time_out to thread socket 
@@ -169,7 +169,7 @@ class Server(object):
         print(new_file.__repr__)
         self.db.commit()
 
-        return 1
+        return port
 
 if __name__ == '__main__':
     main()

@@ -57,7 +57,7 @@ def load_config(config_path = ''):
     #User related configuration
     [User]
         private key =
-        hash client = 
+        hash client =
     """
 
     config = configparser.SafeConfigParser()
@@ -111,7 +111,7 @@ def main():
     args = parser.parse_args()
 
     #Name of the user config file
-    config_path = 'flexa.ini'
+    config_path = 'flexa-ng.ini'
     config = load_config(config_path)
 
     #Generate a new user key
@@ -126,25 +126,27 @@ def main():
 
     #Send a file to server
     if args.put:
-        name_file = "vimout" #future is a hash name
-
-        ip_server = "192.168.0.17"
+        ip_server = "192.168.1.3"
         server_addr = 'http://{}:5000'.format(ip_server)
         server = ServerProxy(server_addr)
- 
-        host = (ip_server, 5002)
-        name_file = "vim"
-        verify_key = "01234"
+
+        file_name = "vim2"
+        verify_key = "dfajkfgghjdfsdfssd3afddx4"
         salt = 2
         write_key = "01234"
         read_key = "01234"
+        dir_key = "home"
         user_id = 1
         type_file = "f"
-        dir_key = "home"
-        
-        if server.get_file(name_file, verify_key, salt, write_key, read_key, dir_key, user_id, type_file):
-            f = open("README.md", "rb")
-            misc.send_file(host, f)
+
+        #server return port where will wait a file
+        port = server.get_file(file_name, verify_key, salt, write_key, read_key, dir_key, user_id, type_file)
+
+        print('Arquivo {}, Porta {}'.format(file_name, port))
+
+        f = open("vimput", "rb")
+        host = (ip_server, port)
+        misc.send_file(host, f)
 
         f.close()
 
@@ -152,7 +154,8 @@ def main():
     if args.get:
         f = open("vim2.pdf","wb")
         ip = misc.my_ip()
-        host = (ip, 5001)
+        port = misc.port_using(5001)#FIXME - passar o thread para o server
+        host = (ip, port)
         #create a thread to listening in socket for a connection with file from server
         thread = Thread(target = misc.recive_file, args = (host, f))
         thread.start()

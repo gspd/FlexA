@@ -124,7 +124,7 @@ def send_file(host, transf_file):
     """       
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    print("Estabelecendo conexão...")
+    print("Estabelecendo conexão...", flush = True)
     client.connect(host)
     print("Conectado, \ntransferindo arquivo", flush = True)
     msg = transf_file.read(1024)
@@ -142,7 +142,7 @@ def recive_file(host, file_name):
     """
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    print("Esperando conexão...")
+    print("Esperando conexão...", flush = True)
     server.bind(host)
     server.listen(1)
 
