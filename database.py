@@ -4,7 +4,7 @@ import os
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Sequence, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Sequence, DateTime, Binary
 
 Base = declarative_base()
 
@@ -27,9 +27,9 @@ class User(Base):
 class File(Base):
 	__tablename__ = 'file'
 
-	verify_key = Column(String(100), primary_key=True)
+	verify_key = Column(Binary, primary_key=True)
 	#in some documentation key = salt
-	salt = Column(Integer, nullable=False)
+	salt = Column(Binary, nullable=False)
 	write_key = Column(String(100), nullable=False)
 	read_key = Column(String(100), nullable=False)
 	file_name = Column(String(255), nullable=False)

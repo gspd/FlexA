@@ -2,6 +2,7 @@
 
 import os
 import binascii
+import hashlib
 from array import array
 
 from Crypto.Cipher import AES
@@ -146,6 +147,15 @@ def open_rsa_key(in_filename, passphrase = None):
     """
     with open(in_filename, 'rb') as infile:
         return RSA.importKey(infile.read(), passphrase)
+
+def generate_verify_key(salt, rsa):
+    key = rsa.exportKey()
+
+    verify_key = hashlib.sha512()
+    verify_key.update(key)
+    verify_key.update(salt)
+
+    return verify_key.digest()
 
 def generate_salt(length=16):
     """Generate a random salt in hexadecimal format.

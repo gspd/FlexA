@@ -110,7 +110,7 @@ def send_file(file_name):
         sys.exit("Arquivo não encontrado.\nTente novamente.")
 
     salt = crypto.generate_salt()
-#    verify_key = 
+    verify_key = crypto.generate_verify_key(salt, crypto.open_rsa_key("/home/mario/git/flexa-ng/chave"))
     write_key = "01234"
     read_key = "01234"
     dir_key = "home"
