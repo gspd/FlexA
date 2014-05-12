@@ -99,22 +99,27 @@ def generate_new_key(check_file = ''):
 
     return filename
 
-def send_file():
+def send_file(file_name):
     """
     send file from client to server
     """
-    ip_server = misc.my_ip()
-    server_addr = 'http://{}:5000'.format(ip_server)
-    server = ServerProxy(server_addr)
 
-    file_name = "vim"
-    verify_key = "dfsdfgsdrfajkfgghjdfdsfdssdfdfssd3afddx4"
-    salt = 2
+    try:
+        f = open(file_name, "rb")
+    except FileNotFoundError:
+        sys.exit("Arquivo não encontrado.\nTente novamente.")
+
+    salt = crypto.generate_salt()
+#    verify_key = 
     write_key = "01234"
     read_key = "01234"
     dir_key = "home"
     user_id = 1
     type_file = "f"
+
+    ip_server = misc.my_ip()
+    server_addr = 'http://{}:5000'.format(ip_server)
+    server = ServerProxy(server_addr)
 
     #server return port where will wait a file
     port = server.get_file(file_name, verify_key, salt, write_key,  \
@@ -122,7 +127,7 @@ def send_file():
 
     print('Arquivo {}, Porta {}'.format(file_name, port))
 
-    f = open("vimput", "rb")
+
     host = (ip_server, port)
     misc.send_file(host, f)
 
@@ -178,7 +183,7 @@ def main():
 
     #Send a file to server
     if args.put:
-        send_file()
+        send_file(args.put[0])
 
     #Get a file from server
     if args.get:
