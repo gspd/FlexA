@@ -28,7 +28,6 @@ class File(Base):
 	__tablename__ = 'file'
 
 	verify_key = Column(Binary, primary_key=True)
-	#in some documentation key = salt
 	salt = Column(Binary, nullable=False)
 	write_key = Column(String(100), nullable=False)
 	read_key = Column(String(100), nullable=False)

@@ -159,11 +159,14 @@ class Server(object):
         ip = misc.my_ip()
         port = misc.port_using(5001)
         host = (ip, port)
-        thread = Thread(target = misc.recive_file, args = (host, file_name))
+
+        file_name_storage = misc.file_name_storage(verify_key.data)
+        print('name do arquivo: {}'.format(file_name_storage), flush = True)
+        thread = Thread(target = misc.recive_file, args = (host, file_name_storage))
         thread.start()
         #TODO: set timout to thread
 
-        new_file = database.File(verify_key, salt, write_key, read_key, file_name, dir_key, user_id, type_file)
+        new_file = database.File(verify_key.data, salt.data, write_key, read_key, file_name, dir_key, user_id, type_file)
         self.db.add(new_file)
         print(new_file.__repr__)
         self.db.commit()

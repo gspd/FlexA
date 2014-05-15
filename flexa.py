@@ -110,7 +110,8 @@ def send_file(file_name):
         sys.exit("Arquivo não encontrado.\nTente novamente.")
 
     salt = crypto.generate_salt()
-    verify_key = crypto.generate_verify_key(salt, crypto.open_rsa_key("/home/mario/git/flexa-ng/chave"))
+    rsa = crypto.open_rsa_key("/home/mario/git/flexa-ng/chave")
+    verify_key = crypto.generate_verify_key(salt, rsa)
     write_key = "01234"
     read_key = "01234"
     dir_key = "home"
@@ -120,7 +121,6 @@ def send_file(file_name):
     ip_server = misc.my_ip()
     server_addr = 'http://{}:5000'.format(ip_server)
     server = ServerProxy(server_addr)
-
     #server return port where will wait a file
     port = server.get_file(file_name, verify_key, salt, write_key,  \
                            read_key, dir_key, user_id, type_file)

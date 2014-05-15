@@ -6,6 +6,8 @@ import sys
 import re
 import subprocess
 import socket
+import binascii
+import time
 from threading import Thread
 from distutils.util import strtobool
 from xmlrpc.client import ServerProxy
@@ -124,37 +126,62 @@ def send_file(host, transf_file):
     """       
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    print("Estabelecendo conexão...", flush = True)
-    client.connect(host)
+    print("Estabelecendo conexão {}".format(host[1]), flush = True)
+    while 1:
+        try:
+            client.connect(host)
+            break
+        except ConnectionRefusedError:
+            print('.', flush = True)
+            time.sleep(1)
     print("Conectado, \ntransferindo arquivo", flush = True)
+
+    sended = 0
     msg = transf_file.read(1024)
+    readed = len(msg)
     while msg:
-        client.send(msg)
+        sended += client.send(msg)
+        if sended != readed:
+            print('readed: {}, sended: {}'.format(readed, sended))
+            raise RuntimeError('Erro ao enviar arquivo')
         msg = transf_file.read(1024)
+        readed += len(msg)
+
+    #confirm if send is correct
+    #TODO if not correct resend
+    #size = client.recv(16)
+    #print('--------------------> {}'.format(int(size)))
+
+    print('--------------------------------> port: {}'.format(host[1]))
     client.close()
 
 def recive_file(host, file_name):
     """ Recive a file with socket 
         Transfer with socket because XMLRPC transfer very slower than socket
         
-        host: tuple (ip, port)
-        save_file: object file that will  transfer
+        host: tuple (str ip, int port)
+        file_name: str with name, verify_key or name of file
     """
-
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    print("Esperando conexão...", flush = True)
+    print("Esperando conexão na porta {}".format(host[1]), flush = True)
     server.bind(host)
     server.listen(1)
 
     file_save = open(file_name, "wb")
     con, server_name  = server.accept()
     print("Conexão estabelecidada, \nrecebendo arquivo.", flush = True)
+    time.sleep(1)
     msg = con.recv(1024)
+    recived = len(msg)
     while msg:
         file_save.write(msg)
-        msg = con.recv(1024) 
-    con.close()
+        msg = con.recv(1024)
+        recived += len(msg)
+        #print('recebendo: {}'.format(recived),flush = True)
     file_save.close()
+    con.send(bytes(recived))
+    con.close()
+    print("Arquivo recebido.", flush = True)
 
 def my_ip():
     """ this function create a socket connection
@@ -166,6 +193,14 @@ def my_ip():
     address = s.getsockname()[0]
     s.close()
     return address
+
+def file_name_storage(verify_key):
+    """
+    keep only a name string in hex
+    """
+    hexa = binascii.b2a_hex(verify_key)
+    name = str(hexa)[2:-1]
+    return name
 
 def port_using(port):
     """
