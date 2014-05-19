@@ -169,7 +169,7 @@ class Server(object):
         new_file = database.File(verify_key.data, salt.data, write_key, read_key, file_name, dir_key, user_id, type_file)
         self.db.add(new_file)
         print(new_file.__repr__)
-        self.db.commit()
+        #self.db.commit()
 
         return port
 

@@ -142,8 +142,9 @@ def send_file(host, transf_file):
     while msg:
         sended += client.send(msg)
         if sended != readed:
-            print('readed: {}, sended: {}'.format(readed, sended))
-            raise RuntimeError('Erro ao enviar arquivo')
+            print('Readed: {}, Sended: {}'.format(readed, sended))
+            print('ERRO: Conexão falhou ao enviar o arquivo.\n port:{}'.format(host[1]))
+            return
         msg = transf_file.read(1024)
         readed += len(msg)
 
