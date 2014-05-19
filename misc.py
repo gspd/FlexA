@@ -127,6 +127,7 @@ def send_file(host, transf_file):
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     print("Estabelecendo conexão {}".format(host[1]), flush = True)
+    #try connect but if serve don't create a sockt yet wait 1 sec.
     while 1:
         try:
             client.connect(host)
@@ -156,29 +157,25 @@ def send_file(host, transf_file):
     print('--------------------------------> port: {}'.format(host[1]))
     client.close()
 
-def recive_file(host, file_name):
+def recive_file(server, file_name):
     """ Recive a file with socket 
         Transfer with socket because XMLRPC transfer very slower than socket
         
         host: tuple (str ip, int port)
         file_name: str with name, verify_key or name of file
     """
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    print("Esperando conexão na porta {}".format(host[1]), flush = True)
-    server.bind(host)
+
     server.listen(1)
 
     file_save = open(file_name, "wb")
     con, server_name  = server.accept()
     print("Conexão estabelecidada, \nrecebendo arquivo.", flush = True)
-    time.sleep(1)
     msg = con.recv(1024)
     recived = len(msg)
     while msg:
         file_save.write(msg)
         msg = con.recv(1024)
         recived += len(msg)
-        #print('recebendo: {}'.format(recived),flush = True)
     file_save.close()
     con.send(bytes(recived))
     con.close()
@@ -208,14 +205,13 @@ def port_using(port):
     test if port is in using in other transfer (thread)
     return the next port not using
     """
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sockt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ip = my_ip()
     try:
-        s.bind((ip,port))
-        s.close()
-        return port
+        sockt.bind((ip,port))
+        return port, sockt
     except OSError:
-        s.close()
+        sockt.close()
         return port_using(port+1)
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
