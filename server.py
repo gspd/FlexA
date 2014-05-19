@@ -8,7 +8,7 @@ import socket
 import argparse
 import configparser
 import database
-from threading import Thread
+from threading import Thread, Lock
 
 from rpc import RPCThreadingServer
 from rpc import RPCServerHandler
@@ -103,10 +103,14 @@ class Server(object):
         server = RPCThreadingServer((host, port),
                                     requestHandler=RPCServerHandler)
         ip, port = server.server_address
-        
+
         #connect database
         #TODO verify if is same name default
         self.db = database.init_db()
+
+        #TODO procurar uma possivel solução melhor - commit in thread
+        self.lock_commit = Lock()
+        self.status_commit = 0 #no threading commiting
 
         # Create local logging object
         self.logger = logging.getLogger("server")
@@ -156,20 +160,29 @@ class Server(object):
            ip: string with ip, address of client
            file_name: name of file that will save in server - future hash
         """
-        ip = misc.my_ip()
-        port = misc.port_using(5001)
-        host = (ip, port)
+        #get a unusage port and mount a socket
+        port, sockt = misc.port_using(5001)
 
         file_name_storage = misc.file_name_storage(verify_key.data)
         print('name do arquivo: {}'.format(file_name_storage), flush = True)
-        thread = Thread(target = misc.recive_file, args = (host, file_name_storage))
+        thread = Thread(target = misc.recive_file, args = (sockt, file_name_storage))
         thread.start()
         #TODO: set timout to thread
+
+        self.lock_commit.acquire()
+        self.status_commit += 1
+        self.lock_commit.release()
+
 
         new_file = database.File(verify_key.data, salt.data, write_key, read_key, file_name, dir_key, user_id, type_file)
         self.db.add(new_file)
         print(new_file.__repr__)
-        #self.db.commit()
+
+        self.lock_commit.acquire()
+        self.status_commit -= 1
+        if self.status_commit == 0:
+            self.db.commit()
+        self.lock_commit.release()
 
         return port
 
