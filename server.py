@@ -63,7 +63,7 @@ def main():
     args = parser.parse_args()
 
     #Name of the server config file
-    config_path = 'flexa-ng.ini'
+    config_path = 'flexa-server.ini'
     config = load_config(config_path)
 
     #Parse args and set the user choices
@@ -76,12 +76,20 @@ def main():
     #Override default IP
     if args.ip:
         ip = args.ip[0]
+        config.set('Network', 'host', ip)
+        #Write new configuration file
+        with open(config_path, mode='w', encoding='utf-8') as outfile:
+            config.write(outfile)
     else:
         ip = config.get('Network','host')
 
     #Override default port
     if args.port:
         port = int(args.port[0])
+        config.set('Network', 'port', args.port[0])
+        #Write new configuration file
+        with open(config_path, mode='w', encoding='utf-8') as outfile:
+            config.write(outfile)
     else:
         port = int(config.get('Network','port'))
 
