@@ -8,42 +8,113 @@ import subprocess
 import socket
 import binascii
 import time
+import signal
+import queue
+import os
 from threading import Thread
 from distutils.util import strtobool
 from xmlrpc.client import ServerProxy
 
 class Ping(object):
-    
-    def __init__(self):
-         self.ip_list = []
-         self.online = []
-         self.offline = []
-      
-    def scan(self, ip_list):
-         """ 
-         Recive a list of strings with ip
-         Complete list onlines and offline hosts
-         """
-         for ip in ip_list:
-            server_addr = 'http://{}:5000'.format(ip)
-            host = ServerProxy(server_addr)
-            if self.ping(host):
-                self.online.append(ip)
-            else:
-                self.offline.append(ip)
 
-    def ping(self, host):
-         """
-         this function 'pinging' on hosts
-         recive a xmlrpc.ServerProxy object
-         0 - offline
-         1 - online
-         """
-         try:
-            host.still_alive()
-            return 1
-         except (ConnectionRefusedError, OSError, TimeoutError):
-            return 0
+    def __init__(self):
+        self.ip_list = []
+        self.online = []
+        self.offline = []
+
+    def scan(self):
+        """
+        Recive a list of strings with ip
+        Complete list onlines and offline hosts
+        """
+        online = queue.Queue()
+        offline = queue.Queue()
+        threads = []
+
+        #start threads to verify if host is online        
+        for ip in self.ip_list:
+            print("scaning ip: {}".format(ip))
+            thr = Thread(target = Ping.ping, args = (self, ip, online, offline))
+            threads.append(thr)
+            thr.start()
+            #this sleep make a magic
+            #if you put lesser start to show warning: Kernel is not very fresh
+            #i think that is why we use parallell ping
+            time.sleep(0.7)
+
+        #wait all threads
+        total_thr = len(self.ip_list)
+        for n in range(0, total_thr):
+            threads[n].join()
+
+        self.online = []
+        self.offline = []
+        while not online.empty():
+            self.online.append(online.get())
+        while not offline.empty():
+            self.offline.append(offline.get())
+
+    def ping(self, ip, online, offline):
+        """
+        this function 'pinging' on hosts
+        recive a xmlrpc.ServerProxy object
+        """
+        #make a test with ping in shell
+        cmd = "ping -c2 " + ip
+        r = "".join(os.popen(cmd).readlines()) 
+        if not re.search ("64 bytes from", r):
+            offline.put(ip)
+            return
+
+        #if host is online will test if is running
+        server_addr = 'http://{}:5000'.format(ip)
+        host = ServerProxy(server_addr)
+        try:
+            if host.still_alive():
+                online.put(ip)
+        except (ConnectionRefusedError, OSError, TimeoutError):
+            offline.put(ip)
+
+    def make_list(self, type_mask, ip):
+        """ mask - define wich mask is in use
+             1 - X.X.X.255
+             2 - X.X.255.255
+             3 - X.255.255.255
+             #4 - 255.255.255.255
+            ip - format of network ex.: "192.168.3."   then is mask = 1
+        """
+        if type_mask == 1:
+            for i in range(1, 255):
+                self.ip_list.append(ip+str(i))
+        if type_mask == 2:
+            for i in range(1, 255):
+                for j in range(1, 255):
+                    self.ip_list.append(ip+str(i))
+        if type_mask == 3:
+            for i in range(1, 255):
+                for j in range(1, 255):
+                    for k in range(1, 255):
+                        self.ip_list.append(ip+str(i))
+        #if type_mask == 4:
+
+
+class Timeout():
+    """Timeout class using ALARM signal."""
+    class Timeout(Exception):
+        pass
+
+    def __init__(self, sec):
+        self.sec = sec
+
+    def __enter__(self):
+        signal.signal(signal.SIGALRM, self.raise_timeout)
+        signal.alarm(self.sec)
+
+    def __exit__(self, *args):
+        signal.alarm(0)    # disable alarm
+
+    def raise_timeout(self, *args):
+        raise Timeout.Timeout()
 
 
 def split_file(fil, nparts):
@@ -123,7 +194,7 @@ def send_file(host, transf_file):
 
         host: tuple (ip, port)
         transf_file: object file that will  transfer
-    """       
+    """
 
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     print("Estabelecendo conexão {}".format(host[1]), flush = True)
@@ -158,9 +229,9 @@ def send_file(host, transf_file):
     client.close()
 
 def recive_file(server, file_name):
-    """ Recive a file with socket 
+    """ Recive a file with socket
         Transfer with socket because XMLRPC transfer very slower than socket
-        
+
         host: tuple (str ip, int port)
         file_name: str with name, verify_key or name of file
     """

@@ -147,7 +147,7 @@ def recive_file():
 
     #TODO: fazer com que pegue o numero do servidor sozinho
     #call in rpc to server transfer a file
-    server_addr = 'http://{}:5000'.format("192.168.1.3")#socket.gethostname())
+    server_addr = 'http://{}:5000'.format("192.168.0.17")#socket.gethostname())
     server = ServerProxy(server_addr)
     result = server.give_file(ip, name_file)
 
