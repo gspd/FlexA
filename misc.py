@@ -9,7 +9,6 @@ import socket
 import binascii
 import time
 import signal
-import queue
 import os
 from threading import Thread
 from distutils.util import strtobool
@@ -17,86 +16,72 @@ from xmlrpc.client import ServerProxy
 
 class Ping(object):
 
-    def __init__(self):
-        self.ip_list = []
+    TIME_TO_ANSWER = 2
+    TIME_AUTO_SCAN = 15
+    MYPORT = 51400
+
+    def __init__(self, interface):
+        """ recive interface of network
+            String like `192.168.2.255`
+        """
+        self.interface = interface
         self.online = []
-        self.offline = []
+
+    def demon():
+        #thread answer_scan
+        answer = Thread(target = answer_scan())
+        answer.start()
+
+        #thread to auto scan
+        while True:
+            scan()
+            time.sleep(TIME_AUTO_SCAN)
 
     def scan(self):
         """
-        Recive a list of strings with ip
-        Complete list onlines and offline hosts
+           send mensage in broadcast and wait answers
+           wait no more then TIME_TO_ANSWER
         """
-        online = queue.Queue()
-        offline = queue.Queue()
-        threads = []
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        #start threads to verify if host is online        
-        for ip in self.ip_list:
-            print("scaning ip: {}".format(ip))
-            thr = Thread(target = Ping.ping, args = (self, ip, online, offline))
-            threads.append(thr)
-            thr.start()
-            #this sleep make a magic
-            #if you put lesser start to show warning: Kernel is not very fresh
-            #i think that is why we use parallell ping
-            time.sleep(0.7)
+        #Send mensage in Broadcast
+        s.sendto(b'Alive?', ('192.168.1.255', self.MYPORT))
 
-        #wait all threads
-        total_thr = len(self.ip_list)
-        for n in range(0, total_thr):
-            threads[n].join()
+        online = []
+        while True:
+            try:
+                with Timeout(self.TIME_TO_ANSWER):
+                    print('aqui1')
+                    message, address = s.recvfrom(4096)
+                    if message == b'I am here':
+                        print('aqui2')
+                        online.append(address[0])
+            except Timeout.Timeout:
+                self.online = online
+                print('aqui3')
+                break
 
-        self.online = []
-        self.offline = []
-        while not online.empty():
-            self.online.append(online.get())
-        while not offline.empty():
-            self.offline.append(offline.get())
-
-    def ping(self, ip, online, offline):
+    def answer_scan(self):
         """
-        this function 'pinging' on hosts
-        recive a xmlrpc.ServerProxy object
         """
-        #make a test with ping in shell
-        cmd = "ping -c2 " + ip
-        r = "".join(os.popen(cmd).readlines()) 
-        if not re.search ("64 bytes from", r):
-            offline.put(ip)
-            return
+        host = ''                               # Bind to all interfaces
 
-        #if host is online will test if is running
-        server_addr = 'http://{}:5000'.format(ip)
-        host = ServerProxy(server_addr)
-        try:
-            if host.still_alive():
-                online.put(ip)
-        except (ConnectionRefusedError, OSError, TimeoutError):
-            offline.put(ip)
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        s.bind((host, self.MYPORT))
 
-    def make_list(self, type_mask, ip):
-        """ mask - define wich mask is in use
-             1 - X.X.X.255
-             2 - X.X.255.255
-             3 - X.255.255.255
-             #4 - 255.255.255.255
-            ip - format of network ex.: "192.168.3."   then is mask = 1
-        """
-        if type_mask == 1:
-            for i in range(1, 255):
-                self.ip_list.append(ip+str(i))
-        if type_mask == 2:
-            for i in range(1, 255):
-                for j in range(1, 255):
-                    self.ip_list.append(ip+str(i))
-        if type_mask == 3:
-            for i in range(1, 255):
-                for j in range(1, 255):
-                    for k in range(1, 255):
-                        self.ip_list.append(ip+str(i))
-        #if type_mask == 4:
-
+        myip = my_ip()
+        while True:
+            try:
+                message, address = s.recvfrom(4096)
+                if message == b'Alive?' and address[0] != myip :
+                    # Acknowledge it.
+                    s.sendto(b"I am here", address)
+            except:
+                pass
 
 class Timeout():
     """Timeout class using ALARM signal."""

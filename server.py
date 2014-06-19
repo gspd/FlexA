@@ -93,6 +93,7 @@ def main():
     else:
         port = int(config.get('Network','port'))
 
+    #FIXME interface da rede
     #Start server
     s=Server(ip,port)
 
@@ -162,6 +163,9 @@ class Server(object):
         misc.send_file(host, saved_file)
         saved_file.close()
         return 1
+
+    def porta():
+        return misc.port_using(5001)
 
     def get_file(self, file_name, verify_key, salt, write_key, read_key, dir_key, user_id, type_file):
         """get file from client
