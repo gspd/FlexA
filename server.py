@@ -94,13 +94,14 @@ def main():
         port = int(config.get('Network','port'))
 
     #FIXME interface da rede
+    interface = '192.168.0.255'
     #Start server
-    s=Server(ip,port)
+    s=Server(ip, port, interface)
 
 class Server(object):
     """Class to receive messages from hosts"""
 
-    def __init__(self, host=None, port=5500):
+    def __init__(self, host=None, port=5500, interface = '192.168.0.255'):
         """
         Variables:
         host -- ip address or hostname to listen
@@ -112,6 +113,10 @@ class Server(object):
         server = RPCThreadingServer((host, port),
                                     requestHandler=RPCServerHandler)
         ip, port = server.server_address
+
+        #run a daemon to find hosts online
+        find_hosts = misc.Ping(interface)
+        find_hosts.daemon()
 
         #connect database
         #TODO verify if is same name default

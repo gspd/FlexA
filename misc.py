@@ -15,9 +15,12 @@ from distutils.util import strtobool
 from xmlrpc.client import ServerProxy
 
 class Ping(object):
-
-    TIME_TO_ANSWER = 2
-    TIME_AUTO_SCAN = 15
+    """ Times to scan network
+        the time between one scan and next is
+        TIMEOUT_TO_ANSWER + TIME_AUTO_SCAN
+    """
+    TIMEOUT_TO_ANSWER = 2
+    TIME_AUTO_SCAN = 3
     MYPORT = 51400
 
     def __init__(self, interface):
@@ -27,40 +30,42 @@ class Ping(object):
         self.interface = interface
         self.online = []
 
-    def demon():
+    def daemon(self):
         #thread answer_scan
-        answer = Thread(target = answer_scan())
+        answer = Thread(target = self.answer_scan, daemon = True)
         answer.start()
 
         #thread to auto scan
+        scan = Thread(target = self.auto_scan, daemon=True)
+        scan.start()
+
+    def auto_scan(self):
         while True:
-            scan()
-            time.sleep(TIME_AUTO_SCAN)
+            self.scan()
+            print(self.online)
+            time.sleep(self.TIME_AUTO_SCAN)
 
     def scan(self):
         """
            send mensage in broadcast and wait answers
-           wait no more then TIME_TO_ANSWER
+           wait no more then TIMEOUT_TO_ANSWER
         """
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.settimeout(self.TIMEOUT_TO_ANSWER)
 
         #Send mensage in Broadcast
-        s.sendto(b'Alive?', ('192.168.1.255', self.MYPORT))
+        s.sendto(b'Alive?', ('192.168.0.255', self.MYPORT))
 
         online = []
         while True:
             try:
-                with Timeout(self.TIME_TO_ANSWER):
-                    print('aqui1')
-                    message, address = s.recvfrom(4096)
-                    if message == b'I am here':
-                        print('aqui2')
-                        online.append(address[0])
-            except Timeout.Timeout:
+                message, address = s.recvfrom(4096)
+                if message == b'I am here':
+                    online.append(address[0])
+            except socket.timeout:
                 self.online = online
-                print('aqui3')
                 break
 
     def answer_scan(self):
@@ -77,30 +82,11 @@ class Ping(object):
         while True:
             try:
                 message, address = s.recvfrom(4096)
-                if message == b'Alive?' and address[0] != myip :
+                #if message == b'Alive?' and address[0] != myip :
                     # Acknowledge it.
-                    s.sendto(b"I am here", address)
+                s.sendto(b"I am here", address)
             except:
                 pass
-
-class Timeout():
-    """Timeout class using ALARM signal."""
-    class Timeout(Exception):
-        pass
-
-    def __init__(self, sec):
-        self.sec = sec
-
-    def __enter__(self):
-        signal.signal(signal.SIGALRM, self.raise_timeout)
-        signal.alarm(self.sec)
-
-    def __exit__(self, *args):
-        signal.alarm(0)    # disable alarm
-
-    def raise_timeout(self, *args):
-        raise Timeout.Timeout()
-
 
 def split_file(fil, nparts):
     """Recive
