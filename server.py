@@ -169,9 +169,6 @@ class Server(object):
         saved_file.close()
         return 1
 
-    def porta():
-        return misc.port_using(5001)
-
     def get_file(self, file_name, verify_key, salt, write_key, read_key, dir_key, user_id, type_file):
         """get file from client
            ip: string with ip, address of client

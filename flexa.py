@@ -123,8 +123,7 @@ def send_file(file_name):
     server_addr = 'http://{}:5000'.format(ip_server)
     server = ServerProxy(server_addr)
 
-    port, sock = server.porta()
-    print("FAZENDO TESTE DE RPC {}".format(port))
+
 
     #server return port where will wait a file
     port = server.get_file(file_name, verify_key, salt, write_key,  \
