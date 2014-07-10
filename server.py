@@ -146,6 +146,7 @@ class Server(object):
         server.register_function(self.still_alive)
         server.register_function(self.give_file)
         server.register_function(self.get_file)
+        server.register_function(self.exist_file)
 
     def list_directory(self):
         """Example function to list a directory and return to the caller
@@ -199,6 +200,12 @@ class Server(object):
         self.lock_commit.release()
 
         return port
+
+    def exist_file(self, file_name, dir_key, user_id):
+        #if don't exist file with same name return 0
+        return 0
+        #if exist file with same name return salt
+        #return salt
 
 if __name__ == '__main__':
     main()

@@ -104,25 +104,32 @@ def send_file(file_name):
     send file from client to server
     """
 
+    #make a server "connection" (stateless, rpc)
+    ip_server = misc.my_ip() #FIXME find a server
+    server_addr = 'http://{}:5000'.format(ip_server)
+    server = ServerProxy(server_addr)
+
+    user_id = 1 #FIXME get a real user id
+
     try:
         f = open(file_name, "rb")
     except FileNotFoundError:
         sys.exit("Arquivo não encontrado.\nTente novamente.")
 
-    salt = crypto.generate_salt()
+    #verify if this file exist (same name in this directory)
+    dir_key = "home" #FIXME set where is.... need more discussion
+    exist = server.exist_file(file_name, dir_key, user_id)
+    if exist != 0:
+        salt = exist
+    else:
+        salt = crypto.generate_salt()
+
     rsa = crypto.open_rsa_key("/home/mario/git/flexa-ng/chave")
     verify_key = crypto.generate_verify_key(salt, rsa)
     write_key = crypto.generate_write_key(verify_key)
     read_key = crypto.generate_read_key(verify_key)
     dir_key = "home"
-    user_id = 1
     type_file = "f"
-
-
-    ip_server = misc.my_ip()
-    server_addr = 'http://{}:5000'.format(ip_server)
-    server = ServerProxy(server_addr)
-
 
 
     #server return port where will wait a file
