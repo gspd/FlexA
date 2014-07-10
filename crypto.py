@@ -149,6 +149,9 @@ def open_rsa_key(in_filename, passphrase = None):
         return RSA.importKey(infile.read(), passphrase)
 
 def generate_verify_key(salt, rsa):
+    """generate a Verify Key with SHA512(RSA + Salt)
+    """
+    
     key = rsa.exportKey()
 
     verify_key = hashlib.sha512()
@@ -156,6 +159,16 @@ def generate_verify_key(salt, rsa):
     verify_key.update(salt)
 
     return verify_key.digest()
+
+def generate_read_key(vk):
+    """generate a Read Key with SHA256(Verify Key)
+    """
+
+    read_key = hashlib.sha256()
+    read_key.update(vk)
+    read_key.update(salt)
+
+    return read_key.digest()
 
 def generate_salt(length=16):
     """Generate a random salt in hexadecimal format.
