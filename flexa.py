@@ -112,7 +112,7 @@ def send_file(file_name):
     salt = crypto.generate_salt()
     rsa = crypto.open_rsa_key("/home/mario/git/flexa-ng/chave")
     verify_key = crypto.generate_verify_key(salt, rsa)
-    write_key = "01234"
+    write_key = crypto.generate_write_key(verify_key)
     read_key = crypto.generate_read_key(verify_key)
     dir_key = "home"
     user_id = 1

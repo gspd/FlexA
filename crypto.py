@@ -166,9 +166,17 @@ def generate_read_key(vk):
 
     read_key = hashlib.sha256()
     read_key.update(vk)
-    read_key.update(salt)
 
     return read_key.digest()
+
+def generate_write_key(vk):
+    """generate a Write Key with SHA384(Verify Key)
+    """
+
+    write_key= hashlib.sha512()
+    write_key.update(key)
+
+    return write_key.digest()
 
 def generate_salt(length=16):
     """Generate a random salt in hexadecimal format.
