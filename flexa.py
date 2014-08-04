@@ -8,7 +8,6 @@ import os
 import getpass
 import configparser
 import hashlib
-import socket
 from threading import Thread
 from xmlrpc.client import ServerProxy
 
@@ -182,9 +181,9 @@ def main():
         filename = generate_new_key(config.get('User', 'private key'))
         config.set('User', 'private key', filename)
         cryp = crypto.open_rsa_key(filename)
-        hash = hashlib.sha256()
-        hash.update(cryp.exportKey(format='DER'))
-        config.set('User', 'hash client', hash.hexdigest())
+        hashe = hashlib.sha256()
+        hashe.update(cryp.exportKey(format='DER'))
+        config.set('User', 'hash client', hashe.hexdigest())
 
     #Send a file to server
     if args.put:

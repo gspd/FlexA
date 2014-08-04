@@ -3,16 +3,10 @@
 """Provide general tools to FlexA."""
 
 import sys
-import re
-import subprocess
 import socket
-import binascii
 import time
-import signal
-import os
 from threading import Thread
 from distutils.util import strtobool
-from xmlrpc.client import ServerProxy
 
 class Ping(object):
     """ Times to scan network

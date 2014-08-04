@@ -4,7 +4,7 @@ import os
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Sequence, DateTime, Binary
+from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Sequence, DateTime
 
 Base = declarative_base()
 
@@ -34,9 +34,9 @@ class File(Base):
 	file_name = Column(String(255), nullable=False)
 	dir_key = Column(String(100), nullable=False)
 	user_id = Column(String, ForeignKey('user.id'), nullable=False)
-	type = Column(String(1))
+	types = Column(String(1))
 
-	def __init__(self, verify_key, salt, write_key, read_key, file_name, dir_key, user_id, type):
+	def __init__(self, verify_key, salt, write_key, read_key, file_name, dir_key, user_id, types):
 		self.verify_key = verify_key
 		self.salt = salt
 		self.write_key = write_key
@@ -44,7 +44,7 @@ class File(Base):
 		self.file_name = file_name
 		self.dir_key = dir_key
 		self.user_id = user_id
-		self.type = type
+		self.types = types
 
 	def __repr__(self):
 		return '<File(vfk "{}", salt "{}", wtk "{}", rdk "{}", name "{}", dir "{}", user "{}", type "{}")>'.format(self.verify_key, self.salt, self.write_key, self.read_key, self.file_name, self.dir_key, self.user_id, self.type)
@@ -68,12 +68,12 @@ class Parts(Base):
 class Server(Base):
 	__tablename__ = 'server'
 	
-	id = Column(String(40), nullable=False, primary_key=True)
+	uid = Column(String(40), nullable=False, primary_key=True)
 	ip = Column(String(15), nullable=False)
 	last_seen = Column(DateTime)
 
-	def __init__(self, id, ip, last_seen):
-		self.id = id
+	def __init__(self, uid, ip, last_seen):
+		self.uid = uid
 		self.ip = ip
 		self.last_seen = last_seen
 

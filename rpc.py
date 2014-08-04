@@ -2,10 +2,7 @@
 
 """Provide communication functionality between each host"""
 
-import os
-import socket
 import logging
-from threading import Thread, Condition
 from socketserver import ThreadingMixIn
 from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
@@ -20,7 +17,7 @@ class Error(object):
     strerror_dict = {UNKNOWN_ERROR: "Unknown error.",
                      NOT_IMPLEMENTED: "Request not implemented."}
 
-    def strerror(error):
+    def strerror(self, error):
         try:
             return Error.strerror_dict[error]
         except KeyError:

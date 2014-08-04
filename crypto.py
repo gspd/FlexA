@@ -3,14 +3,11 @@
 import os
 import binascii
 import hashlib
-from array import array
 
 from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 from Crypto import Random
 from Crypto.Util import Counter
-
-import misc
 
 """Functions to manipulate cryptography on FlexA
 
