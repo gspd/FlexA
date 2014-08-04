@@ -109,6 +109,9 @@ def send_file(file_name):
     server_addr = 'http://{}:5000'.format(ip_server)
     server = ServerProxy(server_addr)
 
+    #TODO: achar o diretorio sozinho
+    rsa = crypto.open_rsa_key("/home/mario/git/flexa-ng/chave")
+
     user_id = 1 #FIXME get a real user id
 
     try:
@@ -118,22 +121,14 @@ def send_file(file_name):
 
     #verify if this file exist (same name in this directory)
     dir_key = "home" #FIXME set where is.... need more discussion
-    exist = server.exist_file(file_name, dir_key, user_id)
-    if exist != 0:
-        salt = exist
-    else:
-        salt = crypto.generate_salt()
-
-    rsa = crypto.open_rsa_key("/home/mario/git/flexa-ng/chave")
-    verify_key = crypto.generate_verify_key(salt, rsa)
-    write_key = crypto.generate_write_key(verify_key)
-    read_key = crypto.generate_read_key(verify_key)
-    dir_key = "home"
+    #ask to server if is update or new file
+    salt = server.exist_file(file_name, dir_key, user_id)
+    #generate every keys in string
+    keys = crypto.keys_string(salt, rsa)
     type_file = "f"
 
-
     #server return port where will wait a file
-    port = server.get_file(file_name, verify_key, salt, write_key, read_key, dir_key, user_id, type_file)
+    port = server.get_file(file_name, keys, dir_key, user_id, type_file)
 
     print('Arquivo {}, Porta {}'.format(file_name, port))
 
