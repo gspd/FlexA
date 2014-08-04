@@ -27,13 +27,13 @@ class User(Base):
 class File(Base):
 	__tablename__ = 'file'
 
-	verify_key = Column(Binary, primary_key=True)
-	salt = Column(Binary, nullable=False)
+	verify_key = Column(String, primary_key=True)
+	salt = Column(String, nullable=False)
 	write_key = Column(String(100), nullable=False)
 	read_key = Column(String(100), nullable=False)
 	file_name = Column(String(255), nullable=False)
 	dir_key = Column(String(100), nullable=False)
-	user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+	user_id = Column(String, ForeignKey('user.id'), nullable=False)
 	type = Column(String(1))
 
 	def __init__(self, verify_key, salt, write_key, read_key, file_name, dir_key, user_id, type):
@@ -81,11 +81,11 @@ class Server(Base):
 		return '<File({} {} {})>'.format(self.id, self.ip, self.last_seen)
 
 def init_db(file_db='flexa.sqlite3'):
-    engine = create_engine('sqlite:///{}'.format(file_db), echo=True)
-    if not os.path.exists(file_db):
-        Base.metadata.create_all(engine)
-    Session = sessionmaker(bind=engine)
+	engine = create_engine('sqlite:///{}'.format(file_db), echo=True)
+	if not os.path.exists(file_db):
+		Base.metadata.create_all(engine)
+	Session = sessionmaker(bind=engine)
 
-    return Session()
+	return Session()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

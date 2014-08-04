@@ -133,8 +133,7 @@ def send_file(file_name):
 
 
     #server return port where will wait a file
-    port = server.get_file(file_name, verify_key, salt, write_key,  \
-                           read_key, dir_key, user_id, type_file)
+    port = server.get_file(file_name, verify_key, salt, write_key, read_key, dir_key, user_id, type_file)
 
     print('Arquivo {}, Porta {}'.format(file_name, port))
 
