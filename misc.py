@@ -234,14 +234,6 @@ def my_ip():
     s.close()
     return address
 
-def file_name_storage(verify_key):
-    """
-    keep only a name string in hex
-    """
-    hexa = binascii.b2a_hex(verify_key)
-    name = str(hexa)[2:-1]
-    return name
-
 def port_using(port):
     """
     test if port is in using in other transfer (thread)
