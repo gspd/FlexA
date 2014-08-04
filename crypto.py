@@ -10,6 +10,8 @@ from Crypto.PublicKey import RSA
 from Crypto import Random
 from Crypto.Util import Counter
 
+import misc
+
 """Functions to manipulate cryptography on FlexA
 
 """
@@ -151,32 +153,29 @@ def open_rsa_key(in_filename, passphrase = None):
 def generate_verify_key(salt, rsa):
     """generate a Verify Key with SHA512(RSA + Salt)
     """
-    
-    key = rsa.exportKey()
 
     verify_key = hashlib.sha512()
-    verify_key.update(key)
-    verify_key.update(salt)
+    verify_key.update(rsa + salt)
 
-    return verify_key.digest()
+    return verify_key.digest(), verify_key.hexdigest()
 
-def generate_read_key(vk):
+def generate_read_key(vk, rsa):
     """generate a Read Key with SHA256(Verify Key)
     """
 
     read_key = hashlib.sha256()
-    read_key.update(vk)
+    read_key.update(vk + rsa)
 
-    return read_key.digest()
+    return read_key.digest(), read_key.hexdigest()
 
-def generate_write_key(vk):
+def generate_write_key(vk, rsa):
     """generate a Write Key with SHA384(Verify Key)
     """
 
     write_key= hashlib.sha512()
-    write_key.update(vk)
+    write_key.update(vk + rsa)
 
-    return write_key.digest()
+    return write_key.hexdigest()
 
 def generate_salt(length=16):
     """Generate a random salt in hexadecimal format.
@@ -191,5 +190,27 @@ def generate_salt(length=16):
     salt = os.urandom(length)
     salt = binascii.hexlify(salt)
     return salt
+
+def keys_string(salt, rsa):
+    """Generate keys (verify, write, read, salt) and return your strings
+    Parameters:
+    salt if exist file or 0 if doesn't
+    rsa is object
+    """
+
+    if salt != 0:
+        salt = generate_salt()
+        salts = salt.decode("ascii")
+    else:
+        salts = salt
+        salt = salt.encode("ascii")
+
+    key_rsa = rsa.exportKey()
+    #call generate hashs that return your binary and your string
+    vk, vks = generate_verify_key(salt, key_rsa)
+    rk, rks = generate_read_key(vk, key_rsa)
+    wks = generate_write_key(rk, key_rsa)
+
+    return (vks, rks, wks, salts)
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
