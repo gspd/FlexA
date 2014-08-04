@@ -202,10 +202,18 @@ class Server(object):
         return port
 
     def exist_file(self, file_name, dir_key, user_id):
-        #if don't exist file with same name return 0
-        return 0
-        #if exist file with same name return salt
-        #return salt
+        
+        file = self.db.query(database.File)
+        file = file.filter(database.File.file_name == "foto1.jpg")
+        file = file.filter(database.File.user_id == "1")
+        result = file.all()
+        if result == None :
+            print("arquivo não encontrado")
+            return 0
+        else:
+            print("arquivo encontrado")
+            print("resultado da pesquisa",result)
+            return result[0].salt
 
 if __name__ == '__main__':
     main()
