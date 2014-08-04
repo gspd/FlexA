@@ -198,7 +198,7 @@ def keys_string(salt, rsa):
     rsa is object
     """
 
-    if salt != 0:
+    if salt == 0:
         salt = generate_salt()
         salts = salt.decode("ascii")
     else:
