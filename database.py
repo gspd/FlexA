@@ -47,14 +47,14 @@ class File(Base):
 		self.types = types
 
 	def __repr__(self):
-		return '<File(vfk "{}", salt "{}", wtk "{}", rdk "{}", name "{}", dir "{}", user "{}", type "{}")>'.format(self.verify_key, self.salt, self.write_key, self.read_key, self.file_name, self.dir_key, self.user_id, self.type)
+		return '<File(vfk "{}", salt "{}", wtk "{}", rdk "{}", name "{}", dir "{}", user "{}", type "{}")>'.format(self.verify_key, self.salt, self.write_key, self.read_key, self.file_name, self.dir_key, self.user_id, self.types)
 
 class Parts(Base):
 	__tablename__ = 'parts'
 	
-	id = Column(Integer, Sequence('parts_id_seq'), primary_key=True)
+	uid = Column(Integer, Sequence('parts_id_seq'), primary_key=True)
 	verify_key = Column(String(100), ForeignKey('file.verify_key'), nullable=False)
-	local = Column(String(40), ForeignKey('server.id'))
+	local = Column(String(40), ForeignKey('server.uid'))
 	num_part = Column(Integer, nullable=False)
 	
 	def __init__(self, verify_key, local, num_part):
