@@ -147,7 +147,7 @@ class Server(object):
         server.register_function(self.give_file)
         server.register_function(self.get_file)
         server.register_function(self.exist_file)
-
+            
     def list_directory(self):
         """Example function to list a directory and return to the caller
 
@@ -170,17 +170,17 @@ class Server(object):
         saved_file.close()
         return 1
 
-    def get_file(self, file_name, verify_key, salt, write_key, read_key, dir_key, user_id, type_file):
+    def get_file(self, file_name, keys, dir_key, user_id, type_file):
         """get file from client
            ip: string with ip, address of client
-           file_name: name of file that will save in server - future hash
+           file_name: name of file that will save in server
+           keys: tupĺe (0 verify_key, 1 read_key, 2 write_key, 3 salt) strings
         """
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)
 
-        file_name_storage = misc.file_name_storage(verify_key.data)
-        print('name do arquivo: {}'.format(file_name_storage), flush = True)
-        thread = Thread(target = misc.recive_file, args = (sockt, file_name_storage))
+        print('name do arquivo: {}'.format(file_name), flush = True)
+        thread = Thread(target = misc.recive_file, args = (sockt, keys[0]))
         thread.start()
         #TODO: set timout to thread
 
@@ -189,7 +189,7 @@ class Server(object):
         self.lock_commit.release()
 
 
-        new_file = database.File(verify_key.data, salt.data, write_key, read_key, file_name, dir_key, user_id, type_file)
+        new_file = database.File(keys[0], keys[3], keys[2], keys[1], file_name, dir_key, user_id, type_file)
         self.db.add(new_file)
         print(new_file.__repr__)
 
