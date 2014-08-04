@@ -174,7 +174,7 @@ def generate_write_key(vk):
     """
 
     write_key= hashlib.sha512()
-    write_key.update(key)
+    write_key.update(vk)
 
     return write_key.digest()
 
