@@ -5,24 +5,27 @@ import os
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Sequence, DateTime
+from threading import Lock
+import time
 
 Base = declarative_base()
 
 class User(Base):
 	__tablename__= 'user'
 	
-	id = Column(String(64), primary_key=True)
+	uid = Column(String(64), primary_key=True)
 	name = Column(String(100), nullable=False)
 	home_key = Column(String(100))
 	rsa_pub = Column(String(100))
 	
-	def __init__(self, name, home_key, rsa_pub):
+	def __init__(self, uid, name, home_key, rsa_pub):
+		self.uid = uid
 		self.name = name
 		self.home_key = home_key
 		self.rsa_pub = rsa_pub
 	
 	def __repr__(self):
-		return '<File({},{})>'.format(self.id, self.name)
+		return '<File({},{})>'.format(self.uid, self.name)
 	
 class File(Base):
 	__tablename__ = 'file'
@@ -33,7 +36,7 @@ class File(Base):
 	read_key = Column(String(100), nullable=False)
 	file_name = Column(String(255), nullable=False)
 	dir_key = Column(String(100), nullable=False)
-	user_id = Column(String, ForeignKey('user.id'), nullable=False)
+	user_id = Column(String, ForeignKey('user.uid'), nullable=False)
 	types = Column(String(1))
 
 	def __init__(self, verify_key, salt, write_key, read_key, file_name, dir_key, user_id, types):
@@ -80,12 +83,82 @@ class Server(Base):
 	def __repr__(self):
 		return '<File({} {} {})>'.format(self.id, self.ip, self.last_seen)
 
-def init_db(file_db='flexa.sqlite3'):
-	engine = create_engine('sqlite:///{}'.format(file_db), echo=True)
-	if not os.path.exists(file_db):
-		Base.metadata.create_all(engine)
-	Session = sessionmaker(bind=engine)
+class DataBase():
+	"""class responsible for make every change and query in data base
+	"""
 
-	return Session()
+	#variable to control max changes in data base before commit
+	_max_modifies = 30
+	#set interval to make commit by time in seconds
+	_time_to_commit = 25
+
+	def __init__(self, file_db='flexa.sqlite3'):
+		engine = create_engine('sqlite:///{}'.format(file_db), connect_args={'check_same_thread':False}, echo=True)
+		if not os.path.exists(file_db):
+			Base.metadata.create_all(engine)
+		Session = sessionmaker(bind=engine)
+		session = Session()
+
+		#Semaphores to control concurrence in data base
+		#save_db is used to commit, put in hd every changes - slow
+		save_db = Lock()
+		#modify_db is used to add, modify, flush in :memory: database - fast
+		modify_db = Lock()
+		#modifies start in 0
+		num_modifies = 0
+
+	def commit_db(self):
+		"""This function make commit in data base.
+		   It can't call in anywhere, this function is controled by Semaphores (save_db, modify_db, num_modifies) 
+		"""
+		self.save_db.acquire()
+		self.session.commit()
+		self.save_db.release()
+
+	def daemon(self):
+		while True:
+			time.sleep(self._time_to_commit)
+			self.commit_db()
+
+	def add(self, new_obj):
+		"""Put a new object in database
+		Use Semaphores to control concurrence
+		When there are more then  modifies execute commit_db()
+		"""
+
+		#block semaphore
+		self.modify_db.acquire()
+
+		#try add new object in database, if don't have success rollback
+		try:
+			self.session.add(new_obj)
+			self.session.flush()
+
+			#verify if have more then 10 modifies
+			if self.num_modifies < self._max_modifies:
+				self.num_modifies+= 1
+			else:
+				self.num_modifies = 0
+				self.commit_db()
+		except:
+			#TODO: implement rollback
+			pass
+
+		#unblock semaphore
+		self.modify_db.release()
+
+	def  exist_file(self, file_name, dir_key, user_id):
+
+		file = self.engines.query(File)
+		file = file.filter(File.file_name == "foto1.jpg")
+		file = file.filter(File.user_id == "1")
+		result = file.all()
+		if result == [] :
+			print("arquivo não encontrado")
+			return 0
+		else:
+			print("arquivo encontrado")
+			print("resultado da pesquisa",result)
+			return result[0].salt
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
