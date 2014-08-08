@@ -108,49 +108,38 @@ class Server(object):
         port -- port to listen to requests
 
         """
-        if not host:
-            host = socket.gethostname()
-        server = RPCThreadingServer((host, port),
-                                    requestHandler=RPCServerHandler)
-        ip, port = server.server_address
-
         #run a daemon to find hosts online
         find_hosts = misc.Ping(interface)
         find_hosts.daemon()
 
         #connect database
-        #TODO verify if is same name default
-        self.db = database.init_db()
+        self.db = database.DataBase()
 
-        #TODO procurar uma possivel solução melhor - commit in thread
-        self.lock_commit = Lock()
-        self.status_commit = 0 #no threading commiting
-
+        if not host:
+            host = socket.gethostname()
+        server = RPCThreadingServer((host, port),
+                                    requestHandler=RPCServerHandler)
+        ip, port = server.server_address
         # Create local logging object
         self.logger = logging.getLogger("server")
-
         self.logger.info("Listening on {}:{}".format(ip, port))
-
         # register all functions
         self.register_operations(server)
-
         # create and server object
         server.serve_forever()
 
     def register_operations(self, server):
         """Register all operations supported by the server in the server
         objects
-
         """
         server.register_function(self.list_directory)
         server.register_function(self.still_alive)
         server.register_function(self.give_file)
         server.register_function(self.get_file)
         server.register_function(self.exist_file)
-            
+
     def list_directory(self):
         """Example function to list a directory and return to the caller
-
         """
         return os.listdir('.')
 
@@ -184,36 +173,15 @@ class Server(object):
         thread.start()
         #TODO: set timout to thread
 
-        self.lock_commit.acquire()
-        self.status_commit += 1
-        self.lock_commit.release()
-
-
         new_file = database.File(keys[0], keys[3], keys[2], keys[1], file_name, dir_key, user_id, type_file)
         self.db.add(new_file)
         print(new_file.__repr__)
 
-        self.lock_commit.acquire()
-        self.status_commit -= 1
-        if self.status_commit == 0:
-            self.db.commit()
-        self.lock_commit.release()
-
         return port
 
     def exist_file(self, file_name, dir_key, user_id):
-        
-        file = self.db.query(database.File)
-        file = file.filter(database.File.file_name == "foto1.jpg")
-        file = file.filter(database.File.user_id == "1")
-        result = file.all()
-        if result == None :
-            print("arquivo não encontrado")
-            return 0
-        else:
-            print("arquivo encontrado")
-            print("resultado da pesquisa",result)
-            return result[0].salt
+        return self.db.exist_file(file_name, dir_key, user_id)
+
 
 if __name__ == '__main__':
     main()
