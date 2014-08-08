@@ -97,15 +97,15 @@ class DataBase():
 		if not os.path.exists(file_db):
 			Base.metadata.create_all(engine)
 		Session = sessionmaker(bind=engine)
-		session = Session()
+		self.session = Session()
 
 		#Semaphores to control concurrence in data base
 		#save_db is used to commit, put in hd every changes - slow
-		save_db = Lock()
+		self.save_db = Lock()
 		#modify_db is used to add, modify, flush in :memory: database - fast
-		modify_db = Lock()
+		self.modify_db = Lock()
 		#modifies start in 0
-		num_modifies = 0
+		self.num_modifies = 0
 
 	def commit_db(self):
 		"""This function make commit in data base.
@@ -149,7 +149,7 @@ class DataBase():
 
 	def  exist_file(self, file_name, dir_key, user_id):
 
-		file = self.engines.query(File)
+		file = self.session.query(File)
 		file = file.filter(File.file_name == "foto1.jpg")
 		file = file.filter(File.user_id == "1")
 		result = file.all()
