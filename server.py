@@ -8,7 +8,7 @@ import socket
 import argparse
 import configparser
 import database
-from threading import Thread, Lock
+from threading import Thread
 
 from rpc import RPCThreadingServer
 from rpc import RPCServerHandler
@@ -96,7 +96,7 @@ def main():
     #FIXME interface da rede
     interface = '192.168.0.255'
     #Start server
-    s=Server(ip, port, interface)
+    Server(ip, port, interface)
 
 class Server(object):
     """Class to receive messages from hosts"""
@@ -126,7 +126,15 @@ class Server(object):
         # register all functions
         self.register_operations(server)
         # create and server object
-        server.serve_forever()
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            print("\nSignal of interrupt recived.")
+        except:
+            print("\nSomething made server stop.")
+        finally:
+            server.shutdown()
+            print("\nServer stopped!")
 
     def register_operations(self, server):
         """Register all operations supported by the server in the server
@@ -136,7 +144,7 @@ class Server(object):
         server.register_function(self.still_alive)
         server.register_function(self.give_file)
         server.register_function(self.get_file)
-        server.register_function(self.exist_file)
+        server.register_function(self.get_salt)
         server.register_function(self.update_file)
 
     def list_files(self, home_key):
@@ -147,18 +155,16 @@ class Server(object):
     def still_alive(self):
         return 1
 
-    def give_file(self, ip, file_name):
+    def give_file(self, ip, port, verify_key):
         """ give files to client
             ip: string with ip, address of client
             file_name: in a future this is a hash of file
         """
-        host = (ip, 5001)
+        host = (ip, port)
+        misc.send_file(host, verify_key)
 
-        saved_file = open(file_name,"rb")
-
-        misc.send_file(host, saved_file)
-        saved_file.close()
         return 1
+
 
     def get_file(self, file_name, keys, dir_key, user_id, type_file):
         """get file from client
@@ -196,8 +202,12 @@ class Server(object):
 
         return port
 
-    def exist_file(self, file_name, dir_key, user_id):
-        return self.db.exist_file(file_name, dir_key, user_id)
+    def get_salt(self, file_name, dir_key, user_id):
+        """make a call in data base to find file
+        if found return your salt
+        else return 0
+        """ 
+        return self.db.salt_file(file_name, dir_key, user_id)
 
 
 if __name__ == '__main__':
