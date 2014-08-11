@@ -163,7 +163,11 @@ class DataBase():
 			return False
 
 
-	def  exist_file(self, file_name, dir_key, user_id):
+	def  salt_file(self, file_name, dir_key, user_id):
+		"""this function search in data base a file
+		and return your salt
+		if don't find return 0
+		"""
 
 		file = self.session.query(File)
 		file = file.filter(File.file_name == file_name)
