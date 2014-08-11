@@ -153,7 +153,7 @@ def query_yes_no(question, default="yes"):
         sys.exit(2)
 
 
-def send_file(host, transf_file):
+def send_file(host, file_name):
     """ Send a file with socket to client
         Transfer with socket because XMLRPC transfer very slower than socket
 
@@ -161,6 +161,7 @@ def send_file(host, transf_file):
         transf_file: object file that will  transfer
     """
 
+    transf_file = open(file_name,"rb")
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     print("Estabelecendo conexão {}".format(host[1]), flush = True)
     #try connect but if serve don't create a sockt yet wait 1 sec.
@@ -192,19 +193,20 @@ def send_file(host, transf_file):
 
     print('--------------------------------> port: {}'.format(host[1]))
     client.close()
+    transf_file.close()
 
-def recive_file(server, file_name):
+def recive_file(sock, file_name):
     """ Recive a file with socket
         Transfer with socket because XMLRPC transfer very slower than socket
 
-        host: tuple (str ip, int port)
+        sock: a socket object where is instance that will recive file
         file_name: str with name, verify_key or name of file
     """
 
-    server.listen(1)
+    sock.listen(1)
 
     file_save = open(file_name, "wb")
-    con, server_name  = server.accept()
+    con, server_name  = sock.accept()
     print("Conexão estabelecidada, \nrecebendo arquivo.", flush = True)
     msg = con.recv(1024)
     recived = len(msg)
@@ -213,8 +215,8 @@ def recive_file(server, file_name):
         msg = con.recv(1024)
         recived += len(msg)
     file_save.close()
-    con.send(bytes(recived))
-    con.close()
+#    con.send(bytes(recived))
+#    con.close()
     print("Arquivo recebido.", flush = True)
 
 def my_ip():
@@ -230,8 +232,8 @@ def my_ip():
 
 def port_using(port):
     """
-    test if port is in using in other transfer (thread)
-    return the next port not using
+    test if port is in using if not return number of port and your socket opening 
+    if in using return the next port (port+1) to port_using - recursive
     """
     sockt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ip = my_ip()
