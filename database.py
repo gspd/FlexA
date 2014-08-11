@@ -5,7 +5,7 @@ import os
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Sequence, DateTime
-from threading import Lock
+from threading import Lock, Thread
 import time
 
 Base = declarative_base()
@@ -37,9 +37,9 @@ class File(Base):
 	file_name = Column(String(255), nullable=False)
 	dir_key = Column(String(100), nullable=False)
 	user_id = Column(String, ForeignKey('user.uid'), nullable=False)
-	types = Column(String(1))
+	type = Column(String(1))
 
-	def __init__(self, verify_key, salt, write_key, read_key, file_name, dir_key, user_id, types):
+	def __init__(self, verify_key, salt, write_key, read_key, file_name, dir_key, user_id, type):
 		self.verify_key = verify_key
 		self.salt = salt
 		self.write_key = write_key
@@ -47,10 +47,10 @@ class File(Base):
 		self.file_name = file_name
 		self.dir_key = dir_key
 		self.user_id = user_id
-		self.types = types
+		self.type = type
 
 	def __repr__(self):
-		return '<File(vfk "{}", salt "{}", wtk "{}", rdk "{}", name "{}", dir "{}", user "{}", type "{}")>'.format(self.verify_key, self.salt, self.write_key, self.read_key, self.file_name, self.dir_key, self.user_id, self.types)
+		return '<File(vfk "{}", salt "{}", wtk "{}", rdk "{}", name "{}", dir "{}", user "{}", type "{}")>'.format(self.verify_key, self.salt, self.write_key, self.read_key, self.file_name, self.dir_key, self.user_id, self.type)
 
 class Parts(Base):
 	__tablename__ = 'parts'
@@ -107,6 +107,9 @@ class DataBase():
 		#modifies start in 0
 		self.num_modifies = 0
 
+		thr_daemon = Thread(target = self.daemon_commit, daemon = True)
+		thr_daemon.start()
+
 	def commit_db(self):
 		"""This function make commit in data base.
 		   It can't call in anywhere, this function is controled by Semaphores (save_db, modify_db, num_modifies) 
@@ -115,7 +118,7 @@ class DataBase():
 		self.session.commit()
 		self.save_db.release()
 
-	def daemon(self):
+	def daemon_commit(self):
 		while True:
 			time.sleep(self._time_to_commit)
 			self.commit_db()
@@ -133,6 +136,7 @@ class DataBase():
 		try:
 			self.session.add(new_obj)
 			self.session.flush()
+			self.commit_db() #FIXME para usar nos testes
 
 			#verify if have more then 10 modifies
 			if self.num_modifies < self._max_modifies:
@@ -141,24 +145,33 @@ class DataBase():
 				self.num_modifies = 0
 				self.commit_db()
 		except:
-			#TODO: implement rollback
 			pass
+			#self.session.rollback()
 
 		#unblock semaphore
 		self.modify_db.release()
 
+	def update_file(self, verify_key, write_key):
+		file = self.session.query(File).filter(File.verify_key == verify_key)
+		if (file.one().write_key == write_key):
+			#have permission to write
+			file.update({"type":"a"})
+			#FIXME: update date time not type
+			return True
+		else:
+			#don't have permission to write
+			return False
+
+
 	def  exist_file(self, file_name, dir_key, user_id):
 
 		file = self.session.query(File)
-		file = file.filter(File.file_name == "foto1.jpg")
-		file = file.filter(File.user_id == "1")
+		file = file.filter(File.file_name == file_name)
+		file = file.filter(File.user_id == user_id)
 		result = file.all()
 		if result == [] :
-			print("arquivo não encontrado")
 			return 0
 		else:
-			print("arquivo encontrado")
-			print("resultado da pesquisa",result)
 			return result[0].salt
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
