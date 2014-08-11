@@ -13,6 +13,7 @@ from xmlrpc.client import ServerProxy
 
 import crypto
 import misc
+import threading
 
 __version__ = "0.1"
 
@@ -102,7 +103,6 @@ def send_file(file_name):
     """
     send file from client to server
     """
-
     #make a server "connection" (stateless, rpc)
     ip_server = misc.my_ip() #FIXME find a server
     server_addr = 'http://{}:5000'.format(ip_server)
@@ -110,28 +110,35 @@ def send_file(file_name):
 
     #TODO: achar o diretorio sozinho
     rsa = crypto.open_rsa_key("/home/mario/git/flexa-ng/chave")
-
     user_id = 1 #FIXME get a real user id
-
-    try:
-        f = open(file_name, "rb")
-    except FileNotFoundError:
-        sys.exit("Arquivo não encontrado.\nTente novamente.")
-
     #verify if this file exist (same name in this directory)
     dir_key = "home" #FIXME set where is.... need more discussion
     #ask to server if is update or new file
     salt = server.exist_file(file_name, dir_key, user_id)
-    #generate every keys in string
+
+    #generate every keys in string return tuple (0 - verify, 1 - write, 2 - read, 3 - salt)
     keys = crypto.keys_string(salt, rsa)
+    try:
+        f = open(file_name, "rb")
+        crypto.encrypt_file(keys[2][0:32], file_name, None, 32)
+        f = open(file_name+".enc", "rb")
+    except FileNotFoundError:
+        sys.exit("Arquivo não encontrado.\nTente novamente.")
+
     type_file = "f"
 
-    #server return port where will wait a file
-    port = server.get_file(file_name, keys, dir_key, user_id, type_file)
+    #if salt has a value then is update. because server return a valid salt
+    if salt:
+        port = server.update_file(keys[0], keys[1])
+    else:
+        #server return port where will wait a file
+        port = server.get_file(file_name, keys, dir_key, user_id, type_file)
 
     print('Arquivo {}, Porta {}'.format(file_name, port))
 
-
+    if not port:
+        print("Some error occurred. Maybe you don't have permission to write. \nTry again.")
+        return
     host = (ip_server, port)
     misc.send_file(host, f)
 
