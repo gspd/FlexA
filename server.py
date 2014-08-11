@@ -132,14 +132,15 @@ class Server(object):
         """Register all operations supported by the server in the server
         objects
         """
-        server.register_function(self.list_directory)
+        server.register_function(self.list_files)
         server.register_function(self.still_alive)
         server.register_function(self.give_file)
         server.register_function(self.get_file)
         server.register_function(self.exist_file)
+        server.register_function(self.update_file)
 
-    def list_directory(self):
-        """Example function to list a directory and return to the caller
+    def list_files(self, home_key):
+        """Show every files in that directory
         """
         return os.listdir('.')
 
@@ -161,10 +162,13 @@ class Server(object):
 
     def get_file(self, file_name, keys, dir_key, user_id, type_file):
         """get file from client
-           ip: string with ip, address of client
-           file_name: name of file that will save in server
-           keys: tupĺe (0 verify_key, 1 read_key, 2 write_key, 3 salt) strings
+           file_name: name of file that will save in server - verify_key
+           keys: tupĺe (0 verify_key, 1 write_key, 2 read_key, 3 salt) strings
         """
+
+        new_file = database.File(keys[0], keys[3], keys[1], keys[2], file_name, dir_key, user_id, type_file)
+        self.db.add(new_file)
+
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)
 
@@ -173,9 +177,22 @@ class Server(object):
         thread.start()
         #TODO: set timout to thread
 
-        new_file = database.File(keys[0], keys[3], keys[2], keys[1], file_name, dir_key, user_id, type_file)
-        self.db.add(new_file)
-        print(new_file.__repr__)
+        return port
+
+    def update_file(self, verify_key, write_key):
+        """get file from client
+           keys: tupĺe (0 verify_key, 1 read_key, 2 write_key, 3 salt) strings
+        """
+        #get a unusage port and mount a socket
+        port, sockt = misc.port_using(5001)
+
+        if not (self.db.update_file(verify_key, write_key)):
+            print("You don't have permission to write in this file.")
+            return False
+
+        thread = Thread(target = misc.recive_file, args = (sockt, verify_key))
+        thread.start()
+        #TODO: set timout to thread
 
         return port
 
