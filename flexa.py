@@ -114,14 +114,15 @@ def send_file(file_name):
     #verify if this file exist (same name in this directory)
     dir_key = "home" #FIXME set where is.... need more discussion
     #ask to server if is update or new file
-    salt = server.exist_file(file_name, dir_key, user_id)
+    salt = server.get_salt(file_name, dir_key, user_id)
 
     #generate every keys in string return tuple (0 - verify, 1 - write, 2 - read, 3 - salt)
     keys = crypto.keys_string(salt, rsa)
     try:
-        f = open(file_name, "rb")
+        f = open(file_name, "rb") #verify if exist file
         crypto.encrypt_file(keys[2][0:32], file_name, None, 32)
         f = open(file_name+".enc", "rb")
+        f.close()
     except FileNotFoundError:
         sys.exit("Arquivo não encontrado.\nTente novamente.")
 
@@ -140,30 +141,37 @@ def send_file(file_name):
         print("Some error occurred. Maybe you don't have permission to write. \nTry again.")
         return
     host = (ip_server, port)
-    misc.send_file(host, f)
+    misc.send_file(host, file_name)
 
-    f.close()
 
-def recive_file():
+def recive_file(file_name):
     """
     recive file from server
     """
-    f = open("vim2.pdf","wb")
+
     ip = misc.my_ip()
-    port = misc.port_using(5001)#FIXME - passar o thread para o server
-    host = (ip, port)
-    #create a thread to listening in socket for a connection with file from server
-    thread = Thread(target = misc.recive_file, args = (host, f))
-    thread.start()
+    port, sock = misc.port_using(4001)
+    thr = Thread(target = misc.recive_file, args = (sock, file_name))
 
-    #TODO: fazer com que pegue o numero do servidor sozinho
-    #call in rpc to server transfer a file
-    server_addr = 'http://{}:5000'.format("192.168.0.17")#socket.gethostname())
+    ip_server = misc.my_ip() #FIXME find a server
+    server_addr = 'http://{}:5000'.format(ip_server)
     server = ServerProxy(server_addr)
-    result = server.give_file(ip, name_file)
 
-    thread.join()
-    f.close()
+    user_id = 1
+    dir_key = "home"
+    salt = server.get_salt(file_name, dir_key, user_id)
+
+    if (salt == 0):
+        print("This file can't be found")
+        return
+
+    #TODO: achar o diretorio sozinho
+    rsa = crypto.open_rsa_key("/home/mario/git/flexa-ng/chave")
+    keys = crypto.keys_string(salt, rsa)
+
+    thr.start()
+    a = server.give_file(ip, port, keys[0])
+
 
 ########################
 
@@ -198,7 +206,7 @@ def main():
 
     #Get a file from server
     if args.get:
-        recive_file()
+        recive_file(args.get[0])
 
     #Write configuration file
     with open(config_path, mode='w', encoding='utf-8') as outfile:
