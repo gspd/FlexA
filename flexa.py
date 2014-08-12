@@ -13,7 +13,6 @@ from xmlrpc.client import ServerProxy
 
 import crypto
 import misc
-import threading
 
 __version__ = "0.1"
 
@@ -124,7 +123,7 @@ def send_file(file_name):
         f = open(file_name+".enc", "rb")
         f.close()
     except FileNotFoundError:
-        sys.exit("Arquivo não encontrado.\nTente novamente.")
+        sys.exit("File not found.\nTry again.")
 
     type_file = "f"
 
@@ -138,8 +137,8 @@ def send_file(file_name):
     print('Arquivo {}, Porta {}'.format(file_name, port))
 
     if not port:
-        print("Some error occurred. Maybe you don't have permission to write. \nTry again.")
-        return
+        sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
+
     host = (ip_server, port)
     misc.send_file(host, file_name)
 
@@ -170,7 +169,8 @@ def recive_file(file_name):
     keys = crypto.keys_string(salt, rsa)
 
     thr.start()
-    a = server.give_file(ip, port, keys[0])
+    server.give_file(ip, port, keys[0])
+    thr.join()
 
 
 ########################
