@@ -163,8 +163,6 @@ class Server(object):
         host = (ip, port)
         misc.send_file(host, verify_key)
 
-        return 1
-
 
     def get_file(self, file_name, keys, dir_key, user_id, type_file):
         """get file from client
@@ -193,7 +191,6 @@ class Server(object):
         port, sockt = misc.port_using(5001)
 
         if not (self.db.update_file(verify_key, write_key)):
-            print("You don't have permission to write in this file.")
             return False
 
         thread = Thread(target = misc.recive_file, args = (sockt, verify_key))
