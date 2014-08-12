@@ -10,7 +10,6 @@ from Crypto import Random
 from Crypto.Util import Counter
 
 """Functions to manipulate cryptography on FlexA
-
 """
 
 def encrypt_file(key, in_filename, out_filename=None, chunksize=64*1024):

@@ -207,7 +207,6 @@ def recive_file(sock, file_name):
 
     file_save = open(file_name, "wb")
     con, server_name  = sock.accept()
-    print("Conexão estabelecidada, \nrecebendo arquivo.", flush = True)
     msg = con.recv(1024)
     recived = len(msg)
     while msg:
@@ -217,7 +216,6 @@ def recive_file(sock, file_name):
     file_save.close()
 #    con.send(bytes(recived))
 #    con.close()
-    print("Arquivo recebido.", flush = True)
 
 def my_ip():
     """ this function create a socket connection
