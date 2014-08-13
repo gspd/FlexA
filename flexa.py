@@ -178,11 +178,43 @@ def recive_file(file_name):
 def main():
     """The function called when the program is executed on a shell"""
 
-    #If no option is given, show help and exit
+
     parser = usage()
+
+    flexa_dir = os.getenv("HOME")+"/directory-flexa"
+    #how directory flexa was called
+    dir_called = os.getcwd()
+
+    if not os.path.exists(flexa_dir):
+        #if don't exist diretory-flexa in user home then is your first time
+        #is necessary create RSA and default directory
+        print("First time you use it.\nSome configuration is necessary.")
+        os.makedirs(flexa_dir)
+
+        #Name of the user config file
+        config_path = 'flexa-ng.ini'
+        config = load_config(config_path)
+
+        if (misc.query_yes_no("Do you want creat RSA key now?")):
+            filename = generate_new_key(config.get('User', 'private key'))
+            config.set('User', 'private key', filename)
+            cryp = crypto.open_rsa_key(filename)
+            hashe = hashlib.sha256()
+            hashe.update(cryp.exportKey(format='DER'))
+            config.set('User', 'hash client', hashe.hexdigest())
+            print("Configurations done.\n How to use flexa:")
+            parser.print_help()
+            sys.exit(0)
+    else:
+        if ((not dir_called in flexa_dir) or (os.getenv("HOME") == dir_called)):
+            #flexa was invoked outside of mapped directory
+            sys.exit("You are calling flexa outside your mapped directory.")
+
+    #If no option is given, show help and exit
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(2)
+
     #Parse the user choices
     args = parser.parse_args()
 
