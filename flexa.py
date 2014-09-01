@@ -67,18 +67,11 @@ def load_config(config_path = ''):
 
     return config
 
-def generate_new_key(check_file = ''):
+def generate_new_key(dir_config):
     """Generate a new RSA key and returns it's filename
 
     Input parameters:
-    check_file -- name of the file to check if it already exists
     """
-
-    if os.path.exists(check_file):
-        confirm = misc.query_yes_no("There is already a generated key, "
-                "generate another one?", default='no')
-        if not confirm:
-            sys.exit(2)
 
     #Ask the desired name and password to the file
     try:
@@ -87,7 +80,7 @@ def generate_new_key(check_file = ''):
             filename = "id_rsa"
     except KeyboardInterrupt:
         sys.exit(2)
-    filename = os.path.abspath(filename)
+    filename = dir_config + "/" + filename
     try:
         password = getpass.getpass('Password? ')
     except KeyboardInterrupt:
@@ -196,10 +189,18 @@ def main():
         #is necessary create RSA and default directory
         print("First time you use it.\nSome configuration is necessary.")
 
+        if(misc.query_yes_no("Do you want creat flexa configurations?")):
+            #make dirs to map and save configurations
+            os.makedirs(flexa_dir)
+            os.makedirs(_config_dir)
+        else:
+            print("Starting in Flexa was canceled")
+            sys.exit(1)
+
         config = load_config(config_path)
 
         if (misc.query_yes_no("Do you want creat RSA key now?")):
-            filename = generate_new_key(config.get('User', 'private key'))
+            filename = generate_new_key(_config_dir)
             config.set('User', 'private key', filename)
             cryp = crypto.open_rsa_key(filename)
             hashe = hashlib.sha256()
@@ -208,8 +209,7 @@ def main():
             print("Configurations done.\n How to use flexa:")
             parser.print_help()
 
-            os.makedirs(flexa_dir)
-            os.makedirs(_config_dir)
+
             #Write configuration file
             with open(config_path, mode='w', encoding='utf-8') as outfile:
                 print("gravando", config_path)
@@ -234,7 +234,13 @@ def main():
     #Generate a new user key
     if args.newkey:
         #Checks if the user already has a key
-        filename = generate_new_key(config.get('User', 'private key'))
+        if os.path.exists(config.get('User', 'private key')):
+            confirm = misc.query_yes_no("There is already a generated key, "
+                    "generate another one?", default='no')
+            if not confirm:
+                sys.exit(2)
+
+        filename = generate_new_key()
         config.set('User', 'private key', filename)
         cryp = crypto.open_rsa_key(filename)
         hashe = hashlib.sha256()
