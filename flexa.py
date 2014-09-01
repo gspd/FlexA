@@ -82,11 +82,11 @@ def generate_new_key(check_file = ''):
 
     #Ask the desired name and password to the file
     try:
-        filename = input('Filename? ')
+        filename = input('Filename? (default: id_rsa) ')
+        if not filename:
+            filename = "id_rsa"
     except KeyboardInterrupt:
         sys.exit(2)
-    if not filename:
-        sys.exit('Needs a filename!')
     filename = os.path.abspath(filename)
     try:
         password = getpass.getpass('Password? ')
@@ -178,21 +178,24 @@ def recive_file(file_name):
 def main():
     """The function called when the program is executed on a shell"""
 
+    #set where is client home
+    _home = os.getenv("HOME")
+    #file where put configurations
+    _config_dir = _home + '/.flexa'
+    #where directory flexa was called
+    dir_called = os.getcwd()
+    #dir to save configs
+    config_path = _config_dir+'/flexa.ini'
+    #mapped dir
+    flexa_dir = _home+"/directory-flexa"
 
     parser = usage()
-
-    flexa_dir = os.getenv("HOME")+"/directory-flexa"
-    #how directory flexa was called
-    dir_called = os.getcwd()
 
     if not os.path.exists(flexa_dir):
         #if don't exist diretory-flexa in user home then is your first time
         #is necessary create RSA and default directory
         print("First time you use it.\nSome configuration is necessary.")
-        os.makedirs(flexa_dir)
 
-        #Name of the user config file
-        config_path = 'flexa-ng.ini'
         config = load_config(config_path)
 
         if (misc.query_yes_no("Do you want creat RSA key now?")):
@@ -204,6 +207,14 @@ def main():
             config.set('User', 'hash client', hashe.hexdigest())
             print("Configurations done.\n How to use flexa:")
             parser.print_help()
+
+            os.makedirs(flexa_dir)
+            os.makedirs(_config_dir)
+            #Write configuration file
+            with open(config_path, mode='w', encoding='utf-8') as outfile:
+                print("gravando", config_path)
+                config.write(outfile)
+
             sys.exit(0)
     else:
         if ((not dir_called in flexa_dir) or (os.getenv("HOME") == dir_called)):
@@ -218,8 +229,6 @@ def main():
     #Parse the user choices
     args = parser.parse_args()
 
-    #Name of the user config file
-    config_path = 'flexa-ng.ini'
     config = load_config(config_path)
 
     #Generate a new user key
