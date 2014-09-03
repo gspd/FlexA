@@ -162,6 +162,8 @@ class Server(object):
         """
         host = (ip, port)
         misc.send_file(host, verify_key)
+        #FIXME every rpc call return something - put sent confirmation
+        return 0
 
 
     def get_file(self, file_name, keys, dir_key, user_id, type_file):

@@ -158,7 +158,7 @@ def send_file(host, file_name):
         Transfer with socket because XMLRPC transfer very slower than socket
 
         host: tuple (ip, port)
-        transf_file: object file that will  transfer
+        transf_file: name of file
     """
 
     transf_file = open(file_name,"rb")
