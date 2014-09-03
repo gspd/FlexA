@@ -91,7 +91,7 @@ def generate_new_key(dir_config):
 
     return filename
 
-def send_file(file_name):
+def send_file(file_name, rsa_dir):
     """
     send file from client to server
     """
@@ -100,8 +100,7 @@ def send_file(file_name):
     server_addr = 'http://{}:5000'.format(ip_server)
     server = ServerProxy(server_addr)
 
-    #TODO: achar o diretorio sozinho
-    rsa = crypto.open_rsa_key("/home/mario/git/flexa-ng/chave")
+    rsa = crypto.open_rsa_key(rsa_dir)
     user_id = 1 #FIXME get a real user id
     #verify if this file exist (same name in this directory)
     dir_key = "home" #FIXME set where is.... need more discussion
@@ -249,7 +248,7 @@ def main():
 
     #Send a file to server
     if args.put:
-        send_file(args.put[0])
+        send_file(args.put[0], config.get('User', 'private key'))
 
     #Get a file from server
     if args.get:
