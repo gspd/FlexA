@@ -135,13 +135,14 @@ def send_file(file_name, rsa_dir):
     misc.send_file(host, file_name)
 
 
-def recive_file(file_name):
+def recive_file(file_name, rsa_dir):
     """
     recive file from server
     """
 
     ip = misc.my_ip()
     port, sock = misc.port_using(4001)
+    #make a thread that will recive file in socket
     thr = Thread(target = misc.recive_file, args = (sock, file_name))
 
     ip_server = misc.my_ip() #FIXME find a server
@@ -157,13 +158,14 @@ def recive_file(file_name):
         return
 
     #TODO: achar o diretorio sozinho
-    rsa = crypto.open_rsa_key("/home/mario/git/flexa-ng/chave")
+    rsa = crypto.open_rsa_key(rsa_dir)
     keys = crypto.keys_string(salt, rsa)
 
     thr.start()
-    server.give_file(ip, port, keys[0])
+    #ask to server a file with name (keys[0] = hash)
+    #client ip and your port to recive file
+    print(server.give_file(ip, port, keys[0]))
     thr.join()
-
 
 ########################
 
@@ -252,7 +254,7 @@ def main():
 
     #Get a file from server
     if args.get:
-        recive_file(args.get[0])
+        recive_file(args.get[0], config.get('User', 'private key'))
 
     #Write configuration file
     with open(config_path, mode='w', encoding='utf-8') as outfile:
