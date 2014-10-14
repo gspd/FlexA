@@ -93,6 +93,7 @@ class DataBase():
 	_time_to_commit = 25
 
 	def __init__(self, file_db='flexa.sqlite3'):
+		#model to connect database 'driver://user:pass@host/database'
 		engine = create_engine('sqlite:///{}'.format(file_db), connect_args={'check_same_thread':False}, echo=True)
 		if not os.path.exists(file_db):
 			Base.metadata.create_all(engine)
