@@ -16,6 +16,18 @@ import misc
 
 __version__ = "0.1"
 
+#set where is client home
+_home = os.getenv("HOME")
+#file where put configurations
+_config_dir = _home + '/.flexa'
+#where directory flexa was called
+_dir_called = os.getcwd()
+#dir to save configs
+_config_path = _config_dir+'/flexa.ini'
+#mapped dir
+_flexa_dir = _home+"/drive"
+
+
 def usage():
     """Generate user help and parse user choices"""
 
@@ -39,11 +51,11 @@ def usage():
 
     return parser
 
-def load_config(config_path = ''):
+def load_config(_config_path = ''):
     """Load default config and parse user config file
 
     Input parameters:
-    config_path -- path of the configuration file
+    _config_path -- path of the configuration file
     """
 
     default_config = """
@@ -63,7 +75,7 @@ def load_config(config_path = ''):
     #This generate a list of default configs
     config.read_string(default_config)
     #If no file is found or is empty, this is ignored
-    config.read(config_path, encoding='utf-8')
+    config.read(_config_path, encoding='utf-8')
 
     return config
 
@@ -155,7 +167,6 @@ def recive_file(file_name, rsa_dir):
         print("This file can't be found")
         return
 
-    #TODO: achar o diretorio sozinho
     rsa = crypto.open_rsa_key(rsa_dir)
     keys = crypto.keys_string(salt, rsa)
 
@@ -165,61 +176,53 @@ def recive_file(file_name, rsa_dir):
     print(server.give_file(ip, port, keys[0]))
     thr.join()
 
+def first_time():
+    print("First time you use it.\nSome configuration is necessary.")
+
+    if(misc.query_yes_no("Do you want creat flexa configurations?")):
+        #make dirs to map and save configurations
+        os.makedirs(_flexa_dir)
+        os.makedirs(_config_dir)
+    else:
+        print("Starting in Flexa was canceled")
+        sys.exit(1)
+
+    config = load_config(_config_path)
+
+    if (misc.query_yes_no("Do you want creat RSA key now?")):
+        filename = generate_new_key(_config_dir)
+        config.set('User', 'private key', filename)
+        cryp = crypto.open_rsa_key(filename)
+        hashe = hashlib.sha256()
+        hashe.update(cryp.exportKey(format='DER'))
+        config.set('User', 'hash client', hashe.hexdigest())
+        print("Configurations done.\n How to use flexa:")
+        parser = usage()
+        parser.print_help()
+
+
+        #Write configuration file
+        with open(_config_path, mode='w', encoding='utf-8') as outfile:
+            print("gravando", _config_path)
+            config.write(outfile)
+
+        sys.exit(0)
+
 ########################
 
 def main():
     """The function called when the program is executed on a shell"""
 
-    #set where is client home
-    _home = os.getenv("HOME")
-    #file where put configurations
-    _config_dir = _home + '/.flexa'
-    #where directory flexa was called
-    dir_called = os.getcwd()
-    #dir to save configs
-    config_path = _config_dir+'/flexa.ini'
-    #mapped dir
-    flexa_dir = _home+"/directory-flexa"
-
-    parser = usage()
-
-    if not os.path.exists(flexa_dir):
+    if not os.path.exists(_config_dir):
         #if don't exist diretory-flexa in user home then is your first time
         #is necessary create RSA and default directory
-        print("First time you use it.\nSome configuration is necessary.")
-
-        if(misc.query_yes_no("Do you want creat flexa configurations?")):
-            #make dirs to map and save configurations
-            os.makedirs(flexa_dir)
-            os.makedirs(_config_dir)
-        else:
-            print("Starting in Flexa was canceled")
-            sys.exit(1)
-
-        config = load_config(config_path)
-
-        if (misc.query_yes_no("Do you want creat RSA key now?")):
-            filename = generate_new_key(_config_dir)
-            config.set('User', 'private key', filename)
-            cryp = crypto.open_rsa_key(filename)
-            hashe = hashlib.sha256()
-            hashe.update(cryp.exportKey(format='DER'))
-            config.set('User', 'hash client', hashe.hexdigest())
-            print("Configurations done.\n How to use flexa:")
-            parser.print_help()
-
-
-            #Write configuration file
-            with open(config_path, mode='w', encoding='utf-8') as outfile:
-                print("gravando", config_path)
-                config.write(outfile)
-
-            sys.exit(0)
+        first_time()
     else:
-        if ((not dir_called in flexa_dir) or (os.getenv("HOME") == dir_called)):
+        if ((not _dir_called in _flexa_dir) or (os.getenv("HOME") == _dir_called)):
             #flexa was invoked outside of mapped directory
             sys.exit("You are calling flexa outside your mapped directory.")
 
+    parser = usage()
     #If no option is given, show help and exit
     if len(sys.argv) == 1:
         parser.print_help()
@@ -228,7 +231,7 @@ def main():
     #Parse the user choices
     args = parser.parse_args()
 
-    config = load_config(config_path)
+    config = load_config(_config_path)
 
     #Generate a new user key
     if args.newkey:
@@ -257,7 +260,7 @@ def main():
             recive_file(names, config.get('User', 'private key'))
 
     #Write configuration file
-    with open(config_path, mode='w', encoding='utf-8') as outfile:
+    with open(_config_path, mode='w', encoding='utf-8') as outfile:
         config.write(outfile)
 
 
