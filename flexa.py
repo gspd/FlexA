@@ -126,14 +126,12 @@ def send_file(file_name, rsa_dir):
         #server return port where will wait a file
         port = server.get_file(file_name, keys, dir_key, user_id, type_file)
 
-    print('Arquivo {}, Porta {}'.format(file_name, port))
-
     if not port:
         sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
 
     host = (ip_server, port)
     misc.send_file(host, file_name)
-
+    os.remove(file_name+'.enc')
 
 def recive_file(file_name, rsa_dir):
     """
@@ -250,11 +248,13 @@ def main():
 
     #Send a file to server
     if args.put:
-        send_file(args.put[0], config.get('User', 'private key'))
+        for names in args.put:
+            send_file(names, config.get('User', 'private key'))
 
     #Get a file from server
     if args.get:
-        recive_file(args.get[0], config.get('User', 'private key'))
+        for names in args.get:
+            recive_file(names, config.get('User', 'private key'))
 
     #Write configuration file
     with open(config_path, mode='w', encoding='utf-8') as outfile:
