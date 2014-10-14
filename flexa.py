@@ -119,12 +119,14 @@ def send_file(file_name, rsa_dir):
     #ask to server if is update or new file
     salt = server.get_salt(file_name, dir_key, user_id)
 
+    file_name_enc = file_name+".enc"
+
     #generate every keys in string return tuple (0 - verify, 1 - write, 2 - read, 3 - salt)
     keys = crypto.keys_string(salt, rsa)
     try:
         f = open(file_name, "rb") #verify if exist file
-        crypto.encrypt_file(keys[2][0:32], file_name, None, 32)
-        f = open(file_name+".enc", "rb")
+        crypto.encrypt_file(keys[2][0:32], file_name, None, 16)
+        f = open(file_name_enc, "rb")
         f.close()
     except FileNotFoundError:
         sys.exit("File not found.\nTry again.")
@@ -136,14 +138,14 @@ def send_file(file_name, rsa_dir):
         port = server.update_file(keys[0], keys[1])
     else:
         #server return port where will wait a file
-        port = server.get_file(file_name, keys, dir_key, user_id, type_file)
+        port = server.get_file(file_name_enc, keys, dir_key, user_id, type_file)
 
     if not port:
         sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
 
     host = (ip_server, port)
-    misc.send_file(host, file_name)
-    os.remove(file_name+'.enc')
+    misc.send_file(host, file_name_enc)
+    os.remove(file_name_enc)
 
 def recive_file(file_name, rsa_dir):
     """
