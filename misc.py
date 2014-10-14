@@ -7,6 +7,7 @@ import socket
 import time
 from threading import Thread
 from distutils.util import strtobool
+import os
 
 class Ping(object):
     """ Times to scan network
@@ -163,7 +164,6 @@ def send_file(host, file_name):
 
     transf_file = open(file_name,"rb")
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    print("Estabelecendo conexão {}".format(host[1]), flush = True)
     #try connect but if serve don't create a sockt yet wait 1 sec.
     while 1:
         try:
@@ -172,7 +172,6 @@ def send_file(host, file_name):
         except ConnectionRefusedError:
             print('.', flush = True)
             time.sleep(1)
-    print("Conectado, \ntransferindo arquivo", flush = True)
 
     sended = 0
     msg = transf_file.read(1024)
@@ -191,7 +190,6 @@ def send_file(host, file_name):
     #size = client.recv(16)
     #print('--------------------> {}'.format(int(size)))
 
-    print('--------------------------------> port: {}'.format(host[1]))
     client.close()
     transf_file.close()
 
