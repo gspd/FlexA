@@ -16,6 +16,10 @@ import misc
 
 __version__ = '0.1'
 
+#where directory flexa was called
+_dir_called = os.getcwd()
+_dir_file = _dir_called + "/files/"
+
 def usage():
     """Generate user help and parse user choices"""
 
@@ -65,6 +69,10 @@ def main():
     #Name of the server config file
     config_path = 'flexa-server.ini'
     config = load_config(config_path)
+
+    #directory to save files
+    if not os.path.exists(_dir_file):
+        os.makedirs(_dir_file)
 
     #Parse args and set the user choices
     #Verbose -v show general information; -vv show debug information
@@ -179,7 +187,7 @@ class Server(object):
         port, sockt = misc.port_using(5001)
 
         print('name do arquivo: {}'.format(file_name), flush = True)
-        thread = Thread(target = misc.recive_file, args = (sockt, keys[0]))
+        thread = Thread(target = misc.recive_file, args = (sockt, _dir_file + keys[0]))
         thread.start()
         #TODO: set timout to thread
 
@@ -195,7 +203,7 @@ class Server(object):
         if not (self.db.update_file(verify_key, write_key)):
             return False
 
-        thread = Thread(target = misc.recive_file, args = (sockt, verify_key))
+        thread = Thread(target = misc.recive_file, args = (sockt, _dir_file + verify_key))
         thread.start()
         #TODO: set timout to thread
 
