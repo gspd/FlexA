@@ -137,7 +137,6 @@ class DataBase():
 		try:
 			self.session.add(new_obj)
 			self.session.flush()
-			self.commit_db() #FIXME para usar nos testes
 
 			#verify if have more then 10 modifies
 			if self.num_modifies < self._max_modifies:
@@ -146,8 +145,7 @@ class DataBase():
 				self.num_modifies = 0
 				self.commit_db()
 		except:
-			pass
-			#self.session.rollback()
+			self.session.rollback()
 
 		#unblock semaphore
 		self.modify_db.release()
@@ -156,7 +154,13 @@ class DataBase():
 		file = self.session.query(File).filter(File.verify_key == verify_key)
 		if (file.one().write_key == write_key):
 			#have permission to write
-			file.update({"type":"a"})
+			try:
+				file.update({"type":"a"})
+				self.session.flush()
+			except:
+				self.commit_db() #FIXME para usar nos testes
+				file.update({"type":"a"})
+				self.session.flush()
 			#FIXME: update date time not type
 			return True
 		else:
