@@ -138,7 +138,7 @@ def send_file(file_name, rsa_dir):
         port = server.update_file(keys[0], keys[1])
     else:
         #server return port where will wait a file
-        port = server.get_file(file_name_enc, keys, dir_key, user_id, type_file)
+        port = server.get_file(file_name, keys, dir_key, user_id, type_file)
 
     if not port:
         sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
