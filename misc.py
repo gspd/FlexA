@@ -7,7 +7,6 @@ import socket
 import time
 from threading import Thread
 from distutils.util import strtobool
-import os
 
 class Ping(object):
     """ Times to scan network
