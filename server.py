@@ -216,6 +216,15 @@ class Server(object):
         """ 
         return self.db.salt_file(file_name, dir_key, user_id)
 
+class Sync(object):
+    def init(self):
+        pass
+
+    def send_update(self):
+        pass
+
+    def update(self):
+        pass
 
 if __name__ == '__main__':
     main()
