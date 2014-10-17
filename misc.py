@@ -78,6 +78,8 @@ class Ping(object):
                 message, address = s.recvfrom(4096)
                 if message == b'Alive?' and address[0] != myip :
                     s.sendto(b"I am here", address)
+            except:
+                pass
 
 
 def split_file(fil, nparts):
