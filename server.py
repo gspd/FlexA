@@ -102,23 +102,20 @@ def main():
         port = int(config.get('Network','port'))
 
     #FIXME interface da rede
-    interface = '192.168.0.255'
+    broadcast = '192.168.0.255'
     #Start server
-    Server(ip, port, interface)
+    Server(ip, port, broadcast)
 
 class Server(object):
     """Class to receive messages from hosts"""
 
-    def __init__(self, host=None, port=5500, interface = '192.168.0.255'):
+    def __init__(self, host=None, port=5500, broadcast = '192.168.0.255'):
         """
         Variables:
         host -- ip address or hostname to listen
         port -- port to listen to requests
 
         """
-        #run a daemon to find hosts online
-        find_hosts = misc.Ping(interface)
-        find_hosts.daemon()
 
         #connect database
         self.db = database.DataBase()
@@ -217,7 +214,11 @@ class Server(object):
         return self.db.salt_file(file_name, dir_key, user_id)
 
 class Sync(object):
-    def init(self):
+
+    def init(self, broadcast):
+        #run a daemon to find hosts online
+        find_hosts = misc.Ping(broadcast)
+        find_hosts.daemon()
         pass
 
     def send_update(self):

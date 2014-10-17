@@ -17,11 +17,11 @@ class Ping(object):
     TIME_AUTO_SCAN = 3
     MYPORT = 51400
 
-    def __init__(self, interface):
-        """ recive interface of network
+    def __init__(self, broadcast):
+        """ recive broadcast of network
             String like `192.168.2.255`
         """
-        self.interface = interface
+        self.broadcast = broadcast
         self.online = []
 
     def daemon(self):
@@ -50,7 +50,7 @@ class Ping(object):
         s.settimeout(self.TIMEOUT_TO_ANSWER)
 
         #Send mensage in Broadcast
-        s.sendto(b'Alive?', ('192.168.0.255', self.MYPORT))
+        s.sendto(b'Alive?', (self.broadcast, self.MYPORT))
 
         online = []
         while True:
@@ -76,11 +76,9 @@ class Ping(object):
         while True:
             try:
                 message, address = s.recvfrom(4096)
-                #if message == b'Alive?' and address[0] != myip :
-                    # Acknowledge it.
-                s.sendto(b"I am here", address)
-            except:
-                pass
+                if message == b'Alive?' and address[0] != myip :
+                    s.sendto(b"I am here", address)
+
 
 def split_file(fil, nparts):
     """Recive
