@@ -4,7 +4,6 @@
 
 import os
 import logging
-import socket
 import argparse
 import configparser
 import database
@@ -48,7 +47,7 @@ def load_config(config_path = ''):
     #Network related configuration
     [Network]
         host =
-        port = 5500
+        port = 5000
     """
 
     config = configparser.SafeConfigParser()
@@ -59,9 +58,7 @@ def load_config(config_path = ''):
 
     return config
 
-def main():
-    """The function called when the program is executed on a shell"""
-
+def parser():
     #Parse the user choices
     parser = usage()
     args = parser.parse_args()
@@ -90,6 +87,8 @@ def main():
             config.write(outfile)
     else:
         ip = config.get('Network','host')
+        if not ip:
+            ip = misc.my_ip()
 
     #Override default port
     if args.port:
@@ -101,19 +100,18 @@ def main():
     else:
         port = int(config.get('Network','port'))
 
-    #FIXME interface da rede
-    interface = '192.168.0.255'
-    #Start server
-    Server(ip, port, interface)
+    return (ip, port)
 
 class Server(object):
     """Class to receive messages from hosts"""
 
-    def __init__(self, host=None, port=5500, interface = '192.168.0.255'):
+    def __init__(self, connection, interface = '192.168.0.255'):
         """
         Variables:
-        host -- ip address or hostname to listen
-        port -- port to listen to requests
++        connection (tuple)
++            host -- ip address or hostname to listen
++            port -- port to listen to requests
++        interface -- broadcast address
 
         """
         #run a daemon to find hosts online
@@ -123,9 +121,8 @@ class Server(object):
         #connect database
         self.db = database.DataBase()
 
-        if not host:
-            host = socket.gethostname()
-        server = RPCThreadingServer((host, port),
+
+        server = RPCThreadingServer(connection,
                                     requestHandler=RPCServerHandler)
         ip, port = server.server_address
         # Create local logging object
@@ -216,8 +213,18 @@ class Server(object):
         """ 
         return self.db.salt_file(file_name, dir_key, user_id)
 
+##########################################################################################
+
+def main():
+    """The function called when the program is executed on a shell"""
+
+    connection = parser()
+
+    #FIXME interface da rede
+    interface = '192.168.0.255'
+    #Start server
+    Server(connection, interface)
 
 if __name__ == '__main__':
     main()
-
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
