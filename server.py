@@ -253,7 +253,7 @@ def main():
     ip, port = parser()
 
     #FIXME interface da rede
-    broadcast = '192.168.0.255'
+    broadcast = '192.168.1.255'
 
     connection = (ip, _port_sync)
     th = Thread(target = Sync, args = (connection, broadcast), daemon = True)
