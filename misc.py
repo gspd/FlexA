@@ -50,15 +50,18 @@ class Ping(object):
         s.settimeout(self.TIMEOUT_TO_ANSWER)
 
         #Send mensage in Broadcast
-        s.sendto(b'Alive?', (self.broadcast, self.MYPORT))
+        s.sendto(b'Alive?', (self.broadcast, self.MYPORT)) 
 
         online = []
         while True:
             try:
                 message, address = s.recvfrom(4096)
-                if message == b'I am here':
+                if (message == b'I am here'):
+                                        
                     online.append(address[0])
+                    
             except socket.timeout:
+                print("Não consegui entender a resposta!!!")
                 self.online = online
                 break
 
@@ -79,7 +82,7 @@ class Ping(object):
                 if message == b'Alive?' and address[0] != myip :
                     s.sendto(b"I am here", address)
             except:
-                pass
+                print("Náo consegui responder o ping!")
 
 
 def split_file(fil, nparts):
