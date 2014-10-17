@@ -57,11 +57,8 @@ class Ping(object):
             try:
                 message, address = s.recvfrom(4096)
                 if (message == b'I am here'):
-                                        
                     online.append(address[0])
-                    
             except socket.timeout:
-                print("Não consegui entender a resposta!!!")
                 self.online = online
                 break
 
