@@ -18,6 +18,8 @@ __version__ = '0.1'
 #where directory flexa was called
 _dir_called = os.getcwd()
 _dir_file = _dir_called + "/files/"
+_port_sync = 53000
+
 
 def usage():
     """Generate user help and parse user choices"""
@@ -100,7 +102,7 @@ def parser():
     else:
         port = int(config.get('Network','port'))
 
-    return (ip, port)
+    return ip, port
 
 
 class Server(object):
@@ -121,8 +123,7 @@ class Server(object):
         self.db = database.DataBase()
 
 
-        server = RPCThreadingServer(connection,
-                                    requestHandler=RPCServerHandler)
+        server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
         ip, port = server.server_address
         # Create local logging object
         self.logger = logging.getLogger("server")
@@ -214,10 +215,27 @@ class Server(object):
 
 class Sync(object):
 
-    def __init__(self, broadcast):
+    def __init__(self, connection, broadcast):
         #run a daemon to find hosts online
-        find_hosts = misc.Ping(broadcast)
-        find_hosts.daemon()
+        #find_hosts = misc.Ping(broadcast)
+        #find_hosts.daemon()
+
+        server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
+        ip, port = server.server_address
+        # Create local logging object
+        self.logger = logging.getLogger("server")
+        self.logger.info("Listening on {}:{}".format(ip, port))
+        # register all functions
+        server.register_function(self.still_alive)
+        # create and server object
+        try:
+            server.serve_forever()
+        except:
+            print("Fechando o modulo de sincronismo")
+            server.shutdown()
+
+    def still_alive(self):
+        return 1
 
     def send_update(self):
         pass
@@ -228,14 +246,21 @@ class Sync(object):
 ##########################################################################################
 
 def main():
-    """The function called when the program is executed on a shell"""
+    """
+    The function called when the program is executed on a shell
+    """
 
-    connection = parser()
+    ip, port = parser()
 
     #FIXME interface da rede
     broadcast = '192.168.0.255'
-    sync =Sync(broadcast)
+
+    connection = (ip, _port_sync)
+    th = Thread(target = Sync, args = (connection, broadcast), daemon = True)
+    th.start()
+
     #Start server
+    connection = (ip, port)
     Server(connection)
 
 
