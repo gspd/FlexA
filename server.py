@@ -217,8 +217,8 @@ class Sync(object):
 
     def __init__(self, connection, broadcast):
         #run a daemon to find hosts online
-        #find_hosts = misc.Ping(broadcast)
-        #find_hosts.daemon()
+        find_hosts = misc.Ping(broadcast)
+        find_hosts.daemon()
 
         server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
         ip, port = server.server_address
