@@ -108,10 +108,10 @@ class Server(object):
     def __init__(self, connection, interface = '192.168.0.255'):
         """
         Variables:
-+        connection (tuple)
-+            host -- ip address or hostname to listen
-+            port -- port to listen to requests
-+        interface -- broadcast address
+        connection (tuple)
+            host -- ip address or hostname to listen
+            port -- port to listen to requests
+        interface -- broadcast address
 
         """
         #run a daemon to find hosts online
