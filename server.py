@@ -153,9 +153,11 @@ class Server(object):
         server.register_function(self.update_file)
 
     def list_files(self, home_key):
-        """Show every files in that directory
         """
-        return os.listdir('.')
+        Show every files in that directory
+        """
+        files = self.db.list_files(1)
+        return files
 
     def still_alive(self):
         return 1
