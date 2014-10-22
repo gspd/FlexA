@@ -217,8 +217,9 @@ class Sync(object):
 
     def __init__(self, connection, broadcast):
         #run a daemon to find hosts online
-        find_hosts = misc.Ping(broadcast)
-        find_hosts.daemon()
+        hosts_online = misc.Ping(broadcast)
+        hosts_online.daemon()
+        
 
         server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
         ip, port = server.server_address
@@ -231,10 +232,16 @@ class Sync(object):
         try:
             server.serve_forever()
         except:
-            print("Fechando o modulo de sincronismo")
+            print("Problems to up sync server.")
             server.shutdown()
 
+    def register_operations(self):
+        self.server.register_function(self.still_alive)
+        self.server.register_function(self.send_update)
+        self.server.register_function(self.update)
+
     def still_alive(self):
+        #TODO: return situation of server, if is free or busy
         return 1
 
     def send_update(self):
@@ -242,6 +249,11 @@ class Sync(object):
 
     def update(self):
         pass
+
+    def verify_service(self):
+        ip_server = misc.my_ip() #FIXME find a server
+        server_addr = 'http://{}:5000'.format(ip_server)
+        server = ServerProxy(server_addr)
 
 ##########################################################################################
 
