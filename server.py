@@ -18,6 +18,8 @@ __version__ = '0.1'
 #where directory flexa was called
 _dir_called = os.getcwd()
 _dir_file = _dir_called + "/files/"
+_port_sync = 53000
+
 
 def usage():
     """Generate user help and parse user choices"""
@@ -100,30 +102,28 @@ def parser():
     else:
         port = int(config.get('Network','port'))
 
-    return (ip, port)
+    return ip, port
+
 
 class Server(object):
     """Class to receive messages from hosts"""
 
-    def __init__(self, connection, interface = '192.168.0.255'):
+
+    def __init__(self, connection):
+
         """
         Variables:
         connection (tuple)
             host -- ip address or hostname to listen
             port -- port to listen to requests
-        interface -- broadcast address
 
         """
-        #run a daemon to find hosts online
-        find_hosts = misc.Ping(interface)
-        find_hosts.daemon()
 
         #connect database
         self.db = database.DataBase()
 
 
-        server = RPCThreadingServer(connection,
-                                    requestHandler=RPCServerHandler)
+        server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
         ip, port = server.server_address
         # Create local logging object
         self.logger = logging.getLogger("server")
@@ -213,17 +213,68 @@ class Server(object):
         """ 
         return self.db.salt_file(file_name, dir_key, user_id)
 
+class Sync(object):
+
+    def __init__(self, connection, broadcast):
+        #run a daemon to find hosts online
+        hosts_online = misc.Ping(broadcast)
+        hosts_online.daemon()
+        
+
+        server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
+        ip, port = server.server_address
+        # Create local logging object
+        self.logger = logging.getLogger("server")
+        self.logger.info("Listening on {}:{}".format(ip, port))
+        # register all functions
+        server.register_function(self.still_alive)
+        # create and server object
+        try:
+            server.serve_forever()
+        except:
+            print("Problems to up sync server.")
+            server.shutdown()
+
+    def register_operations(self):
+        self.server.register_function(self.still_alive)
+        self.server.register_function(self.send_update)
+        self.server.register_function(self.update)
+
+    def still_alive(self):
+        #TODO: return situation of server, if is free or busy
+        return 1
+
+    def send_update(self):
+        pass
+
+    def update(self):
+        pass
+
+    def verify_service(self):
+        ip_server = misc.my_ip() #FIXME find a server
+        server_addr = 'http://{}:5000'.format(ip_server)
+        server = ServerProxy(server_addr)
+
 ##########################################################################################
 
 def main():
-    """The function called when the program is executed on a shell"""
+    """
+    The function called when the program is executed on a shell
+    """
 
-    connection = parser()
+    ip, port = parser()
 
     #FIXME interface da rede
-    interface = '192.168.0.255'
+    broadcast = '192.168.1.255'
+
+    connection = (ip, _port_sync)
+    th = Thread(target = Sync, args = (connection, broadcast), daemon = True)
+    th.start()
+
     #Start server
-    Server(connection, interface)
+    connection = (ip, port)
+    Server(connection)
+
 
 if __name__ == '__main__':
     main()
