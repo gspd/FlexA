@@ -210,6 +210,18 @@ def first_time():
 
         sys.exit(0)
 
+
+
+def createNewUserKey():
+
+    """ Create new RSA key for user and add it to config """
+    filename = generate_new_key()
+    config.set('User', 'private key', filename)
+    cryp = crypto.open_rsa_key(filename)
+    hashe = hashlib.sha256()
+    hashe.update(cryp.exportKey(format='DER'))
+    config.set('User', 'hash client', hashe.hexdigest())
+
 ########################
 
 def main():
@@ -244,12 +256,7 @@ def main():
             if not confirm:
                 sys.exit(2)
 
-        filename = generate_new_key()
-        config.set('User', 'private key', filename)
-        cryp = crypto.open_rsa_key(filename)
-        hashe = hashlib.sha256()
-        hashe.update(cryp.exportKey(format='DER'))
-        config.set('User', 'hash client', hashe.hexdigest())
+        createNewUserKey()
 
     #Send a file to server
     if args.put:
