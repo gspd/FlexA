@@ -167,6 +167,10 @@ class DataBase():
 			#don't have permission to write
 			return False
 
+	def list_files(self, user_id):
+		files = self.session.query(File)
+		files = files.filter(File.user_id == user_id)
+		return files.all()
 
 	def  salt_file(self, file_name, dir_key, user_id):
 		"""this function search in data base a file
