@@ -146,6 +146,7 @@ def send_file(file_name, rsa_dir):
     if not port:
         sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
 
+    ip_server = '192.168.1.7'
     host = (ip_server, port)
     misc.send_file(host, file_name_enc)
     os.remove(file_name_enc)
@@ -178,8 +179,15 @@ def recive_file(file_name, rsa_dir):
     print(server.give_file(ip, port, keys[0]))
     thr.join()
 
+def list_files():
+    """
+    Search every files from user
+    """
+    server = rpc_server()
+    print(server.list_files())
+
 def rpc_server():
-    ip_server = misc.my_ip() #FIXME find a server
+    ip_server = '192.168.1.7'
     server_addr = 'http://{}:{}'.format(ip_server, _PORT_SERVER)
     return ServerProxy(server_addr)
 
