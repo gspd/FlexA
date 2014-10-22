@@ -16,6 +16,8 @@ import misc
 
 __version__ = "0.1"
 
+#******* CONFIGS ************#
+
 #set where is client home
 _home = os.getenv("HOME")
 #file where put configurations
@@ -26,7 +28,10 @@ _dir_called = os.getcwd()
 _config_path = _config_dir+'/flexa.ini'
 #mapped dir
 _flexa_dir = _home+"/drive"
+#port connection server
+_PORT_SERVER = 5000
 
+#******* CONFIGS ************#
 
 def usage():
     """Generate user help and parse user choices"""
@@ -107,10 +112,8 @@ def send_file(file_name, rsa_dir):
     """
     send file from client to server
     """
-    #make a server "connection" (stateless, rpc)
-    ip_server = misc.my_ip() #FIXME find a server
-    server_addr = 'http://{}:5000'.format(ip_server)
-    server = ServerProxy(server_addr)
+
+    server = rpc_server()
 
     rsa = crypto.open_rsa_key(rsa_dir)
     user_id = 1 #FIXME get a real user id
@@ -157,10 +160,7 @@ def recive_file(file_name, rsa_dir):
     #make a thread that will recive file in socket
     thr = Thread(target = misc.recive_file, args = (sock, file_name))
 
-    ip_server = misc.my_ip() #FIXME find a server
-    server_addr = 'http://{}:5000'.format(ip_server)
-    server = ServerProxy(server_addr)
-
+    server = rpc_server()
     user_id = 1
     dir_key = "home"
     salt = server.get_salt(file_name, dir_key, user_id)
@@ -177,6 +177,11 @@ def recive_file(file_name, rsa_dir):
     #client ip and your port to recive file
     print(server.give_file(ip, port, keys[0]))
     thr.join()
+
+def rpc_server():
+    ip_server = misc.my_ip() #FIXME find a server
+    server_addr = 'http://{}:{}'.format(ip_server, _PORT_SERVER)
+    return ServerProxy(server_addr)
 
 def first_time():
     print("First time you use it.\nSome configuration is necessary.")
