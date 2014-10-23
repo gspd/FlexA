@@ -134,6 +134,8 @@ def generate_rsa_key(out_filename, passphrase = None, bits = 2048):
     with open(out_filename + '.pub', 'wb') as outfile:
         outfile.write(key.publickey().exportKey('PEM', passphrase))
 
+
+
 def open_rsa_key(in_filename, passphrase = None):
     """Open RSA private key and returns a RSA object
 
@@ -144,7 +146,13 @@ def open_rsa_key(in_filename, passphrase = None):
 
     """
     with open(in_filename, 'rb') as infile:
-        return RSA.importKey(infile.read(), passphrase)
+        try:
+            key = RSA.importKey(infile.read(), passphrase)
+            return key
+        except:
+            return None
+
+
 
 def generate_verify_key(salt, rsa):
     """generate a Verify Key with SHA512(RSA + Salt)
