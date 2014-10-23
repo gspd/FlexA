@@ -168,7 +168,7 @@ class Server(object):
             file_name: in a future this is a hash of file
         """
         host = (ip, port)
-        misc.send_file(host, verify_key)
+        misc.send_file(host, _dir_file + verify_key)
         #FIXME every rpc call return something - put sent confirmation
         return 0
 
