@@ -145,12 +145,13 @@ def open_rsa_key(in_filename, passphrase = None):
     passphrase -- if used, the resulting file is encrypted
 
     """
-    with open(in_filename, 'rb') as infile:
-        try:
-            key = RSA.importKey(infile.read(), passphrase)
-            return key
-        except:
-            return None
+    try:
+        with open(in_filename, 'rb') as infile:
+                key = RSA.importKey(infile.read(), passphrase)
+                return key
+    except:
+        print("Can not open RSA KEY.")
+        raise
 
 
 
