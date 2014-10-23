@@ -115,12 +115,13 @@ def send_file(file_name, rsa_dir):
     send file from client to server
     """
 
+    
     local_file = _flexa_dir + file_name
     file_name_enc = file_name+".enc"
     local_file_enc = _flexa_dir + file_name_enc
 
     server = rpc_server()
-    rsa = crypto.open_rsa_key(rsa_dir)
+    rsa = crypto.open_rsa_key(rsa_dir,)
 
     user_id = 1 #FIXME get a real user id
     #verify if this file exist (same name in this directory)
@@ -224,9 +225,12 @@ def rpc_server():
     return ServerProxy(server_addr)
 
 def first_time():
+
+    """ Create configurations files, folders and a new RSA key for user """
+
     print("First time you use it.\nSome configuration is necessary.")
 
-    if(misc.query_yes_no("Do you want creat flexa configurations?")):
+    if(misc.query_yes_no("Do you want create flexa configurations?")):
         #make dirs to map and save configurations
 
         # Create dir for store user files (MAPPED DIR)
@@ -243,7 +247,7 @@ def first_time():
 
 
     else:
-        print("Starting in Flexa was canceled")
+        print("Starting in Flexa was canceled.")
         sys.exit(1)
 
     config = load_config(_config_path)
@@ -251,22 +255,39 @@ def first_time():
     if (misc.query_yes_no("Do you want creat RSA key now?")):
         filename = generate_new_key(_config_dir)
         config.set('User', 'private key', filename)
-        cryp = crypto.open_rsa_key(filename)
+
+        p = None
+        try:
+            p = getpass.getpass("Enter with your password to unlock key:")
+        except KeyboardInterrupt:
+            sys.exit(2)
+
+        success = False
+        try:
+            cryp = crypto.open_rsa_key(filename,p)
+        except:
+            sys.exit(1)
+        
         hashe = hashlib.sha256()
         hashe.update(cryp.exportKey(format='DER'))
+
         config.set('User', 'hash client', hashe.hexdigest())
-        print("Configurations done.\n How to use flexa:")
-        parser = usage()
-        parser.print_help()
+        print("Configurations done.")
 
+        #Write configuration file          
+        try:
 
-        #Write configuration file
-        with open(_config_path, mode='w', encoding='utf-8') as outfile:
-            print("gravando", _config_path)
-            config.write(outfile)
-
-        sys.exit(0)
-
+            with open(_config_path, mode='w', encoding='utf-8') as outfile:
+                print("Your configuration files are at", _config_path)
+                config.write(outfile)
+        except:
+            print("Can not write config files.")
+    else:
+        print("Please, add path to your key in your flexa.ini manually")
+    
+    
+    print("Run FlexA again, to start with system configured.")
+    sys.exit(0)
 
 
 def createNewUserKey():
