@@ -27,7 +27,7 @@ _dir_called = os.getcwd()
 #dir to save configs
 _config_path = _config_dir+'/flexa.ini'
 #mapped dir
-_flexa_dir = _home+"/drive"
+_flexa_dir = _home+"/drive/"
 #port connection server
 _PORT_SERVER = 5000
 
@@ -113,23 +113,26 @@ def send_file(file_name, rsa_dir):
     send file from client to server
     """
 
-    server = rpc_server()
+    local_file = _flexa_dir + file_name
+    file_name_enc = file_name+".enc"
+    local_file_enc = _flexa_dir + file_name_enc
 
+    server = rpc_server()
     rsa = crypto.open_rsa_key(rsa_dir)
+
     user_id = 1 #FIXME get a real user id
     #verify if this file exist (same name in this directory)
     dir_key = "home" #FIXME set where is.... need more discussion
     #ask to server if is update or new file
     salt = server.get_salt(file_name, dir_key, user_id)
 
-    file_name_enc = file_name+".enc"
-
     #generate every keys in string return tuple (0 - verify, 1 - write, 2 - read, 3 - salt)
     keys = crypto.keys_string(salt, rsa)
     try:
-        f = open(file_name, "rb") #verify if exist file
-        crypto.encrypt_file(keys[2][0:32], file_name, None, 16)
-        f = open(file_name_enc, "rb")
+        print(local_file)
+        f = open(local_file, "rb") #verify if exist file
+        crypto.encrypt_file(keys[0][0:32], local_file, local_file_enc, 16)
+        f = open(local_file_enc, "rb") #verify if create file crypted
         f.close()
     except FileNotFoundError:
         sys.exit("File not found.\nTry again.")
@@ -146,22 +149,28 @@ def send_file(file_name, rsa_dir):
     if not port:
         sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
 
-    ip_server = '192.168.1.7'
+    ip_server = '192.168.1.183'
     host = (ip_server, port)
-    misc.send_file(host, file_name_enc)
-    os.remove(file_name_enc)
+    misc.send_file(host, local_file_enc)
+    #remove temp crypt file
+    os.remove(local_file_enc)
 
 def recive_file(file_name, rsa_dir):
     """
     recive file from server
     """
 
+    file_name_enc = file_name + '.enc'
+    local_file = _flexa_dir + file_name
+    local_file_enc = _flexa_dir + file_name_enc
+
     ip = misc.my_ip()
     port, sock = misc.port_using(4001)
     #make a thread that will recive file in socket
-    thr = Thread(target = misc.recive_file, args = (sock, file_name))
+    thr = Thread(target = misc.recive_file, args = (sock, local_file_enc))
 
     server = rpc_server()
+    print(server)
     user_id = 1
     dir_key = "home"
     salt = server.get_salt(file_name, dir_key, user_id)
@@ -179,6 +188,10 @@ def recive_file(file_name, rsa_dir):
     print(server.give_file(ip, port, keys[0]))
     thr.join()
 
+    crypto.decrypt_file(keys[0][0:32], file_name_enc, local_file,16)
+    #remove temp crypt file
+    os.remove(local_file_enc)
+
 def list_files():
     """
     Search every files from user
@@ -187,7 +200,22 @@ def list_files():
     print(server.list_files())
 
 def rpc_server():
-    ip_server = '192.168.1.7'
+    """
+    Find a servers online and make connection
+    """
+
+    host = misc.Ping('192.168.1.255')
+    host.TIMEOUT_TO_ANSWER = 0.3
+    host.scan()
+    while not host.online:
+        host.TIMEOUT_TO_ANSWER += 0.3
+        host.scan()
+        if host.TIMEOUT_TO_ANSWER > 1.5:
+            print("Can't found servers. \n Time out.")
+            sys.exit(0)
+
+    #online[0] is the first server that answer
+    ip_server = host.online[0]
     server_addr = 'http://{}:{}'.format(ip_server, _PORT_SERVER)
     return ServerProxy(server_addr)
 
