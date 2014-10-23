@@ -77,8 +77,10 @@ def load_config(_config_path = ''):
     """
 
     config = configparser.SafeConfigParser()
+
     #This generate a list of default configs
     config.read_string(default_config)
+
     #If no file is found or is empty, this is ignored
     config.read(_config_path, encoding='utf-8')
 
@@ -126,7 +128,8 @@ def send_file(file_name, rsa_dir):
     #ask to server if is update or new file
     salt = server.get_salt(file_name, dir_key, user_id)
 
-    #generate every keys in string return tuple (0 - verify, 1 - write, 2 - read, 3 - salt)
+    #generate every keys in string return tuple:
+    #(0 - verify, 1 - write, 2 - read, 3 - salt)
     keys = crypto.keys_string(salt, rsa)
     try:
         print(local_file)
@@ -147,7 +150,8 @@ def send_file(file_name, rsa_dir):
         port = server.get_file(file_name, keys, dir_key, user_id, type_file)
 
     if not port:
-        sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
+        sys.exit("Some error occurred. Maybe you don't have permission to \
+                write. \nTry again.")
 
     ip_server = '192.168.1.183'
     host = (ip_server, port)
@@ -224,8 +228,20 @@ def first_time():
 
     if(misc.query_yes_no("Do you want creat flexa configurations?")):
         #make dirs to map and save configurations
-        os.makedirs(_flexa_dir)
-        os.makedirs(_config_dir)
+
+        # Create dir for store user files (MAPPED DIR)
+        try:
+            os.makedirs(_flexa_dir)
+        except OSError:
+            sys.exit("ERROR: Can not create folder at '" + _flexa_dir + "'.")
+
+        # Create dir for store flexa config files
+        try:
+            os.makedirs(_config_dir)
+        except OSError:
+            sys.exit("ERROR: Can not create folder at '" + _config_dir+ "'.")
+
+
     else:
         print("Starting in Flexa was canceled")
         sys.exit(1)
@@ -273,7 +289,9 @@ def main():
         #is necessary create RSA and default directory
         first_time()
     else:
-        if ((not _dir_called in _flexa_dir) or (os.getenv("HOME") == _dir_called)):
+        if ((not _dir_called in _flexa_dir) or \
+            (os.getenv("HOME") == _dir_called)):
+
             #flexa was invoked outside of mapped directory
             sys.exit("You are calling flexa outside your mapped directory.")
 
