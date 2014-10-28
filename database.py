@@ -91,10 +91,13 @@ class DataBase():
 	_max_modifies = 30
 	#set interval to make commit by time in seconds
 	_time_to_commit = 25
+	#set echo in class database, if == True -> show every change in db; if == False -> don't show any thing
+	#to set True, execute server.py with -vv (two verbose)
+	_echo_db = False
 
 	def __init__(self, file_db='flexa.sqlite3'):
 		#model to connect database 'driver://user:pass@host/database'
-		engine = create_engine('sqlite:///{}'.format(file_db), connect_args={'check_same_thread':False}, echo=True)
+		engine = create_engine('sqlite:///{}'.format(file_db), connect_args={'check_same_thread':False}, echo= self._echo_db)
 		if not os.path.exists(file_db):
 			Base.metadata.create_all(engine)
 		Session = sessionmaker(bind=engine)

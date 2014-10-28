@@ -79,6 +79,7 @@ def parser():
         logging.basicConfig(level=logging.INFO)
     elif args.verbose >= 2:
         logging.basicConfig(level=logging.DEBUG)
+        database.DataBase._echo_db = True
 
     #Override default IP
     if args.ip:
@@ -226,7 +227,7 @@ class Sync(object):
         server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
         ip, port = server.server_address
         # Create local logging object
-        self.logger = logging.getLogger("server")
+        self.logger = logging.getLogger("sync_server")
         self.logger.info("Listening on {}:{}".format(ip, port))
         # register all functions
         server.register_function(self.still_alive)
