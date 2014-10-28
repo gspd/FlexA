@@ -120,7 +120,7 @@ def send_file(file_name, rsa_dir):
     file_name_enc = file_name+".enc"
     local_file_enc = _flexa_dir + file_name_enc
 
-    server = rpc_server()
+    server, ip_server = rpc_server()
     rsa = crypto.open_rsa_key(rsa_dir,)
 
     user_id = 1 #FIXME get a real user id
@@ -154,7 +154,6 @@ def send_file(file_name, rsa_dir):
         sys.exit("Some error occurred. Maybe you don't have permission to \
                 write. \nTry again.")
 
-    ip_server = '192.168.1.183'
     host = (ip_server, port)
     misc.send_file(host, local_file_enc)
     #remove temp crypt file
@@ -222,7 +221,7 @@ def rpc_server():
     #online[0] is the first server that answer
     ip_server = host.online[0]
     server_addr = 'http://{}:{}'.format(ip_server, _PORT_SERVER)
-    return ServerProxy(server_addr)
+    return ServerProxy(server_addr), ip_server
 
 def first_time():
 
