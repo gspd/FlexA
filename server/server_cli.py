@@ -14,7 +14,15 @@ import logging
 from server.config import configs
 
 class Server(object):
-    """Class to receive messages from hosts"""
+    """Class that make rpc server
+    
+        your constructor make configs to start server
+        
+        functions:
+            register_operations
+                register all functions that client can call by rpc
+            
+    """
 
 
     def __init__(self):

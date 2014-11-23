@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
-"""Implements the server class and all it's supported functions"""
+"""Call servers to start services
+Servers is implemented in package server
+"""
 
 from server.server_cli import Server
 
-
-
-
-##########################################################################################
 
 def main():
     """

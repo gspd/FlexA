@@ -12,6 +12,10 @@ import logging
 
 
 class Sync(object):
+    
+    """
+    Class that start server to sync with others server client updates
+    """
 
     def __init__(self, connection, broadcast):
         #run a daemon to find hosts online
