@@ -261,7 +261,6 @@ def first_time():
         except KeyboardInterrupt:
             sys.exit(2)
 
-        success = False
         try:
             cryp = crypto.open_rsa_key(filename,p)
         except:
@@ -289,7 +288,7 @@ def first_time():
     sys.exit(0)
 
 
-def createNewUserKey():
+def createNewUserKey(config):
 
     """ Create new RSA key for user and add it to config """
     filename = generate_new_key()
@@ -335,7 +334,7 @@ def main():
             if not confirm:
                 sys.exit(2)
 
-        createNewUserKey()
+        createNewUserKey(config)
 
     #Send a file to server
     if args.put:
