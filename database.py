@@ -92,7 +92,7 @@ class DataBase():
 	#set interval to make commit by time in seconds
 	_time_to_commit = 25
 	#set echo in class database, if == True -> show every change in db; if == False -> don't show any thing
-	#to set True, execute server.py with -vv (two verbose)
+	#to set True, execute init_server.py with -vv (two verbose)
 	_echo_db = False
 
 	def __init__(self, file_db='flexa.sqlite3'):
