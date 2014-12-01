@@ -1,4 +1,5 @@
-#!/bin/python3
+#!/usr/bin/env python3
+
 '''
 Created on 23/11/2014
 
@@ -44,10 +45,12 @@ class Server(object):
         self.register_operations(server)
         # create and init_server object
         try:
+            scanner = misc.Ping("255.255.255.255")
+            scanner.daemon()
             server.serve_forever()
-        except KeyboardInterrupt:
+        except KeyboardInterrupt as error:
             print("\nSignal of interrupt recived.")
-        except:
+        except :
             print("\nSomething made init_server stop.")
         finally:
             server.shutdown()
