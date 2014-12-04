@@ -11,9 +11,11 @@ from rpc import RPCServerHandler
 from threading import Thread
 import misc
 import database
+import file
 import logging
 
 from server.config import configs
+
 
 class Server(object):
     """Class that make rpc server
@@ -71,8 +73,11 @@ class Server(object):
         """
         Show every files in that directory
         """
-        files = self.db.list_files(1)
-        return files
+        files_db = self.db.list_files(1)
+        file = []
+        for file_obj in files_db:
+            file.append(  file.file(files_db = file_obj)  )
+        return file
 
     def still_alive(self):
         return 1
