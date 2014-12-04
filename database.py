@@ -39,6 +39,10 @@ class File(Base):
 	user_id = Column(String, ForeignKey('user.uid'), nullable=False)
 	type = Column(String(1))
 
+	size = Column(Integer)
+	create_date = Column(DateTime)
+	modify_date = Column(DateTime)
+
 	def __init__(self, verify_key, salt, write_key, read_key, file_name, dir_key, user_id, type):
 		self.verify_key = verify_key
 		self.salt = salt
