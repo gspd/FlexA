@@ -121,7 +121,11 @@ def send_file(file_name, rsa_dir):
     local_file_enc = _flexa_dir + file_name_enc
 
     server, ip_server = rpc_server()
-    rsa = crypto.open_rsa_key(rsa_dir,)
+    """ FIXME - Add password here! """
+
+    p = getpass.getpass("Enter your key password to encrypt file:")
+    rsa = crypto.open_rsa_key(rsa_dir,p)
+
 
     user_id = 1 #FIXME get a real user id
     #verify if this file exist (same name in this directory)
