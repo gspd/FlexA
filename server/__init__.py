@@ -12,3 +12,4 @@ You can start servers with
 
 #initialize configs
 from server import config
+import file
