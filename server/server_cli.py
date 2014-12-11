@@ -69,12 +69,13 @@ class Server(object):
         server.register_function(self.get_salt)
         server.register_function(self.update_file)
 
-    def list_files(self, home_key):
+    def list_files(self, verify_key):
         """
-        Show every file in that directory
+            Show every file in that directory
+                verify_key - verify_key of current directory
         """
 
-        files_db = self.db.list_files(1)
+        files_db = self.db.list_files(verify_key)
         list_file = []
         for file_obj in files_db:
             list_file.append(file.File(file_db = file_obj ))
@@ -130,9 +131,9 @@ class Server(object):
 
         return port
 
-    def get_salt(self, file_name, dir_key, user_id):
+    def get_salt(self, file_name, user_id):
         """make a call in data base to find file
-        if found return your salt
-        else return 0
+            if found return your salt
+            else return 0
         """ 
-        return self.db.salt_file(file_name, dir_key, user_id)
+        return self.db.salt_file(file_name, user_id)

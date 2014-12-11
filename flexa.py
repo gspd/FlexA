@@ -41,17 +41,12 @@ def usage():
             description='A New Flexible and Distributed File System')
     #The following options are mutually exclusive
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-p', '--put', metavar='FILE', nargs='+',
-            help='send file to server')
-    group.add_argument('-g', '--get', metavar='FILE', nargs='+',
-            help='receive file from server')
-    group.add_argument('-l', '--list', action='count', default=0,
-            help='list file from server')
-    group.add_argument('-n', '--newkey', action='store_true',
-            help='generate new user key')
+    group.add_argument('-p', '--put', metavar='FILE', nargs='+', help='send file to server')
+    group.add_argument('-g', '--get', metavar='FILE', nargs='+', help='receive file from server')
+    group.add_argument('-l', '--list', action='count', default=0, help='list file from server')
+    group.add_argument('-n', '--newkey', action='store_true', help='generate new user key')
     #These options can be used in combination with any other
-    parser.add_argument('-v', '--verbose', action='count', default=0,
-            help='increase output verbosity')
+    parser.add_argument('-v', '--verbose', action='count', default=0, help='increase output verbosity')
     version_info = '%(prog)s {}'.format(__version__)
     parser.add_argument('--version', action='version', version=version_info)
 
@@ -116,7 +111,6 @@ def send_file(file_name, rsa_dir):
     send file from client to server
     """
 
-    
     local_file = _flexa_dir + file_name
     file_name_enc = file_name+".enc"
     local_file_enc = _flexa_dir + file_name_enc
@@ -132,7 +126,7 @@ def send_file(file_name, rsa_dir):
     #verify if this file exist (same name in this directory)
     dir_key = "home" #FIXME set where is.... need more discussion
     #ask to server if is update or new file
-    salt = server.get_salt(file_name, dir_key, user_id)
+    salt = server.get_salt(file_name, user_id)
 
     #generate every keys in string return tuple:
     #(0 - verify, 1 - write, 2 - read, 3 - salt)
@@ -182,7 +176,7 @@ def recive_file(file_name, rsa_dir):
     print(server)
     user_id = 1
     dir_key = "home"
-    salt = server.get_salt(file_name, dir_key, user_id)
+    salt = server.get_salt(file_name, user_id)
 
     if (salt == 0):
         print("This file can't be found")
@@ -203,11 +197,18 @@ def recive_file(file_name, rsa_dir):
 
 def list_files():
     """
-    Search every file from user
+    Search every file from verify_key
+        verify_key is directory where called this operation - answer is a dictionary of files and yours attributes 
     """
     server, ip = rpc_server()
-    print(server)
-    print(server.list_files(1))
+
+    dir_current = _dir_called.split(_flexa_dir[:-1])[1]
+    if dir_current == '':
+        dir_current = '/'
+    print(dir_current)
+
+    for dic_file in server.list_files("home"):
+        print(dic_file['name'])
 
 def rpc_server():
     """
@@ -314,9 +315,7 @@ def main():
         #is necessary create RSA and default directory
         first_time()
     else:
-        if ((not _dir_called in _flexa_dir) or \
-            (os.getenv("HOME") == _dir_called)):
-
+        if ( not _flexa_dir in _dir_called+'/'):
             #flexa was invoked outside of mapped directory
             sys.exit("You are calling flexa outside your mapped directory.")
 
