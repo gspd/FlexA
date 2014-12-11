@@ -178,12 +178,12 @@ class DataBase():
 			#don't have permission to write
 			return False
 
-	def list_files(self, user_id):
+	def list_files(self, dir_key):
 		files = self.session.query(File)
-		files = files.filter(File.user_id == user_id)
+		files = files.filter(File.dir_key == dir_key)
 		return files.all()
 
-	def salt_file(self, file_name, dir_key, user_id):
+	def salt_file(self, file_name, user_id):
 		"""this function search in data base a file
 		and return your salt
 		if don't find return 0
