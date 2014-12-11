@@ -11,8 +11,8 @@ from rpc import RPCServerHandler
 from threading import Thread
 import misc
 import database
-import file
 import logging
+from file import file
 
 from server.config import configs
 
@@ -71,19 +71,21 @@ class Server(object):
 
     def list_files(self, home_key):
         """
-        Show every files in that directory
+        Show every file in that directory
         """
+
         files_db = self.db.list_files(1)
-        file = []
+        list_file = []
         for file_obj in files_db:
-            file.append(  file.file(files_db = file_obj)  )
-        return file
+            list_file.append(file.File(file_db = file_obj ))
+
+        return list_file
 
     def still_alive(self):
         return 1
 
     def give_file(self, ip, port, verify_key):
-        """ give files to client
+        """ give file to client
             ip: string with ip, address of client
             file_name: in a future this is a hash of file
         """

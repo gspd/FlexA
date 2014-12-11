@@ -13,6 +13,7 @@ from xmlrpc.client import ServerProxy
 
 import crypto
 import misc
+from file.file import File
 
 __version__ = "0.1"
 
@@ -44,8 +45,8 @@ def usage():
             help='send file to server')
     group.add_argument('-g', '--get', metavar='FILE', nargs='+',
             help='receive file from server')
-    group.add_argument('-l', '--list', metavar='PATH', nargs='?',
-            help='list files from server')
+    group.add_argument('-l', '--list', action='count', default=0,
+            help='list file from server')
     group.add_argument('-n', '--newkey', action='store_true',
             help='generate new user key')
     #These options can be used in combination with any other
@@ -202,17 +203,18 @@ def recive_file(file_name, rsa_dir):
 
 def list_files():
     """
-    Search every files from user
+    Search every file from user
     """
-    server = rpc_server()
-    print(server.list_files())
+    server, ip = rpc_server()
+    print(server)
+    print(server.list_files(1))
 
 def rpc_server():
     """
     Find a servers online and make connection
     """
 
-    host = misc.Ping('192.168.1.255')
+    host = misc.Ping('255.255.255.255')
     host.TIMEOUT_TO_ANSWER = 0.3
     host.scan()
     while not host.online:
@@ -229,14 +231,14 @@ def rpc_server():
 
 def first_time():
 
-    """ Create configurations files, folders and a new RSA key for user """
+    """ Create configurations file, folders and a new RSA key for user """
 
     print("First time you use it.\nSome configuration is necessary.")
 
     if(misc.query_yes_no("Do you want create flexa configurations?")):
         #make dirs to map and save configurations
 
-        # Create dir for store user files (MAPPED DIR)
+        # Create dir for store user file (MAPPED DIR)
         try:
             os.makedirs(_flexa_dir)
         except OSError:
@@ -280,10 +282,10 @@ def first_time():
         try:
 
             with open(_config_path, mode='w', encoding='utf-8') as outfile:
-                print("Your configuration files are at", _config_path)
+                print("Your configuration file are at", _config_path)
                 config.write(outfile)
         except:
-            print("Can not write config files.")
+            print("Can not write config file.")
     else:
         print("Please, add path to your key in your flexa.ini manually")
     
@@ -350,6 +352,8 @@ def main():
         for names in args.get:
             recive_file(names, config.get('User', 'private key'))
 
+    if args.list:
+        list_files()
     #Write configuration file
     with open(_config_path, mode='w', encoding='utf-8') as outfile:
         config.write(outfile)

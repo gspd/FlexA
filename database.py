@@ -7,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Sequence, DateTime
 from threading import Lock, Thread
 import time
+import datetime
 
 Base = declarative_base()
 
@@ -52,6 +53,9 @@ class File(Base):
 		self.dir_key = dir_key
 		self.user_id = user_id
 		self.type = type
+		self.create_date = datetime.datetime.now()
+		self.modify_date = datetime.datetime.now()
+		self.size = 100 #FIXME: colocar o tamanho real do arquivo - teste
 
 	def __repr__(self):
 		return '<File(vfk "{}", salt "{}", wtk "{}", rdk "{}", name "{}", dir "{}", user "{}", type "{}")>'.format(self.verify_key, self.salt, self.write_key, self.read_key, self.file_name, self.dir_key, self.user_id, self.type)
@@ -179,7 +183,7 @@ class DataBase():
 		files = files.filter(File.user_id == user_id)
 		return files.all()
 
-	def  salt_file(self, file_name, dir_key, user_id):
+	def salt_file(self, file_name, dir_key, user_id):
 		"""this function search in data base a file
 		and return your salt
 		if don't find return 0

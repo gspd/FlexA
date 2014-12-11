@@ -9,23 +9,24 @@ class File(object):
     classdocs
     '''
 
-    name = None
-    size = None
-    create_date = None
-    modify_date = None
-    owner = None
+    file_name = 0
+    size = 0
+    create_date = 0
+    modify_date = 0
+    owner = 0
 
-    def __init__(self, name = None, size = None, create_date = None, modify_date = None, owner = None, file_db = None):
+    def __init__(self, name = 0, size = 0, create_date = 0, modify_date = 0, owner = 0, file_db = None):
         '''
         Constructor
+        You can make obj File put your attributes or put a fatabase.File obj.
         '''
         if(file_db):
             #make file with database.file informations
-            self.name = file_db.name
+            self.name = file_db.file_name
             self.size = file_db.size
             self.create_date = file_db.create_date
             self.modify_date = file_db.modify_date
-            self.owner = file_db.owner  #FIXME: search in db name of owner
+            self.owner = file_db.user_id  #FIXME: search in db name of owner
         elif(name):
             self.name = name
             self.size = size
@@ -36,4 +37,4 @@ class File(object):
             pass
 
     def __repr__(self):
-        return '<name: "{}", size: "{}", create_date: "{}", modify_date: "{}", owner: "{}"'.format(self.name, self.size, self.create_date, self.modify_date, self.user_id)
+        return '<name: "{}", size: "{}", create_date: "{}", modify_date: "{}", owner: "{}"'.format(self.file_name, self.size, self.create_date, self.modify_date, self.owner)

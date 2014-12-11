@@ -29,7 +29,7 @@ class Config():
 
     #where directory flexa was called
     _dir_called = os.getcwd()
-    _dir_file = _dir_called + "/files/"
+    _dir_file = _dir_called + "/data/"
     _port_sync = 53000
     __version__ = '0.1'
 
@@ -101,7 +101,7 @@ class Config():
         config_path = 'flexa-server.ini'
         config = self.load_config(config_path)
     
-        #directory to save files
+        #directory to save file
         if not os.path.exists(self._dir_file):
             os.makedirs(self._dir_file)
     
