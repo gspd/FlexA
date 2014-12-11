@@ -4,7 +4,9 @@ Created on 23/11/2014
 This module make every configurations and parsers on variables to system
 The main class is Config that concentrates the vars and set it with others def
 
-TO IMPORT package = server, module = config, object = configs = Config()
+TO IMPORT:   package = server
+             module = config
+             configs = Config() -> end of this module
 therefor 
 from server.config import configs
 
