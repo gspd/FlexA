@@ -17,6 +17,9 @@ class Ping(object):
     TIME_AUTO_SCAN = 3
     MYPORT = 51400
 
+    #flag to enable local servers
+    LOCAL = True
+
     def __init__(self, broadcast):
         """ recive broadcast of network
             String like `192.168.2.255`
@@ -76,7 +79,11 @@ class Ping(object):
         while True:
             try:
                 message, address = s.recvfrom(4096)
-                if message == b'Alive?' and address[0] != myip :
+                #FIXME: para rodar servidores na mesma maquina - TESTE
+                if self.LOCAL and message == b'Alive?' and address[0] != myip :
+                    s.sendto(b"I am here", address)
+                #enable local host
+                elif message == b'Alive?':
                     s.sendto(b"I am here", address)
             except:
                 print("Náo consegui responder o ping!")

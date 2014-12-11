@@ -55,10 +55,9 @@ class Config():
                         System')
         parser.add_argument('-i', '--ip', nargs=1, help='define server IP')
         parser.add_argument('-p', '--port', nargs=1, help='define server port')
-        parser.add_argument('-d', '--daemon', action='store_true',
-                help='daemonize server')
-        parser.add_argument('-v', '--verbose', action='count', default=0,
-                help='increase output verbosity')
+        parser.add_argument('-d', '--daemon', action='store_true', help='daemonize server')
+        parser.add_argument('-v', '--verbose', action='count', default=0, help='increase output verbosity')
+        parser.add_argument('-L', '--LOCAL', action='count', help='enable local server')
         version_info = '%(prog)s {}'.format(self.__version__)
         parser.add_argument('--version', action='version', version=version_info)
     
@@ -134,7 +133,9 @@ class Config():
                 config.write(outfile)
         else:
             port = int(config.get('Network','port'))
-    
+
+        if args.LOCAL:
+            misc.Ping.LOCAL = False
     
     
         self.ip = ip
