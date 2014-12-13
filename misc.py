@@ -53,7 +53,10 @@ class Ping(object):
         s.settimeout(self.TIMEOUT_TO_ANSWER)
 
         #Send mensage in Broadcast
-        s.sendto(b'Alive?', (self.broadcast, self.MYPORT)) 
+        try:
+            s.sendto(b'Alive?', (self.broadcast, self.MYPORT))
+        except:
+            print("An error occurs. Could't send broadcast message.") 
 
         online = []
         while True:
@@ -80,10 +83,10 @@ class Ping(object):
             try:
                 message, address = s.recvfrom(4096)
                 #FIXME: para rodar servidores na mesma maquina - TESTE
-                if self.LOCAL and message == b'Alive?' and address[0] != myip :
+                if (self.LOCAL) and (message == b'Alive?') and (address[0] != myip) :
                     s.sendto(b"I am here", address)
                 #enable local host
-                elif message == b'Alive?':
+                elif message == b'Alive?' and not self.LOCAL:
                     s.sendto(b"I am here", address)
             except:
                 print("Náo consegui responder o ping!")
@@ -227,7 +230,10 @@ def my_ip():
     return - string with ip
     """
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(('1.1.1.1', 0))
+    try:
+        s.connect(('1.1.1.1', 0))
+    except:
+        sys.exit("Error in Network interface")
     address = s.getsockname()[0]
     s.close()
     return address
