@@ -31,7 +31,10 @@ _config_path = _config_dir+'/flexa.ini'
 _flexa_dir = _home+"/drive/"
 #port connection server
 _PORT_SERVER = 5000
-
+#directory relative by system. directories of flea
+_dir_current_relative = _dir_called.split(_flexa_dir[:-1])[1]
+if _dir_current_relative == '':
+    _dir_current_relative = '/'
 #******* CONFIGS ************#
 
 def usage():
@@ -110,8 +113,10 @@ def send_file(file_name, rsa_dir):
     """
     send file from client to server
     """
+    #name with your relative position (directory) in flexa system 
+    file_name_complete_relative = _dir_current_relative + '/' + file_name
 
-    local_file = _flexa_dir + file_name
+    local_file = _dir_called + "/" + file_name
     file_name_enc = file_name+".enc"
     local_file_enc = _flexa_dir + file_name_enc
 
@@ -120,9 +125,9 @@ def send_file(file_name, rsa_dir):
 
     user_id = 1 #FIXME get a real user id
     #verify if this file exist (same name in this directory)
-    dir_key = "home" #FIXME set where is.... need more discussion
+    dir_key = "/" #FIXME set where is.... need more discussion
     #ask to server if is update or new file
-    salt = server.get_salt(file_name, user_id)
+    salt = server.get_salt(file_name_complete_relative, user_id)
 
     #generate every keys in string return tuple:
     #(0 - verify, 1 - write, 2 - read, 3 - salt)
@@ -143,7 +148,7 @@ def send_file(file_name, rsa_dir):
         port = server.update_file(keys[0], keys[1])
     else:
         #server return port where will wait a file
-        port = server.get_file(file_name, keys, dir_key, user_id, type_file)
+        port = server.get_file(file_name_complete_relative, keys, dir_key, user_id, type_file)
 
     if not port:
         sys.exit("Some error occurred. Maybe you don't have permission to \
@@ -159,20 +164,22 @@ def recive_file(file_name, rsa_dir):
     recive file from server
     """
 
+    #name with your relative position (directory) in flexa system 
+    dir_file_relative = _dir_current_relative + '/' + file_name
+    dir_file_local = _dir_called + '/' + file_name
     file_name_enc = file_name + '.enc'
-    local_file = _flexa_dir + file_name
-    local_file_enc = _flexa_dir + file_name_enc
+    dir_file_local_enc = _dir_called + '/' + file_name_enc
 
     ip = misc.my_ip()
     port, sock = misc.port_using(4001)
     #make a thread that will recive file in socket
-    thr = Thread(target = misc.recive_file, args = (sock, local_file_enc))
+    thr = Thread(target = misc.recive_file, args = (sock, dir_file_local_enc))
 
-    server = rpc_server()
+    server, ip_server = rpc_server()
     print(server)
     user_id = 1
-    dir_key = "home"
-    salt = server.get_salt(file_name, user_id)
+    dir_key = "/"
+    salt = server.get_salt(dir_file_relative, user_id)
 
     if (salt == 0):
         print("This file can't be found")
@@ -187,9 +194,9 @@ def recive_file(file_name, rsa_dir):
     print(server.give_file(ip, port, keys[0]))
     thr.join()
 
-    crypto.decrypt_file(keys[0][0:32], file_name_enc, local_file,16)
+    crypto.decrypt_file(keys[0][0:32], file_name_enc, dir_file_local ,16)
     #remove temp crypt file
-    os.remove(local_file_enc)
+    os.remove(dir_file_local_enc)
 
 def list_files():
     """
@@ -198,12 +205,7 @@ def list_files():
     """
     server, ip = rpc_server()
 
-    dir_current = _dir_called.split(_flexa_dir[:-1])[1]
-    if dir_current == '':
-        dir_current = '/'
-    print(dir_current)
-
-    for dic_file in server.list_files("home"):
+    for dic_file in server.list_files(_dir_current_relative):
         print(dic_file['name'])
 
 def rpc_server():
