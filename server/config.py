@@ -59,7 +59,7 @@ class Config():
         parser.add_argument('-p', '--port', nargs=1, help='define server port')
         parser.add_argument('-d', '--daemon', action='store_true', help='daemonize server')
         parser.add_argument('-v', '--verbose', action='count', default=0, help='increase output verbosity')
-        parser.add_argument('-L', '--LOCAL', action='count', help='enable local server')
+        parser.add_argument('-L', '--LOCAL', action='count', default=0, help='enable local server')
         version_info = '%(prog)s {}'.format(self.__version__)
         parser.add_argument('--version', action='version', version=version_info)
     
