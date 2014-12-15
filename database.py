@@ -65,16 +65,16 @@ class Parts(Base):
 	
 	uid = Column(Integer, Sequence('parts_id_seq'), primary_key=True)
 	verify_key = Column(String(100), ForeignKey('file.verify_key'), nullable=False)
-	local = Column(String(40), ForeignKey('server.uid'))
+	server_id = Column(String(40), ForeignKey('server.uid'))
 	num_part = Column(Integer, nullable=False)
 	
-	def __init__(self, verify_key, local, num_part):
+	def __init__(self, verify_key, server_id, num_part):
 		self.verify_key = verify_key
-		self.local = local
+		self.server_id = server_id
 		self.num_part = num_part
 
 	def __repr__(self):
-		return '<File({})>'.format(self.num_part, self.local)
+		return '<File({})>'.format(self.num_part, self.server_id)
 
 class Server(Base):
 	__tablename__ = 'server'
@@ -197,5 +197,18 @@ class DataBase():
 			return 0
 		else:
 			return result[0].salt
+
+
+
+
+
+
+        
+
+
+
+            
+
+
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
