@@ -51,7 +51,7 @@ class Server(object):
             scanner.daemon()
             server.serve_forever()
         except KeyboardInterrupt as error:
-            print("\nSignal of interrupt recived.")
+            print("\nSignal of interrupt received.")
         except :
             print("\nSomething made init_server stop.")
         finally:
@@ -109,7 +109,7 @@ class Server(object):
         port, sockt = misc.port_using(5001)
 
         print('name do arquivo: {}'.format(file_name), flush = True)
-        thread = Thread(target = misc.recive_file, args = (sockt, configs._dir_file + keys[0]))
+        thread = Thread(target = misc.receive_file, args = (sockt, configs._dir_file + keys[0]))
         thread.start()
         #TODO: set timout to thread
 
@@ -125,7 +125,7 @@ class Server(object):
         if not (self.db.update_file(verify_key, write_key)):
             return False
 
-        thread = Thread(target = misc.recive_file, args = (sockt, configs._dir_file + verify_key))
+        thread = Thread(target = misc.receive_file, args = (sockt, configs._dir_file + verify_key))
         thread.start()
         #TODO: set timout to thread
 

@@ -21,7 +21,7 @@ class Ping(object):
     LOCAL = True
 
     def __init__(self, broadcast):
-        """ recive broadcast of network
+        """ receive broadcast of network
             String like `192.168.2.255`
         """
         self.broadcast = broadcast
@@ -199,11 +199,11 @@ def send_file(host, file_name):
     client.close()
     transf_file.close()
 
-def recive_file(sock, file_name):
+def receive_file(sock, file_name):
     """ Recive a file with socket
         Transfer with socket because XMLRPC transfer very slower than socket
 
-        sock: a socket object where is instance that will recive file
+        sock: a socket object where is instance that will receive file
         file_name: str with name, verify_key or name of file
     """
 
@@ -212,13 +212,13 @@ def recive_file(sock, file_name):
     file_save = open(file_name, "wb")
     con, server_name  = sock.accept()
     msg = con.recv(1024)
-    recived = len(msg)
+    received = len(msg)
     while msg:
         file_save.write(msg)
         msg = con.recv(1024)
-        recived += len(msg)
+        received += len(msg)
     file_save.close()
-#    con.send(bytes(recived))
+#    con.send(bytes(received))
 #    con.close()
 
 def my_ip():

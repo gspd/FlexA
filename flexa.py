@@ -158,9 +158,9 @@ def send_file(file_name, rsa_dir):
     #remove temp crypt file
     os.remove(local_file_enc)
 
-def recive_file(file_name, rsa_dir):
+def receive_file(file_name, rsa_dir):
     """
-    recive file from server
+    receive file from server
     """
 
     file_name_enc = file_name + '.enc'
@@ -169,8 +169,8 @@ def recive_file(file_name, rsa_dir):
 
     ip = misc.my_ip()
     port, sock = misc.port_using(4001)
-    #make a thread that will recive file in socket
-    thr = Thread(target = misc.recive_file, args = (sock, local_file_enc))
+    #make a thread that will receive file in socket
+    thr = Thread(target = misc.receive_file, args = (sock, local_file_enc))
 
     server = rpc_server()
     print(server)
@@ -187,7 +187,7 @@ def recive_file(file_name, rsa_dir):
 
     thr.start()
     #ask to server a file with name (keys[0] = hash)
-    #client ip and your port to recive file
+    #client ip and your port to receive file
     print(server.give_file(ip, port, keys[0]))
     thr.join()
 
@@ -349,7 +349,7 @@ def main():
     #Get a file from server
     if args.get:
         for names in args.get:
-            recive_file(names, config.get('User', 'private key'))
+            receive_file(names, config.get('User', 'private key'))
 
     if args.list:
         list_files()
