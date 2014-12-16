@@ -174,12 +174,17 @@ def send_file(host, file_name):
     transf_file = open(file_name,"rb")
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #try connect but if serve don't create a sockt yet wait 1 sec.
+    #after 10 errors, cancel connection
+    attempt = 0
     while 1:
         try:
             client.connect(host)
             break
         except ConnectionRefusedError:
-            print('.', flush = True)
+            print('Try connect to transfer file. ', attempt, flush = True)
+            attempt+=1
+            if attempt == 10:
+                return 1
             time.sleep(1)
 
     sended = 0
@@ -201,6 +206,8 @@ def send_file(host, file_name):
 
     client.close()
     transf_file.close()
+
+    return 0
 
 def recive_file(sock, file_name):
     """ Recive a file with socket
