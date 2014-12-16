@@ -4,7 +4,9 @@ Created on 23/11/2014
 This module make every configurations and parsers on variables to system
 The main class is Config that concentrates the vars and set it with others def
 
-TO IMPORT package = server, module = config, object = configs = Config()
+TO IMPORT:   package = server
+             module = config
+             configs = Config() -> end of this module
 therefor 
 from server.config import configs
 
@@ -57,7 +59,7 @@ class Config():
         parser.add_argument('-p', '--port', nargs=1, help='define server port')
         parser.add_argument('-d', '--daemon', action='store_true', help='daemonize server')
         parser.add_argument('-v', '--verbose', action='count', default=0, help='increase output verbosity')
-        parser.add_argument('-L', '--LOCAL', action='count', help='enable local server')
+        parser.add_argument('-L', '--LOCAL', action='count', default=0, help='enable local server')
         version_info = '%(prog)s {}'.format(self.__version__)
         parser.add_argument('--version', action='version', version=version_info)
     

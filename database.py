@@ -45,7 +45,7 @@ class File(Base):
 	create_date = Column(DateTime)
 	modify_date = Column(DateTime)
 
-	def __init__(self, verify_key, salt, write_key, read_key, file_name, dir_key, user_id, type, num_parts):
+	def __init__(self, verify_key, salt, write_key, read_key, file_name, dir_key, user_id, type, num_parts=0):
 		self.verify_key = verify_key
 		self.salt = salt
 		self.write_key = write_key
@@ -60,7 +60,7 @@ class File(Base):
 		self.size = 100 #FIXME: colocar o tamanho real do arquivo - teste
 
 	def __repr__(self):
-		return '<File(vfk "{}", salt "{}", wtk "{}", rdk "{}", name "{}", dir "{}", user "{}", type "{}",
+		return '<File(vfk "{}", salt "{}", wtk "{}", rdk "{}", name "{}", dir "{}", user "{}", type "{}",\
 	    num_parts "{}")>'.format(self.verify_key, self.salt, self.write_key, self.read_key, self.file_name,
 	            self.dir_key, self.user_id, self.type, self.num_parts)
 
@@ -201,33 +201,5 @@ class DataBase():
 			return 0
 		else:
 			return result[0].salt
-
-	def get_servers_with_file_parts(self, verify_key):
-
-	    """ This function search in table "parts" for all occurrences of
-	    file with vk = verify_key and return a list of servers who has
-	    the parts of this file. """
-
-	    connParts = self.session.query(Server.ip,Parts.num_part)
-	    query = conn.filter(Parts.verify_key == verify_key)
-	    result = query.all()
-
-            return result
-
-        
-
-
-
-
-
-
-
-        
-
-
-
-            
-
-
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

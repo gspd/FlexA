@@ -137,28 +137,3 @@ class Server(object):
             else return 0
         """ 
         return self.db.salt_file(file_name, user_id)
-
-
-###############################################################################
-###############################################################################
-##  NEW FUNCTIONS IMPLEMENTATION - WORKING HERE - WARNING - BIOLOGICAL RISK  ##
-###############################################################################
-###############################################################################
-
-    def who_has_parts(verify_key):
-
-        """ Query database and return a list of tuples with ordered pair:
-        (server_ip,num_part) of requested file by verify_key """
-
-        return self.db.get_servers_with_file_parts(verify_key)
-
-
-
-
-        
-
-
-
-
-
-

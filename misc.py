@@ -53,7 +53,10 @@ class Ping(object):
         s.settimeout(self.TIMEOUT_TO_ANSWER)
 
         #Send mensage in Broadcast
-        s.sendto(b'Alive?', (self.broadcast, self.MYPORT)) 
+        try:
+            s.sendto(b'Alive?', (self.broadcast, self.MYPORT))
+        except:
+            print("An error occurs. Could't send broadcast message.") 
 
         online = []
         while True:
@@ -80,10 +83,10 @@ class Ping(object):
             try:
                 message, address = s.recvfrom(4096)
                 #FIXME: para rodar servidores na mesma maquina - TESTE
-                if self.LOCAL and message == b'Alive?' and address[0] != myip :
+                if (self.LOCAL) and (message == b'Alive?') and (address[0] != myip) :
                     s.sendto(b"I am here", address)
                 #enable local host
-                elif message == b'Alive?':
+                elif message == b'Alive?' and not self.LOCAL:
                     s.sendto(b"I am here", address)
             except:
                 print("Náo consegui responder o ping!")
@@ -171,12 +174,17 @@ def send_file(host, file_name):
     transf_file = open(file_name,"rb")
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     #try connect but if serve don't create a sockt yet wait 1 sec.
+    #after 10 errors, cancel connection
+    attempt = 0
     while 1:
         try:
             client.connect(host)
             break
         except ConnectionRefusedError:
-            print('.', flush = True)
+            print('Try connect to transfer file. ', attempt, flush = True)
+            attempt+=1
+            if attempt == 10:
+                return 1
             time.sleep(1)
 
     sended = 0
@@ -198,6 +206,8 @@ def send_file(host, file_name):
 
     client.close()
     transf_file.close()
+
+    return 0
 
 def receive_file(sock, file_name):
     """ Recive a file with socket
@@ -227,7 +237,10 @@ def my_ip():
     return - string with ip
     """
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(('1.1.1.1', 0))
+    try:
+        s.connect(('1.1.1.1', 0))
+    except:
+        sys.exit("Error in Network interface")
     address = s.getsockname()[0]
     s.close()
     return address
