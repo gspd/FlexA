@@ -198,6 +198,19 @@ class DataBase():
 		else:
 			return result[0].salt
 
+	def get_servers_with_file_parts(self, verify_key):
+
+	    """ This function search in table "parts" for all occurrences of
+	    file with vk = verify_key and return a list of servers who has
+	    the parts of this file. """
+
+	    connParts = self.session.query(Server.ip,Parts.num_part)
+	    query = conn.filter(Parts.verify_key == verify_key)
+	    result = query.all()
+
+            return result
+
+
 
 
 
