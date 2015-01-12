@@ -34,7 +34,6 @@ class File(Base):
 	verify_key = Column(String, primary_key=True)
 	salt = Column(String, nullable=False)
 	write_key = Column(String(100), nullable=False)
-	read_key = Column(String(100), nullable=False)
 	file_name = Column(String(255), nullable=False)
 	dir_key = Column(String(100), nullable=False)
 	num_parts = Column(Integer,nullable=False)
@@ -45,11 +44,10 @@ class File(Base):
 	create_date = Column(DateTime)
 	modify_date = Column(DateTime)
 
-	def __init__(self, verify_key, salt, write_key, read_key, file_name, dir_key, user_id, type, num_parts=0):
+	def __init__(self, verify_key, salt, write_key, file_name, dir_key, user_id, type, num_parts=0):
 		self.verify_key = verify_key
 		self.salt = salt
 		self.write_key = write_key
-		self.read_key = read_key
 		self.file_name = file_name
 		self.dir_key = dir_key
 		self.user_id = user_id
@@ -60,8 +58,8 @@ class File(Base):
 		self.size = 100 #FIXME: colocar o tamanho real do arquivo - teste
 
 	def __repr__(self):
-		return '<File(vfk "{}", salt "{}", wtk "{}", rdk "{}", name "{}", dir "{}", user "{}", type "{}",\
-	    num_parts "{}")>'.format(self.verify_key, self.salt, self.write_key, self.read_key, self.file_name,
+		return '<File(vfk "{}", salt "{}", wtk "{}", name "{}", dir "{}", user "{}", type "{}",\
+	    num_parts "{}")>'.format(self.verify_key, self.salt, self.write_key, self.file_name,
 	            self.dir_key, self.user_id, self.type, self.num_parts)
 
 class Parts(Base):
