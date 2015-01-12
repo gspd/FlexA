@@ -92,41 +92,55 @@ class Ping(object):
                 print("Náo consegui responder o ping!")
 
 
-def split_file(fil, nparts):
-    """Recive
-    pointer of file - fil
-    how many part to split  - nparts
+def split_file(file_name, nparts):
+    """
+        split file in nparts and save it with ".n"
+        where n is number of part
     """
 
-    #config size of file
-    size = fil.seek(0,2)
-    #set in initial of file
-    fil.seek(0)
-    #inicialize list of parts
-    part = []
-    #size of parts
-    chucksize = size//nparts
+    with open(file_name, "rb") as file_pointer:
+        #config size of file
+        size = file_pointer.seek(0,2)
+        #set in initial of file
+        file_pointer.seek(0)
+        #size of parts
+        chucksize = size//nparts
 
-    #get parts but not the last
-    for i in range(nparts-1):
-        part.append(fil.read(chucksize))
+        try:
+            #get parts but not the last
+            for i in range(nparts-1):
+                file_part = open( file_name + '.' + str(i), 'wb' )
+                file_part.write( file_pointer.read(chucksize) )
+                file_part.close()
 
-    #get the last part that can has size<chucksize
-    part.append(fil.read(size - fil.tell()))
+            #save last part
+            file_part = open(file_name + '.' + str(nparts-1), 'wb')
+            #get the last part that can has size<chucksize
+            file_part.write( file_pointer.read( size - file_pointer.tell() ) )
+            file_part.close()
+        except:
+            print("Unexpected error:", sys.exc_info()[0])
+            return False
 
-    return part
+    return True
 
-def join_file(fil, parts):
-    """Recive
-    list whith all parts of file - parts
-    name of file that will save  - name
+def join_file(name_parts, name_merged):
+    """
+        Join parts of file and save in name_merged 
+        receive:
+            name_parts - list of files name to join
+            name_merged - file name where will save merged 
     """
 
-    #how many parts
-    nparts = len(parts)
-    #write in file
-    for i in range(nparts):
-        fil.write( parts[i].read())
+    try:
+        with open(name_merged, "wb") as merged:
+            for part in name_parts:
+                with open(part, "rb") as file_part:
+                    merged.write( file_part.read() )
+    except:
+        return False
+
+    return True
 
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via input() and return their answer.
@@ -195,14 +209,9 @@ def send_file(host, file_name):
         if sended != readed:
             print('Readed: {}, Sended: {}'.format(readed, sended))
             print('ERRO: Conexão falhou ao enviar o arquivo.\n port:{}'.format(host[1]))
-            return
+            return 1
         msg = transf_file.read(1024)
         readed += len(msg)
-
-    #confirm if send is correct
-    #TODO if not correct resend
-    #size = client.recv(16)
-    #print('--------------------> {}'.format(int(size)))
 
     client.close()
     transf_file.close()
@@ -228,8 +237,6 @@ def receive_file(sock, file_name):
         msg = con.recv(1024)
         received += len(msg)
     file_save.close()
-#    con.send(bytes(received))
-#    con.close()
 
 def my_ip():
     """ this function create a socket connection
