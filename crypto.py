@@ -197,10 +197,10 @@ def generate_salt(length=16):
     return salt
 
 def keys_string(salt, rsa):
-    """Generate keys (0 - verify, 1 - write, 2 - read, 3 - salt) and return your strings
+    """Generate keys [0 - verify, 1 - write, 2 - read, 3 - salt] and return your strings
     Parameters:
-    salt if exist file or 0 if doesn't
-    rsa is object
+        salt if exist file or 0 if doesn't
+        rsa is object
     """
 
     if salt == 0:
@@ -216,6 +216,6 @@ def keys_string(salt, rsa):
     rk, rks = generate_read_key(vk, key_rsa)
     wks = generate_write_key(rk, key_rsa)
 
-    return (vks, rks, wks, salts)
+    return [vks, rks, wks, salts]
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
