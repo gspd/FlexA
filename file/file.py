@@ -37,4 +37,4 @@ class File(object):
             pass
 
     def __repr__(self):
-        return '<name: "{}", size: "{}", create_date: "{}", modify_date: "{}", owner: "{}"'.format(self.file_name, self.size, self.create_date, self.modify_date, self.owner)
+        return '<name: "{}", size: "{}", create_date: "{}", modify_date: "{}", owner: "{}">'.format(self.file_name, self.size, self.create_date, self.modify_date, self.owner)
