@@ -9,6 +9,8 @@ from threading import Lock, Thread
 import time
 import datetime
 
+import logging
+
 Base = declarative_base()
 
 class User(Base):
@@ -106,10 +108,16 @@ class DataBase():
 	_echo_db = False
 
 	def __init__(self, file_db='flexa.sqlite3'):
+
+		# Create local logging object
+		self.logger = logging.getLogger("DataBase")
+
 		#model to connect database 'driver://user:pass@host/database'
 		engine = create_engine('sqlite:///{}'.format(file_db), connect_args={'check_same_thread':False}, echo= self._echo_db)
 		if not os.path.exists(file_db):
+			self.logger.info("Make database {}".format(file_db))
 			Base.metadata.create_all(engine)
+		self.logger.info("Connecting database")
 		Session = sessionmaker(bind=engine)
 		self.session = Session()
 
@@ -143,6 +151,8 @@ class DataBase():
 		When there are more then  modifies execute commit_db()
 		"""
 
+		self.logger.info("add invoked")
+
 		#block semaphore
 		self.modify_db.acquire()
 
@@ -164,6 +174,9 @@ class DataBase():
 		self.modify_db.release()
 
 	def update_file(self, verify_key, write_key):
+
+		self.logger.info("update_file invoked")
+
 		file = self.session.query(File).filter(File.verify_key == verify_key)
 		if (file.one().write_key == write_key):
 			#have permission to write
@@ -181,6 +194,9 @@ class DataBase():
 			return False
 
 	def list_files(self, dir_key):
+
+		self.logger.info("list_files invoked")
+
 		files = self.session.query(File)
 		files = files.filter(File.dir_key == dir_key)
 		return files.all()
@@ -190,6 +206,8 @@ class DataBase():
 		and return your salt
 		if don't find return 0
 		"""
+
+		self.logger.info("salt_file invoked")
 
 		file = self.session.query(File)
 		file = file.filter(File.file_name == file_name)
