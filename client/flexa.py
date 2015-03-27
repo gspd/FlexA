@@ -64,6 +64,9 @@ class Client():
         if args.list:
             self.list_files()
 
+        if args.delete:
+            for names in args.delete:
+                self.delete_file(names)
         # Write configuration file
         with open(self.configs._config_path, mode='w', encoding='utf-8') as outfile:
             self.configs.loaded_config.write(outfile)
@@ -203,3 +206,12 @@ class Client():
         for dic_file in server.list_files(self.configs._dir_current_relative):
             print(dic_file['name'])
 
+    def delete_file(self, name_file):
+        """
+            Delete files in flexa system
+
+            Parameters:
+                name_file - name of file
+        """
+
+        pass

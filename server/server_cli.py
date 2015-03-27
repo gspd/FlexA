@@ -68,6 +68,10 @@ class Server(object):
         server.register_function(self.get_salt)
         server.register_function(self.update_file)
         server.register_function(self.negotiate_store_part)
+        server.register_function(self.delete_file)
+
+    def delete_file(self):
+        pass
 
     def list_files(self, verify_key):
         """
