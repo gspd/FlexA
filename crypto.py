@@ -196,7 +196,7 @@ def generate_salt(length=16):
     salt = binascii.hexlify(salt)
     return salt
 
-def keys_string(salt, rsa):
+def keys_to_string(salt, rsa):
     """Generate keys [0 - verify, 1 - write, 2 - read, 3 - salt] and return your strings
     Parameters:
         salt if exist file or 0 if doesn't
@@ -217,5 +217,19 @@ def keys_string(salt, rsa):
     wks = generate_write_key(rk, key_rsa)
 
     return [vks, rks, wks, salts]
+
+
+def keys_generator(rsa_location, salt):
+    """
+    Function that open rsa and return string of rsa (HASH)
+
+    Parameters:
+        rsa_location - where is rsa key
+        salt - random number to compose key
+    """
+
+    rsa = open_rsa_key(rsa_location, )
+
+    return keys_to_string(salt, rsa)
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
