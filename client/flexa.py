@@ -28,14 +28,19 @@ class Client():
     dir_file_local_enc = None
 
     rpc = rpc_client.RPC()
-    
+
+
+########################################################
+########  CONTROLLING METHODS  #########################
+########################################################
+
+
     def __init__(self):
         '''
         Constructor
         '''
         self.configs = Config()
-        
-        
+
         args = Config.args
 
         # Generate a new user key
@@ -54,13 +59,13 @@ class Client():
             for names in args.put:
                 self.create_relatives_names_directory(names)
                 self.send_file()
-    
+
         # Get a file from server
         if args.get:
             for names in args.get:
                 self.create_relatives_names_directory(names)
                 self.recive_file()
-    
+
         if args.list:
             self.list_files()
 
@@ -71,6 +76,7 @@ class Client():
         with open(self.configs._config_path, mode='w', encoding='utf-8') as outfile:
             self.configs.loaded_config.write(outfile)
 
+        return
 
     def create_relatives_names_directory(self, file_name):
         """ Function that make names relatives to file in FlexA system and
@@ -94,7 +100,20 @@ class Client():
         #real directory in workstation of file encrypt (temp to receive)
         self.dir_file_local_enc = self.configs._dir_called + '/' + self.file_name_enc
 
+        return
 
+    def send_file_part(self, num_part, ip_server, port_server):
+
+        host = (ip_server, port_server)
+        local_file_name_complete = self.local_file_enc + '.' + str(num_part)
+        # TODO: colocar um if no send_file para confirmar se o envio foi efetuado com sucesso
+        misc.send_file(host, local_file_name_complete)
+        os.remove(local_file_name_complete)
+
+
+########################################################
+#########   OPERATIONS METHODS   #######################
+########################################################
 
         
     def send_file(self):
@@ -106,49 +125,40 @@ class Client():
         if not os.path.exists(self.local_file):
             sys.exit("File not found.\nTry again.")
 
-
-        user_id = self.configs.loaded_config.get("User", "hash client")
+        user_id = self.configs.loaded_config.get( "User", "hash client" )
         # verify if this file exist (same name in this directory)
         dir_key = "/"  # FIXME set where is.... need more discussion
-
         total_parts_file = 3
 
-        server, ip_server = self.rpc.rpc_server()
+        server_obj = rpc_client.RPC()
+        server_conn, ip_server = server_obj.get_next_server()
         # ask to server if is update or new file
-        salt = server.get_salt(self.file_name_complete_relative, user_id)
+        salt = server_conn.get_salt( self.file_name_complete_relative, user_id )
 
         # generate every keys in string return vector:
         # [0 - verify, 1 - write, 2 - read, 3 - salt]
         keys = crypto.keys_generator( self.configs.loaded_config.get("User", "private key"), salt ) 
-
         crypto.encrypt_file(keys[2][0:32], self.local_file, self.local_file_enc, 16)
-
         # verify if exist file
-        if not (misc.split_file(self.local_file_enc, total_parts_file)):
-            sys.exit("Problems with split file occurred.\nTry again.")
+        if not ( misc.split_file(self.local_file_enc, total_parts_file) ):
+            sys.exit("Problems while splitting file.\nTry again.")
 
-
-        list_ports = []
         # if salt has a value then is update. because server return a valid salt
         if salt:
-            for num_part in range(total_parts_file):
-                list_ports.append(server.update_file(keys[0], keys[1], num_part))
+            for num_part in range( total_parts_file ):
+                server_conn, ip_server = server_obj.get_next_server( )
+                port_server = server_conn.update_file( keys[0], keys[1], num_part )
+                self.send_file_part( num_part, ip_server, port_server )
         else:
             # server return port where will wait a file
             keys[2] = 0
             for num_part in range(total_parts_file):
-                port_on_server = server.negotiate_store_part(user_id, self.file_name_complete_relative, keys[0], dir_key, keys[1], keys[3], num_part)
-                list_ports.append(port_on_server)
-                if not port_on_server:
+                server_conn, ip_server = server_obj.get_next_server( )
+                port_server = server_conn.negotiate_store_part(user_id, self.file_name_complete_relative, keys[0], dir_key, keys[1], keys[3], num_part)
+                self.send_file_part(num_part, ip_server, port_server)
+                if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
                             write. \nTry again.")
-
-        for num_part in range(total_parts_file):
-            host = (ip_server, list_ports[num_part - 1])
-            file_name_to_get = self.local_file_enc + '.' + str(num_part)
-            # TODO: colocar um if no send_file para confirmar se o envio foi efetuado com sucesso
-            misc.send_file(host, file_name_to_get)
-            os.remove(file_name_to_get)
 
         # remove temp crypt file
         os.remove(self.local_file_enc)
@@ -193,8 +203,12 @@ class Client():
         misc.join_file(name_parts_file, self.file_name_enc)
 
         crypto.decrypt_file(keys[2][0:32], self.file_name_enc, self.local_file, 16)
-        # remove temp crypt file
-        #FIXME: colocar no for   os.remove(dir_file_local_enc)
+
+        #remove temp files from  workstation -> parts
+        for files_to_del in name_parts_file:
+            os.remove(files_to_del)
+        #remove temp files from  workstation -> complete
+        os.remove(self.dir_file_local_enc)
 
     def list_files(self):
         """

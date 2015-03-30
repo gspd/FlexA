@@ -17,6 +17,8 @@ class Ping(object):
     TIME_AUTO_SCAN = 3
     MYPORT = 51400
 
+    online = None
+
     #flag to enable local servers
     LOCAL = True
 
