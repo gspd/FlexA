@@ -28,6 +28,7 @@ class Client():
     dir_file_local_enc = None
 
     rpc = rpc_client.RPC()
+    user_id = None
 
 
 ########################################################
@@ -53,6 +54,8 @@ class Client():
                     sys.exit(2)
     
             # createNewUserKey(self.configs)
+
+        self.user_id = self.configs.loaded_config.get("User", "hash client")
 
         # Send a file to server
         if args.put:
@@ -131,7 +134,7 @@ class Client():
         total_parts_file = 3
 
         server_obj = rpc_client.RPC()
-        server_conn, ip_server = server_obj.get_next_server()
+        server_conn = server_obj.get_next_server()
         # ask to server if is update or new file
         salt = server_conn.get_salt( self.file_name_complete_relative, user_id )
 
@@ -146,16 +149,16 @@ class Client():
         # if salt has a value then is update. because server return a valid salt
         if salt:
             for num_part in range( total_parts_file ):
-                server_conn, ip_server = server_obj.get_next_server( )
+                server_conn = server_obj.get_next_server( )
                 port_server = server_conn.update_file( keys[0], keys[1], num_part )
-                self.send_file_part( num_part, ip_server, port_server )
+                self.send_file_part( num_part, server_conn.ip_server, port_server )
         else:
             # server return port where will wait a file
             keys[2] = 0
             for num_part in range(total_parts_file):
-                server_conn, ip_server = server_obj.get_next_server( )
+                server_conn = server_obj.get_next_server( )
                 port_server = server_conn.negotiate_store_part(user_id, self.file_name_complete_relative, keys[0], dir_key, keys[1], keys[3], num_part)
-                self.send_file_part(num_part, ip_server, port_server)
+                self.send_file_part(num_part, server_conn.ip_server, port_server)
                 if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
                             write. \nTry again.")
@@ -168,18 +171,18 @@ class Client():
         """
         recive file from server
         """
-    
-        ip = misc.my_ip()
+
         port, sock = misc.port_using(4001)
-    
-        server, ip_server = self.rpc.rpc_server()
-        user_id = self.configs.loaded_config.get("User", "hash client")
-        salt = server.get_salt(self.file_name_complete_relative, user_id)
+
+
+        server_obj = rpc_client.RPC()
+        server_conn = server_obj.get_next_server()
+        salt = server_conn.get_salt(self.file_name_complete_relative, self.user_id)
     
         if (salt == 0):
             print("This file can't be found")
             return
-    
+
         keys = crypto.keys_generator( self.configs.loaded_config.get("User", "private key"), salt )
 
 
@@ -195,7 +198,7 @@ class Client():
             thr.start()
             # ask to server a file with name (keys[0] = hash)
             # client ip and your port to recive file
-            if ( server.give_file(ip,port,keys[0],num_part) ):
+            if ( server_conn.give_file( misc.my_ip(),port,keys[0],num_part) ):
                 # exit with error and kill thread thr
                 sys.exit("Some error occurs. Try again later.")
             thr.join()
