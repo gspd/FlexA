@@ -19,7 +19,7 @@ class Ping(object):
 
     online = None
 
-    #flag to enable local servers
+    #flag to enable local servers - default: enable 
     LOCAL = True
 
     def __init__(self, broadcast):
@@ -84,11 +84,9 @@ class Ping(object):
         while True:
             try:
                 message, address = s.recvfrom(4096)
-                #FIXME: para rodar servidores na mesma maquina - TESTE
-                if (self.LOCAL) and (message == b'Alive?') and (address[0] != myip) :
+                if (message == b'Alive?') and (address[0] != myip):
                     s.sendto(b"I am here", address)
-                #enable local host
-                elif message == b'Alive?' and not self.LOCAL:
+                elif message == b'Alive?' and (address[0] == myip) and (self.LOCAL):
                     s.sendto(b"I am here", address)
             except:
                 print("Náo consegui responder o ping!")

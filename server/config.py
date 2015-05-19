@@ -9,6 +9,7 @@ TO IMPORT:   package = server
              configs = Config() -> end of this module
 therefor 
 from server.config import configs
+Then configs is the object that has every configuration.
 
 @author: mario
 '''
@@ -59,7 +60,7 @@ class Config():
         parser.add_argument('-p', '--port', nargs=1, help='define server port')
         parser.add_argument('-d', '--daemon', action='store_true', help='daemonize server')
         parser.add_argument('-v', '--verbose', action='count', default=0, help='increase output verbosity')
-        parser.add_argument('-L', '--LOCAL', action='count', default=0, help='enable local server')
+        parser.add_argument('-L', '--LOCAL', action='count', default=0, help='disable local server [ default: enable]')
         version_info = '%(prog)s {}'.format(self.__version__)
         parser.add_argument('--version', action='version', version=version_info)
     
