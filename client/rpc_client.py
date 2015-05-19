@@ -22,6 +22,7 @@ class RPC(object):
 
     list_online = None
     index_list_online = None
+    ip_server = None
 
     def __init__(self):
         '''
@@ -75,13 +76,13 @@ class RPC(object):
             self.scan_online_servers()
 
         #get the next server of the list of servers online
-        ip_server = self.list_online[self.index_list_online]
+        self.ip_server = self.list_online[self.index_list_online]
         self.index_list_online += 1
         #make the structure to connect rpc_server
-        server_addr = 'http://{}:{}'.format(ip_server, Config._PORT_SERVER)
+        server_addr = 'http://{}:{}'.format(self.ip_server, Config._PORT_SERVER)
 
         #return the object server_rpc
-        return ServerProxy(server_addr), ip_server
+        return ServerProxy(server_addr)
 
 
     def rpc_server(self):

@@ -55,4 +55,4 @@ class Sync(object):
     def verify_service(self):
         ip_server = misc.my_ip() #FIXME find a init_server
         server_addr = 'http://{}:5000'.format(ip_server)
-        server = ServerProxy(server_addr)
+        ServerProxy(server_addr)
