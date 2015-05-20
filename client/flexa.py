@@ -151,14 +151,14 @@ class Client():
             for num_part in range( total_parts_file ):
                 server_conn = server_obj.get_next_server( )
                 port_server = server_conn.update_file( keys[0], keys[1], num_part )
-                self.send_file_part( num_part, server_conn.ip_server, port_server )
+                self.send_file_part( num_part, server_obj.ip_server, port_server )
         else:
             # server return port where will wait a file
             keys[2] = 0
             for num_part in range(total_parts_file):
                 server_conn = server_obj.get_next_server( )
                 port_server = server_conn.negotiate_store_part(user_id, self.file_name_complete_relative, keys[0], dir_key, keys[1], keys[3], num_part)
-                self.send_file_part(num_part, server_conn.ip_server, port_server)
+                self.send_file_part(num_part, server_obj.ip_server, port_server)
                 if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
                             write. \nTry again.")
