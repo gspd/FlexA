@@ -20,16 +20,18 @@ class RPC(object):
     MIN_SERVER = 3
     MAX_TIME_OUT_ANSWER = 1.5
 
-    list_online = None
+    list_online = []
     index_list_online = None
     ip_server = None
+
+    #if have few servers, ask if user want to continue
+    few_servers_continue = False
 
     def __init__(self):
         '''
         Start object with first scan
         '''
         
-        self.scan_online_servers()
         self.index_list_online = 0
 
         return
@@ -46,15 +48,17 @@ class RPC(object):
         scan_ping = misc.Ping(self.MASK_SCAN)
         scan_ping.TIMEOUT_TO_ANSWER = self.TIME_OUT_ANSWER
 
+        print("searching servers")
         #scan network until at least a minimun number of online servers are found
         #or to break the timeout -> any one server was find
         while len(scan_ping.online) < self.MIN_SERVER :
+            print(".", end='', flush=True)
             scan_ping.scan()
             scan_ping.TIMEOUT_TO_ANSWER += self.TIME_ADD_PER_HOPE
 
             if scan_ping.TIMEOUT_TO_ANSWER > self.MAX_TIME_OUT_ANSWER :
-                print("Couldn't find servers.\n Timed out.")
-                sys.exit(0)
+                #if TIMEOUT stop the search
+                break
 
         #get list of servers online
         self.list_online = scan_ping.online
@@ -75,6 +79,15 @@ class RPC(object):
         if self.index_list_online >= len(self.list_online):
             self.scan_online_servers()
 
+        if len(self.list_online) < self.MIN_SERVER:
+            #ask if want to continue.
+            #if yes, set few_servers_continue and dont show query again.
+            #if no exit program
+            if(self.few_servers_continue or misc.query_yes_no("Couldn't find many servers, would you like to continue?")):
+                self.few_servers_continue = True
+            else:
+                sys.exit(0)
+
         #get the next server of the list of servers online
         self.ip_server = self.list_online[self.index_list_online]
         self.index_list_online += 1
@@ -83,26 +96,3 @@ class RPC(object):
 
         #return the object server_rpc
         return ServerProxy(server_addr)
-
-
-    def rpc_server(self):
-        """
-        Find a servers online and make connection
-
-        FIXME: this method will be deleted. It will be replaced by scan_online_servers and get_next_server
-        """
-
-        host = misc.Ping('255.255.255.255')
-        host.TIMEOUT_TO_ANSWER = 0.3
-        host.scan()
-        while not host.online:
-            host.TIMEOUT_TO_ANSWER += 0.3
-            host.scan()
-            if host.TIMEOUT_TO_ANSWER > 1.5:
-                print("Can't found servers. \n Time out.")
-                sys.exit(0)
-    
-        #online[0] is the first server that answer
-        ip_server = host.online[0]
-        server_addr = 'http://{}:{}'.format(ip_server, Config._PORT_SERVER)
-        return ServerProxy(server_addr), ip_server
