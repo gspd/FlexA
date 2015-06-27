@@ -218,9 +218,9 @@ class Client():
         Search every file from verify_key
             verify_key is directory where called this operation - answer is a dictionary of files and yours attributes 
         """
-        server, ip = self.rpc.rpc_server()
+        server_conn = self.rpc.get_next_server()
     
-        for dic_file in server.list_files(self.configs._dir_current_relative):
+        for dic_file in server_conn.list_files(self.configs._dir_current_relative):
             print(dic_file['name'])
 
     def delete_file(self, name_file):
