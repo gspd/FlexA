@@ -11,7 +11,7 @@ import misc
 import logging
 
 
-class Sync(object):
+class Sync_Server(object):
     
     """
     Class that start server to sync with others server client updates

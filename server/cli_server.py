@@ -17,7 +17,7 @@ from file import file
 from server.config import configs
 
 
-class Server(object):
+class Client_Server(object):
     """Class that make rpc server
 
         your constructor make configs to start server
