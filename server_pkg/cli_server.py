@@ -14,13 +14,13 @@ import database
 import logging
 from file import file
 
-from server.config import configs
+from server_pkg.config import configs
 
 
 class Client_Server(object):
-    """Class that make rpc server
+    """Class that make rpc server_pkg
 
-        your constructor make configs to start server
+        your constructor make configs to start server_pkg
 
         functions:
             register_operations
@@ -92,7 +92,7 @@ class Client_Server(object):
 
     def get_server_status(self):
         """
-            Analyze status of server with:
+            Analyze status of server_pkg with:
                 - how many disc is free
                 - how many connections is alive
                 - how many memory is in using
@@ -145,7 +145,7 @@ class Client_Server(object):
     def update_file(self, verify_key, write_key, num_part):
         """
             if exist file, and client wanna send the same file (reference in db)
-            the server update file in system
+            the server_pkg update file in system
         """
 
         self.logger.info("update_file invoked")
@@ -179,7 +179,7 @@ class Client_Server(object):
 
     def negotiate_store_part(self, user_id, file_name, verify_key, directory_key, write_key, salt, part_number):
         """
-            Negotiate with client to server receive file part
+            Negotiate with client to server_pkg receive file part
             (0 verify_key, 1 write_key, 2 read_key (None), 3 salt)
         """
 

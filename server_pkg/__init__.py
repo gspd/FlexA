@@ -9,7 +9,3 @@ You can start servers with
     -vv              to more verbose
 
 """
-
-#initialize configs
-from server import config
-import file

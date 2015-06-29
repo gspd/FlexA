@@ -4,11 +4,11 @@ Created on 23/11/2014
 This module make every configurations and parsers on variables to system
 The main class is Config that concentrates the vars and set it with others def
 
-TO IMPORT:   package = server
+TO IMPORT:   package = server_pkg
              module = config
              configs = Config() -> end of this module
 therefor 
-from server.config import configs
+from server_pkg.config import configs
 Then configs is the object that has every configuration.
 
 @author: mario
@@ -58,11 +58,11 @@ class Config():
         parser = argparse.ArgumentParser(
                 description='Server for a New Flexible and Distributed File \
                         System')
-        parser.add_argument('-i', '--ip', nargs=1, help='define server IP')
-        parser.add_argument('-p', '--port', nargs=1, help='define server port')
-        parser.add_argument('-d', '--daemon', action='store_true', help='daemonize server')
+        parser.add_argument('-i', '--ip', nargs=1, help='define server_pkg IP')
+        parser.add_argument('-p', '--port', nargs=1, help='define server_pkg port')
+        parser.add_argument('-d', '--daemon', action='store_true', help='daemonize server_pkg')
         parser.add_argument('-v', '--verbose', action='count', default=0, help='increase output verbosity')
-        parser.add_argument('-L', '--LOCAL', action='count', default=0, help='disable local server [ default: enable]')
+        parser.add_argument('-L', '--LOCAL', action='count', default=0, help='disable local server_pkg [ default: enable]')
         version_info = '%(prog)s {}'.format(self.__version__)
         parser.add_argument('--version', action='version', version=version_info)
     
@@ -105,8 +105,8 @@ class Config():
         parser = self.usage()
         args = parser.parse_args()
     
-        #Name of the server config file
-        config_path = 'flexa-server.ini'
+        #Name of the server_pkg config file
+        config_path = 'flexa-server_pkg.ini'
         config = self.load_config(config_path)
     
         #directory to save file
@@ -137,7 +137,7 @@ class Config():
         else:
             port = int(config.get('Network','port'))
 
-        #cat id of server
+        #cat id of server_pkg
         uid = config.get('Metadata', 'uid')
         if not uid:
             uid = uuid.uuid4().hex
