@@ -20,6 +20,7 @@ import logging
 import argparse
 import configparser
 import database
+import uuid
 
 import misc
 
@@ -39,6 +40,7 @@ class Config():
     #configs to start server_cli
     ip = None
     port = None
+    uid = None
 
     def __init__(self):
         '''
@@ -77,6 +79,10 @@ class Config():
         """
     
         default_config = """
+        #Metadata of Server
+        [Metadata]
+            uid =
+
         #Network related configuration
         [Network]
             host =
@@ -119,31 +125,33 @@ class Config():
         if args.ip:
             ip = args.ip[0]
             config.set('Network', 'host', ip)
-            #Write new configuration file
-            with open(config_path, mode='w', encoding='utf-8') as outfile:
-                config.write(outfile)
         else:
             ip = config.get('Network','host')
             if not ip:
                 ip = misc.my_ip()
-    
+
         #Override default port
         if args.port:
             port = int(args.port[0])
             config.set('Network', 'port', args.port[0])
-            #Write new configuration file
-            with open(config_path, mode='w', encoding='utf-8') as outfile:
-                config.write(outfile)
         else:
             port = int(config.get('Network','port'))
 
+        #cat id of server
+        uid = config.get('Metadata', 'uid')
+        if not uid:
+            uid = uuid.uuid4().hex
+            config.set('Metadata', 'uid', uid)
+
         if args.LOCAL:
             misc.Ping.LOCAL = False
-    
-    
+
         self.ip = ip
         self.port = port
 
+        #Write new configuration file
+        with open(config_path, mode='w', encoding='utf-8') as outfile:
+            config.write(outfile)
 
 
 #object that have every configurations vars
