@@ -4,13 +4,12 @@ Created on 23/11/2014
 @author: mario
 '''
 
+from server_pkg.server import Server
 from rpc import RPCThreadingServer
 from rpc import RPCServerHandler
 import logging
- 
-from server_pkg.config import configs
 
-class Sync_Server():
+class Sync_Server(Server):
     
     """
     Class that start server_pkg to sync with others server_pkg client updates
@@ -23,9 +22,9 @@ class Sync_Server():
 
     def __init__(self):
         
-        print(uid)
+        #self.uid = self.configs.uid
         
-        connection = (configs.ip, configs.port)
+        connection = (self.configs.ip, self.configs.port)
 
         server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
         ip, port = server.server_address

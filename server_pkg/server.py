@@ -4,24 +4,28 @@ Created on 28/06/2015
 @author: mario
 '''
 
-from server_pkg import cli_server
-from server_pkg import sync_server
-from server_pkg.config import configs
+from server_pkg import config
 
-class Server():   
+class Server(object):
     '''
     Initialize Synchronism Server and Client Server
     '''
 
-    _uid = None
-    
+    configs = None
+
     def __init__(self):
         '''
-        Constructor
+        Sets configurations
         '''
-        
-        self._uid = configs.uid
-        
-        
-        sync_server.Sync_Server()
-        cli_server.Client_Server()
+
+        Server.configs = config.Config()
+
+    def start_services(self):
+
+            #DON'T TOUCH IN THIS LINE. DON'T MOVE TO THE BEGINNING
+            #If put this line in the beginning circular imports will occurs
+            from server_pkg import sync_server, cli_server
+
+            sync_server.Sync_Server()
+
+            cli_server.Client_Server()
