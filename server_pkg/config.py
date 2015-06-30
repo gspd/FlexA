@@ -26,7 +26,7 @@ import misc
 
 
 
-class Config():
+class Config(object):
     '''
     Start every config vars to system
     ''' 
@@ -138,10 +138,10 @@ class Config():
             port = int(config.get('Network','port'))
 
         #cat id of server_pkg
-        uid = config.get('Metadata', 'uid')
-        if not uid:
-            uid = uuid.uuid4().hex
-            config.set('Metadata', 'uid', uid)
+        self.uid = config.get('Metadata', 'uid')
+        if not self.uid:
+            self.uid = uuid.uuid4().hex
+            config.set('Metadata', 'uid', self.uid)
 
         if args.LOCAL:
             misc.Ping.LOCAL = False
@@ -152,7 +152,3 @@ class Config():
         #Write new configuration file
         with open(config_path, mode='w', encoding='utf-8') as outfile:
             config.write(outfile)
-
-
-#object that have every configurations vars
-configs = Config()
