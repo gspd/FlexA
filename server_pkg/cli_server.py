@@ -15,9 +15,10 @@ import logging
 from file import file
 
 from server_pkg.server import Server
+from multiprocessing import Process 
 
 
-class Client_Server(Server):
+class Client_Server(Process, Server):
     """Class that make rpc server_pkg
 
         your constructor make configs to start server_pkg
@@ -29,15 +30,11 @@ class Client_Server(Server):
     """
 
 
-    def __init__(self):
-
-        """
-        """
-
+    def run(self):
         #connect database
         self.db = database.DataBase()
 
-        connection = (self.configs.ip, self.configs.port)
+        connection = (self.configs.ip, self.configs.cli_port)
         server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
         ip, port = server.server_address
         # Create local logging object

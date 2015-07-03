@@ -26,6 +26,13 @@ class Server(object):
             #If put this line in the beginning circular imports will occurs
             from server_pkg import sync_server, cli_server
 
-            sync_server.Sync_Server()
+            sync = sync_server.Sync_Server()
+            cli = cli_server.Client_Server()
+            sync.start()
+            cli.start()
 
-            cli_server.Client_Server()
+            try:
+                sync.join()
+                cli.join()
+            except:
+                exit(0)

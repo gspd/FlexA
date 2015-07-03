@@ -9,7 +9,9 @@ from rpc import RPCThreadingServer
 from rpc import RPCServerHandler
 import logging
 
-class Sync_Server(Server):
+from multiprocessing import Process 
+
+class Sync_Server(Process, Server):
     
     """
     Class that start server_pkg to sync with others server_pkg client updates
@@ -17,14 +19,14 @@ class Sync_Server(Server):
 
     #indicate how many machines will be observed -> 2 in right and 2 in left
     size_window = 4
+    left_neighbor = []
+    right_neighbor = []
 
+    def run(self):
 
-
-    def __init__(self):
-        
         #self.uid = self.configs.uid
-        
-        connection = (self.configs.ip, self.configs.port)
+
+        connection = (self.configs.ip, self.configs.sync_port)
 
         server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
         ip, port = server.server_address
@@ -48,7 +50,7 @@ class Sync_Server(Server):
 
     def get_neighbor_map(self):
 
-        pass
+        return self.left_neighbor+self.right_neighbor
 
     def update_neighbor(self):
 
