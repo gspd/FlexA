@@ -39,7 +39,8 @@ class Config(object):
 
     #configs to start server_cli
     ip = None
-    port = None
+    cli_port = None
+    sync_port = None
     uid = None
 
     def __init__(self):
@@ -58,8 +59,9 @@ class Config(object):
         parser = argparse.ArgumentParser(
                 description='Server for a New Flexible and Distributed File \
                         System')
-        parser.add_argument('-i', '--ip', nargs=1, help='define server_pkg IP')
-        parser.add_argument('-p', '--port', nargs=1, help='define server_pkg port')
+        parser.add_argument('-i', '--ip', nargs=1, help='define server IP')
+        parser.add_argument('-p', '--cliport', nargs=1, help='define client server port')
+        parser.add_argument('-ps', '--syncport', nargs=1, help='define sync server port')
         parser.add_argument('-d', '--daemon', action='store_true', help='daemonize server_pkg')
         parser.add_argument('-v', '--verbose', action='count', default=0, help='increase output verbosity')
         parser.add_argument('-L', '--LOCAL', action='count', default=0, help='disable local server_pkg [ default: enable]')
@@ -79,14 +81,16 @@ class Config(object):
         """
     
         default_config = """
-        #Metadata of Server
-        [Metadata]
-            uid =
+        #Metadata of Servers
+        [General]
+            uid = 
+            host = 
 
-        #Network related configuration
-        [Network]
-            host =
+        [Client]
             port = 5000
+            
+        [Sync]
+            port = 15000
         """
     
         config = configparser.SafeConfigParser()
@@ -106,7 +110,7 @@ class Config(object):
         args = parser.parse_args()
     
         #Name of the server_pkg config file
-        config_path = 'flexa-server_pkg.ini'
+        config_path = 'flexa-server.ini'
         config = self.load_config(config_path)
     
         #directory to save file
@@ -124,30 +128,38 @@ class Config(object):
         #Override default IP
         if args.ip:
             ip = args.ip[0]
-            config.set('Network', 'host', ip)
+            config.set('General', 'host', ip)
         else:
-            ip = config.get('Network','host')
+            ip = config.get('General','host')
             if not ip:
                 ip = misc.my_ip()
 
         #Override default port
-        if args.port:
-            port = int(args.port[0])
-            config.set('Network', 'port', args.port[0])
+        if args.cliport:
+            cli_port = int(args.cliport[0])
+            config.set('Client', 'port', args.cliport[0])
         else:
-            port = int(config.get('Network','port'))
+            cli_port = int(config.get('Client','port'))
+            
+        if args.syncport:
+            sync_port = int(args.port[0])
+            config.set('Sync', 'port', args.port[0])
+        else:
+            sync_port = int(config.get('Sync','port'))
 
         #cat id of server_pkg
-        self.uid = config.get('Metadata', 'uid')
+        self.uid = config.get('General', 'uid')
         if not self.uid:
             self.uid = uuid.uuid4().hex
-            config.set('Metadata', 'uid', self.uid)
+            config.set('General', 'uid', self.uid)
 
         if args.LOCAL:
             misc.Ping.LOCAL = False
 
+
         self.ip = ip
-        self.port = port
+        self.cli_port = cli_port
+        self.sync_port = sync_port
 
         #Write new configuration file
         with open(config_path, mode='w', encoding='utf-8') as outfile:
