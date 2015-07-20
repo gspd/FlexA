@@ -83,7 +83,9 @@ class RPC(object):
             #ask if want to continue.
             #if yes, set few_servers_continue and dont show query again.
             #if no exit program
-            if(self.few_servers_continue or misc.query_yes_no("Couldn't find many servers, would you like to continue?")):
+            if len(self.list_online) == 0 :
+                sys.exit("Couldn't find any server. Verify your connection.")
+            elif(self.few_servers_continue or misc.query_yes_no("Couldn't find many servers, would you like to continue?")):
                 self.few_servers_continue = True
             else:
                 sys.exit(0)

@@ -83,12 +83,12 @@ class Config(object):
         default_config = """
         #Metadata of Servers
         [General]
-            uid = 
-            host = 
+            uid =
+            host =
 
         [Client]
             port = 5000
-            
+
         [Sync]
             port = 15000
         """
@@ -140,7 +140,7 @@ class Config(object):
             config.set('Client', 'port', args.cliport[0])
         else:
             cli_port = int(config.get('Client','port'))
-            
+
         if args.syncport:
             sync_port = int(args.port[0])
             config.set('Sync', 'port', args.port[0])

@@ -15,7 +15,7 @@ import logging
 from file import file
 
 from server_pkg.server import Server
-from multiprocessing import Process 
+from multiprocessing import Process  # @UnresolvedImport
 
 
 class Client_Server(Process, Server):
@@ -44,8 +44,6 @@ class Client_Server(Process, Server):
         self.register_operations(server)
         # create and init_server object
         try:
-            scanner = misc.Ping("255.255.255.255")
-            scanner.daemon()
             server.serve_forever()
         except KeyboardInterrupt:
             print("\nSignal of interrupt received.")

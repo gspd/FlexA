@@ -5,6 +5,7 @@ Created on 28/06/2015
 '''
 
 from server_pkg import config
+import misc
 
 class Server(object):
     '''
@@ -25,6 +26,10 @@ class Server(object):
             #DON'T TOUCH IN THIS LINE. DON'T MOVE TO THE BEGINNING
             #If put this line in the beginning circular imports will occurs
             from server_pkg import sync_server, cli_server
+
+            #local network machines finder
+            scanner = misc.Ping("255.255.255.255")
+            scanner.daemon()
 
             sync = sync_server.Sync_Server()
             cli = cli_server.Client_Server()

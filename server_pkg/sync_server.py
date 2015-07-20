@@ -9,7 +9,7 @@ from rpc import RPCThreadingServer
 from rpc import RPCServerHandler
 import logging
 
-from multiprocessing import Process 
+from multiprocessing import Process
 
 class Sync_Server(Process, Server):
     
