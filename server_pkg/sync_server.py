@@ -20,8 +20,8 @@ class Sync_Server(Process, Server):
 
     #indicate how many machines will be observed -> 2 in right and 2 in left
     size_window = 4
-    left_neighbor = {}
-    right_neighbor = {}
+    left_neighbor = [[]]
+    right_neighbor = [[]]
 
     def run(self):
 
@@ -53,7 +53,7 @@ class Sync_Server(Process, Server):
         server.register_function(self.update_neighbor)
 
     def get_neighbor_map(self):
-        return (self.left_neighbor+{Server.configs.uid: Server.configs.ip}+self.right_neighbor)
+        return (self.left_neighbor+[[Server.configs.uid,Server.configs.ip]]+self.right_neighbor)
 
     def update_neighbor(self):
         pass
