@@ -63,7 +63,7 @@ class Sync_Server(Process, Server):
         while True:
             server_conn = self.server_obj.get_next_server()
             map = server_conn.get_neighbor_map()
-            self.logger.debug("Recived neighbor map: {}", map)
+            self.logger.debug(" Recived neighbor map: {}".format(map))
             sleep(10)
 
 
