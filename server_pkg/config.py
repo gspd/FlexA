@@ -34,7 +34,6 @@ class Config(object):
     #where directory flexa was called
     _dir_called = os.getcwd()
     _dir_file = _dir_called + "/data/"
-    _port_sync = 53000
     __version__ = '0.1'
 
     #configs to start server_cli
