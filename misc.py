@@ -5,6 +5,7 @@
 import sys
 import socket
 import time
+import logging
 from threading import Thread
 from distutils.util import strtobool
 
@@ -28,6 +29,7 @@ class Ping(object):
         """
         self.broadcast = broadcast
         self.online = []
+        self.logger = logging.getLogger("[Misc.Ping]")
 
     def daemon(self):
         #thread answer_scan
@@ -41,7 +43,7 @@ class Ping(object):
     def auto_scan(self):
         while True:
             self.scan()
-            print(self.online)
+            self.logger.info("Onlines servers {}".format(self.online))
             time.sleep(self.TIME_AUTO_SCAN)
 
     def scan(self):

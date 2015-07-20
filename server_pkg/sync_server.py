@@ -32,7 +32,7 @@ class Sync_Server(Process, Server):
         server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
         ip, port = server.server_address
         # Create local logging object
-        self.logger = logging.getLogger("sync_server")
+        self.logger = logging.getLogger("[Sync Server]")
         self.logger.info("Listening on {}:{}".format(ip, port))
 
         self.server_obj = RPC()
@@ -61,9 +61,9 @@ class Sync_Server(Process, Server):
     def scan_neighbor(self):
 
         while True:
-            server_conn = self.server_obj.get_next_server_not_me()
-            window = server_conn.get_neighbor_map()
-            print("A janela recebida é",window)
+            server_conn = self.server_obj.get_next_server()
+            map = server_conn.get_neighbor_map()
+            self.logger.debug("Recived neighbor map: {}", map)
             sleep(10)
 
 

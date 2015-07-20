@@ -38,7 +38,7 @@ class Client_Server(Process, Server):
         server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
         ip, port = server.server_address
         # Create local logging object
-        self.logger = logging.getLogger("Server_cli")
+        self.logger = logging.getLogger("[Server Cli]")
         self.logger.info("Listening on {}:{}".format(ip, port))
         # register all functions
         self.register_operations(server)
