@@ -61,10 +61,13 @@ class Ping(object):
             print("An error occurs. Could't send broadcast message.") 
 
         online = []
+        myip = my_ip()
         while True:
             try:
                 message, address = s.recvfrom(4096)
-                if (message == b'I am here'):
+                if (message == b'I am here') and (address[0] != myip):
+                    online.append(address[0])
+                elif message == b'I am here' and (address[0] == myip) and (self.LOCAL):
                     online.append(address[0])
             except socket.timeout:
                 self.online = online
@@ -80,13 +83,10 @@ class Ping(object):
         s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         s.bind((host, self.MYPORT))
 
-        myip = my_ip()
         while True:
             try:
                 message, address = s.recvfrom(4096)
-                if (message == b'Alive?') and (address[0] != myip):
-                    s.sendto(b"I am here", address)
-                elif message == b'Alive?' and (address[0] == myip) and (self.LOCAL):
+                if (message == b'Alive?'):
                     s.sendto(b"I am here", address)
             except:
                 print("Náo consegui responder o ping!")
