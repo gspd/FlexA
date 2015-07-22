@@ -147,10 +147,12 @@ class Config(object):
             sync_port = int(config.get('Sync','port'))
 
         #cat id of server_pkg
-        self.uid = config.get('General', 'uid')
-        if not self.uid:
-            self.uid = uuid.uuid4().hex
-            config.set('General', 'uid', self.uid)
+        uid_read = config.get('General', 'uid')
+        if uid_read:
+            self.uid = uuid.UUID(uid_read)
+        else:
+            self.uid = uuid.uuid4()
+            config.set('General', 'uid', self.uid.hex)
 
         if args.LOCAL:
             misc.Ping.LOCAL = False

@@ -13,6 +13,9 @@ class Server(object):
     '''
 
     configs = None
+    uid_hex = None
+    uid_int = None
+    ip = None
 
     def __init__(self):
         '''
@@ -20,6 +23,9 @@ class Server(object):
         '''
 
         Server.configs = config.Config()
+        Server.uid_hex = Server.configs.uid.hex
+        Server.uid_int = Server.configs.uid.int
+        Server.ip = Server.configs.ip
 
     def start_services(self):
 
@@ -34,10 +40,10 @@ class Server(object):
             sync = sync_server.Sync_Server()
             cli = cli_server.Client_Server()
             sync.start()
-            cli.start()
+            #cli.start()
 
             try:
                 sync.join()
-                cli.join()
+                #cli.join()
             except:
                 exit(0)
