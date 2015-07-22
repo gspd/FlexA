@@ -77,8 +77,8 @@ class Neighbor():
         self.server_obj.scan_ping.LOCAL = False
 
         for _ in range(self.window_size//2):
-            self.left_neighbor.append(['0',0])
-            self.right_neighbor.append(['0',0])
+            self.left_neighbor.append(["0",0])
+            self.right_neighbor.append(["0",0])
 
     def get_neighbors(self):
         #return a growing list of [uid, ips]
@@ -109,19 +109,39 @@ class Neighbor():
             sleep(10)
 
     def initialize(self):
+
         server_conn = self.server_obj.get_next_server()
         map = server_conn.get_neighbor_map()
 
-        print(map)
-        for server in map:
-            if(server[0]!='0'):
-                print('valor de server:',server)
-                if(int(server[0],16) < Server.uid_int):
+        while( (int(map[0][0],16)<Server.uid_int) and (map[0][0]!='0') ):
+            server_conn = self.server_obj.set_server(map[0][1])
+            map = server_conn.get_neighbor_map()
+
+        while( (int(map[(self.window_size//2)-1][0],16)>Server.uid_int) and
+               (map[(self.window_size//2)-1][0]!='0') ):
+            server_conn = self.server_obj.set_server(map[(self.window_size//2)-1][1])
+            map = server_conn.get_neighbor_map()
+
+        if('0' in dict(map)):
+            #this is a signal that all machines starts now or something is wrong -> verify all servers
+            for _ in range( len(self.server_obj.list_online) ):
+                server_conn = self.server_obj.get_next_server()
+                map = server_conn.get_neighbor_map()
+                if(int(map[len(map)//2][0],16) < Server.uid_int):
                     #then this server is in left
-                    self.put_in_left(server)
+                    self.put_in_left(map[len(map)//2])
                 else:
-                    self.put_in_right(server)
-        print("o mapa atualizado é", self.get_neighbors())
+                    self.put_in_right(map[len(map)//2])
+        else:
+            for server in map:
+                if(server[0]!='0'):
+                    if(int(server[0],16) < Server.uid_int):
+                        #then this server is in left
+                        self.put_in_left(server)
+                    else:
+                        self.put_in_right(server)
+
+        self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
 
     def put_in_left(self, server):
         """insert server in left list
@@ -145,8 +165,8 @@ class Neighbor():
         """
         aux_next = server
         for i in range(self.window_size//2):
-            if(self.left_neighbor[i] == server):
+            if(self.right_neighbor[i] == server):
                 break
-            if(int(self.right_neighbor[i][0],16)>int(server[0],16)):
+            if( (self.right_neighbor[i][0]=='0') or (int(self.right_neighbor[i][0],16)>int(server[0],16)) ):
                 #start to change vector
                 aux_next, self.right_neighbor[i] = self.right_neighbor[i], aux_next
