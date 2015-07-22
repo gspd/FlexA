@@ -22,7 +22,7 @@ class Config(object):
 
 
     #set where is client home
-    _home = _home = os.getenv("HOME")
+    _home = os.getenv("HOME")
     #file where put configurations
     _config_dir = _home + '/.flexa'
     #where directory flexa was called
