@@ -56,11 +56,7 @@ class Config(object):
         else:
             if ( not Config._flexa_dir in Config._dir_called+'/'):
                 #flexa was invoked outside of mapped directory
-                sys.exit("You are calling flexa outside your mapped directory.")
-
-
-
-
+                sys.exit("You are calling FlexA outside your mapped directory.")
 
         Config._dir_current_relative = Config._dir_called.split(Config._flexa_dir[:-1])[1] + '/'
         if Config._dir_current_relative == '':
@@ -132,36 +128,36 @@ class Config(object):
 
         """ Create configurations file, folders and a new RSA key for user """
 
-        print("First time you use it.\nSome configuration is necessary.")
+        print("First time you're running FlexA.\nSome configuration is necessary.")
 
-        if(misc.query_yes_no("Do you want create flexa configurations?")):
+        if(misc.query_yes_no('Do you want to configure FlexA now?')):
             #make dirs to map and save configurations
 
-            # Create dir for store user file (MAPPED DIR)
+            # Create dir for store user file (MAPPED DIRECTORY)
             try:
                 os.makedirs(Config._flexa_dir)
             except OSError:
-                sys.exit("ERROR: Can not create folder at '" + Config._flexa_dir + "'.")
+                sys.exit("ERROR: Couldn't create folder at '" + Config._flexa_dir + "'.")
 
             # Create dir for store flexa config files
             try:
                 os.makedirs(Config._config_dir)
             except OSError:
-                sys.exit("ERROR: Can not create folder at '" + Config._config_dir+ "'.")
+                sys.exit("ERROR: Couldn't create folder at '" + Config._config_dir+ "'.")
 
         else:
-            print("Starting in Flexa was canceled.")
+            print("FlexA startup was canceled by the user.")
             sys.exit(1)
 
         config = Config.load_config(Config._config_path)
 
-        if (misc.query_yes_no("Do you want creat RSA key now?")):
+        if (misc.query_yes_no('Do you want to create RSA key now?')):
             filename = self.generate_new_key()
             config.set('User', 'private key', filename)
 
             p = None
             try:
-                p = getpass.getpass("Enter with your password to unlock key:")
+                p = getpass.getpass("Type your password to unlock key:")
             except KeyboardInterrupt:
                 sys.exit(2)
 
@@ -196,19 +192,25 @@ class Config(object):
         """
 
         #Ask the desired name and password to the file
-        try:
-            filename = input('Filename? (default: id_rsa) ')
-            if not filename:
-                filename = "id_rsa"
-        except KeyboardInterrupt:
-            sys.exit(2)
-        filename = Config._config_dir + "/" + filename
-        try:
-            password = getpass.getpass('Password? ')
-        except KeyboardInterrupt:
-            sys.exit(2)
-        #Generate the RSA key and store it's path on config file
-        crypto.generate_rsa_key(filename, password)
+        filename=""
+        if (misc.query_yes_no("Filename is currently 'id_rsa', do you want to change it?", default="no")):
+            try:
+                filename = input('New filename: ')
+            except KeyboardInterrupt:
+                sys.exit(2)
+        if not filename:
+            filename = "id_rsa"
+        filepath = Config._config_dir + "/" + filename
+
+        password = ""
+        if (misc.query_yes_no('Do you want to add a password?', default="no")):
+            try:
+                password = getpass.getpass('Password: ')
+            except KeyboardInterrupt:
+                sys.exit(2)
+
+        #Generate the RSA key, its file and store file path on config file
+        crypto.generate_rsa_key(filepath, password)
         print('RSA key generated!')
 
-        return filename 
+        return filepath 
