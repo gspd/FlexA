@@ -77,8 +77,8 @@ class Neighbor():
         self.server_obj.scan_ping.LOCAL = False
 
         for _ in range(self.window_size//2):
-            self.left_neighbor.append([0,0])
-            self.right_neighbor.append([0,0])
+            self.left_neighbor.append(['0',0])
+            self.right_neighbor.append(['0',0])
 
     def get_neighbors(self):
         #return a growing list of [uid, ips]
@@ -111,15 +111,16 @@ class Neighbor():
     def initialize(self):
         server_conn = self.server_obj.get_next_server()
         map = server_conn.get_neighbor_map()
+
         print(map)
         for server in map:
-            if(server[0]==0):
-                pass
-            elif(int(server[0],16) < Server.uid_int):
-                #then this server is in left
-                self.put_in_left(server)
-            else:
-                self.put_in_right(server)
+            if(server[0]!='0'):
+                print('valor de server:',server)
+                if(int(server[0],16) < Server.uid_int):
+                    #then this server is in left
+                    self.put_in_left(server)
+                else:
+                    self.put_in_right(server)
         print("o mapa atualizado é", self.get_neighbors())
 
     def put_in_left(self, server):
@@ -130,11 +131,11 @@ class Neighbor():
         """
         aux_next = server
         for i in range(self.window_size//2):
-            if(self.left_neighbor[i][0]<int(server[0],16)):
+            if(self.left_neighbor[i] == server):
+                break
+            if(int(self.left_neighbor[i][0],16)<int(server[0],16)):
                 #start to change vector
-                aux_current = self.left_neighbor[i]
-                self.left_neighbor[i] = aux_next
-                aux_next = aux_current
+                aux_next, self.left_neighbor[i] = self.left_neighbor[i], aux_next
 
     def put_in_right(self, server):
         """insert server in left list
@@ -144,6 +145,8 @@ class Neighbor():
         """
         aux_next = server
         for i in range(self.window_size//2):
-            if(self.right_neighbor[i][0]>int(server[0],16)):
+            if(self.left_neighbor[i] == server):
+                break
+            if(int(self.right_neighbor[i][0],16)>int(server[0],16)):
                 #start to change vector
                 aux_next, self.right_neighbor[i] = self.right_neighbor[i], aux_next
