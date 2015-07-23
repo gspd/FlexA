@@ -8,6 +8,7 @@ from xmlrpc.client import ServerProxy
 import misc
 import sys
 from server_pkg.config import Config
+import socket
 
 class RPC(object):
     '''
@@ -91,8 +92,18 @@ class RPC(object):
         #make the structure to connect rpc_server
         server_addr = 'http://{}:{}'.format(self.ip_server, self.config.sync_port)
 
-        #return the object server_rpc
-        return ServerProxy(server_addr)
+        try:
+            #set configurations of connection
+            connection = ServerProxy(server_addr)
+            socket.setdefaulttimeout(10)
+            #verify if server is online and fine
+            connection.still_alive()
+            socket.setdefaulttimeout(None)
+            #return the object server_rpc
+            return connection
+        except:
+            #try next connection
+            return self.get_next_server()
     
     def get_next_server_not_me(self):
         """
