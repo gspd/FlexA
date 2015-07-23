@@ -17,6 +17,8 @@ class Server(object):
     uid_int = None
     ip = None
 
+    logRequests = None
+
     def __init__(self):
         '''
         Sets configurations
@@ -26,6 +28,7 @@ class Server(object):
         Server.uid_hex = Server.configs.uid.hex
         Server.uid_int = Server.configs.uid.int
         Server.ip = Server.configs.ip
+        Server.logRequests = Server.configs.logRequests_servers
 
     def start_services(self):
 

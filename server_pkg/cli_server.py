@@ -35,7 +35,8 @@ class Client_Server(Process, Server):
         self.db = database.DataBase()
 
         connection = (self.configs.ip, self.configs.cli_port)
-        server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
+        server = RPCThreadingServer(connection, requestHandler=RPCServerHandler,
+                                    logRequests=Server.logRequests)
         ip, port = server.server_address
         # Create local logging object
         self.logger = logging.getLogger("[Server Cli]")

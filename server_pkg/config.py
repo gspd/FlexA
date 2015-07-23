@@ -42,15 +42,13 @@ class Config(object):
     sync_port = None
     uid = None
 
+    logRequests_servers = False
+
     def __init__(self):
         '''
         Constructor
         '''
-
         self.parser()
-
-
-
 
     def usage(self):
         """Generate user help and parse user choices"""
@@ -68,9 +66,6 @@ class Config(object):
         parser.add_argument('--version', action='version', version=version_info)
     
         return parser
-
-
-
 
     def load_config(self, config_path = ''):
         """Load default config and parse user config file
@@ -100,9 +95,6 @@ class Config(object):
     
         return config
 
-
-
-
     def parser(self):
         #Parse the user choices
         parser = self.usage()
@@ -120,8 +112,10 @@ class Config(object):
         #Verbose -v show general information; -vv show debug information
         if args.verbose == 1:
             logging.basicConfig(level=logging.INFO)
+            self.logRequests_servers = True
         elif args.verbose >= 2:
             logging.basicConfig(level=logging.DEBUG)
+            self.logRequests_servers = True
             database.DataBase._echo_db = True
     
         #Override default IP
@@ -156,7 +150,6 @@ class Config(object):
 
         if args.LOCAL:
             misc.Ping.LOCAL = False
-
 
         self.ip = ip
         self.cli_port = cli_port
