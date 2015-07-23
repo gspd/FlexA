@@ -108,11 +108,18 @@ class Neighbor():
 
             sleep(10)
 
-    def initialize(self):
+    def first_searcher(self):
+        """
+            Search in system who is your neighbor
+            Used when system start or is unstable
+        """
 
+        #searching servers with ping
         server_conn = self.server_obj.get_next_server()
         map = server_conn.get_neighbor_map()
 
+        #with the first map go to the next server
+        #stop when find a map that your id can put in the middle
         while( (int(map[0][0],16)<Server.uid_int) and (map[0][0]!='0') ):
             server_conn = self.server_obj.set_server(map[0][1])
             map = server_conn.get_neighbor_map()
@@ -123,7 +130,7 @@ class Neighbor():
             map = server_conn.get_neighbor_map()
 
         if('0' in dict(map)):
-            #this is a signal that all machines starts now or something is wrong -> verify all servers
+            #this is a signal that all machines starts now or something is wrong -> verify all servers from ping
             for _ in range( len(self.server_obj.list_online) ):
                 server_conn = self.server_obj.get_next_server()
                 map = server_conn.get_neighbor_map()
@@ -133,6 +140,7 @@ class Neighbor():
                 else:
                     self.put_in_right(map[len(map)//2])
         else:
+            #if find a map that your id can put in the middle
             for server in map:
                 if(server[0]!='0'):
                     if(int(server[0],16) < Server.uid_int):
