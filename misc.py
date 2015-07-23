@@ -166,7 +166,7 @@ def query_yes_no(question, default="yes"):
 
     try:
         while True:
-            print(question + prompt)
+            print(question + prompt, end="")
             choice = input().lower()
             try:
                 if default is not None and choice == '':
