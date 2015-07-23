@@ -25,38 +25,40 @@ class Sync_Server(Process, Server):
 
         connection = (self.configs.ip, self.configs.sync_port)
 
-        server = RPCThreadingServer(connection, requestHandler=RPCServerHandler)
+        server = RPCThreadingServer(addr=connection, requestHandler=RPCServerHandler, 
+                                    logRequests=Server.logRequests)
         ip, port = server.server_address
         # Create local logging object
         self.logger = logging.getLogger("[Sync Server]")
-        self.logger.info("Listening on {}:{}".format(ip, port))
 
         self.server_obj = RPC()
 
         self.neighbor = Neighbor()
-        proc = Process(target=self.neighbor.initialize)
-        proc.start()
+        self.neighbor.daemon()
 
         # register all functions
         self.register_operations(server)
 
         # create and init_server object
         try:
+            self.logger.info("Listening on {}:{}".format(ip, port))
             server.serve_forever()
         except:
-            print("\nSomething made init_server stop.")
             server.shutdown()
 
     def register_operations(self, server):
         server.register_function(self.get_neighbor_map)
         server.register_function(self.update_neighbor)
+        server.register_function(self.still_alive)
+
+    def still_alive(self):
+        return 1
 
     def get_neighbor_map(self):
         return self.neighbor.get_neighbors()
 
     def update_neighbor(self):
         pass
-
 
 class Neighbor():
     """
@@ -66,6 +68,9 @@ class Neighbor():
     #indicate how many machines will be observed -> 2 in right and 2 in left
     window_size = 4
 
+    #interval between scans to verify if server is online (seconds)
+    TIME_AUTO_SCAN =10
+
     #array to save neighbors - [[uid,ip]]
     left_neighbor = []
     right_neighbor = []
@@ -74,39 +79,45 @@ class Neighbor():
         self.logger = logging.getLogger("[Sync Server - Neighbor]")
 
         self.server_obj = RPC()
-        self.server_obj.scan_ping.LOCAL = False
+        self.server_obj.scan_ping.LOCAL = True
 
         for _ in range(self.window_size//2):
             self.left_neighbor.append(["0",0])
             self.right_neighbor.append(["0",0])
 
+    def daemon(self):
+        """
+            Resposable to start auto scan in network in new process
+        """
+
+        proc = Process(target=self.auto_scan, daemon=True)
+        proc.start()
+
+    def auto_scan(self):
+        """
+            Make scan in network to verify if servers is online
+        """
+        self.first_searcher()
+        while True:
+            self.verify_map()
+            sleep(self.TIME_AUTO_SCAN)
+
+    def verify_map(self):
+        """
+            Make a verify if servers is online in current map, if some one is offline try to find next
+        """
+
+        for server in self.get_neighbors():
+            server_conn = self.server_obj.set_server(ip=server[1])
+            try:
+                server_conn.still_alive()
+            except:
+                self.first_searcher()
+                break
+
     def get_neighbors(self):
         #return a growing list of [uid, ips]
         return (self.left_neighbor[::-1]+[[Server.uid_hex,Server.ip]]+self.right_neighbor)
-
-    def scan_neighbor(self):
-        #first verification - verify list of saved servers - if list is empty try broadcast
-        for i in range(self.window_size//2):
-            if(self.left_neighbor[i][0] != 0):
-                server_conn = self.server_obj.set_server(self.left_neighbor[i][1])
-                break
-            elif( self.right_neighbor[i][0] != 0):
-                server_conn = self.server_obj.set_server(self.right_neighbor[i][1])
-                break
-        else:
-            #will try broadcast
-            server_conn = self.server_obj.get_next_server()
-            map = server_conn.get_neighbor_map()
-            self.organize_neighbors(map)
-
-        while True:
-            map = server_conn.get_neighbor_map()
-            self.logger.debug(" Recived neighbor map: {}".format(map))
-
-            if not(map[2][0]<Server.ip and map[3][0]>Server.ip):
-                pass #reorganização
-
-            sleep(10)
 
     def first_searcher(self):
         """
@@ -118,36 +129,36 @@ class Neighbor():
         server_conn = self.server_obj.get_next_server()
         map = server_conn.get_neighbor_map()
 
-        #with the first map go to the next server
-        #stop when find a map that your id can put in the middle
+        #using the first map go to the next server
+        #stop when find a map whose id can be placed in the middle
+        # only one of the following while(s) will be executed
         while( (int(map[0][0],16)<Server.uid_int) and (map[0][0]!='0') ):
             server_conn = self.server_obj.set_server(map[0][1])
             map = server_conn.get_neighbor_map()
 
-        while( (int(map[(self.window_size//2)-1][0],16)>Server.uid_int) and
-               (map[(self.window_size//2)-1][0]!='0') ):
-            server_conn = self.server_obj.set_server(map[(self.window_size//2)-1][1])
+        while( (int(map[len(map)-1][0],16)>Server.uid_int) and
+               (map[len(map)-1][0]!='0') ):
+            server_conn = self.server_obj.set_server(map[(len(map)//2)-1][1])
             map = server_conn.get_neighbor_map()
 
         if('0' in dict(map)):
-            #this is a signal that all machines starts now or something is wrong -> verify all servers from ping
+            #this is a signal that all machines just started or something went wrong -> verify all servers with ping
             for _ in range( len(self.server_obj.list_online) ):
                 server_conn = self.server_obj.get_next_server()
                 map = server_conn.get_neighbor_map()
                 if(int(map[len(map)//2][0],16) < Server.uid_int):
                     #then this server is in left
                     self.put_in_left(map[len(map)//2])
-                else:
+                elif(int(map[len(map)//2][0],16) > Server.uid_int):
                     self.put_in_right(map[len(map)//2])
         else:
             #if find a map that your id can put in the middle
             for server in map:
-                if(server[0]!='0'):
-                    if(int(server[0],16) < Server.uid_int):
-                        #then this server is in left
-                        self.put_in_left(server)
-                    else:
-                        self.put_in_right(server)
+                if(int(server[0],16) < Server.uid_int):
+                    #then this server is in left
+                    self.put_in_left(server)
+                elif(int(map[len(map)//2][0],16) > Server.uid_int):
+                    self.put_in_right(server)
 
         self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
 
