@@ -10,6 +10,7 @@ from rpc import RPCServerHandler
 from multiprocessing import Process
 from server_pkg.RPC import RPC
 import logging
+import hashlib
 from time import sleep
 
 class Sync_Server(Process, Server):
@@ -26,7 +27,7 @@ class Sync_Server(Process, Server):
         connection = (self.configs.ip, self.configs.sync_port)
 
         server = RPCThreadingServer(addr=connection, requestHandler=RPCServerHandler, 
-                                    logRequests=Server.logRequests)
+                                    logRequests=Server.logRequests, allow_none=True)
         ip, port = server.server_address
         # Create local logging object
         self.logger = logging.getLogger("[Sync Server]")
@@ -58,7 +59,7 @@ class Sync_Server(Process, Server):
         return self.neighbor.get_neighbors()
 
     def update_neighbor(self):
-        pass
+        self.neighbor.count=0
 
 class Neighbor():
     """
@@ -85,6 +86,8 @@ class Neighbor():
             self.left_neighbor.append(["0",0])
             self.right_neighbor.append(["0",0])
 
+        self.count = 20
+
     def daemon(self):
         """
             Resposable to start auto scan in network in new process
@@ -98,9 +101,25 @@ class Neighbor():
             Make scan in network to verify if servers is online
         """
         self.first_searcher()
+        last_hash=b'0'
         while True:
             self.verify_map()
+            self.count-=1
+            if(not self.count):
+                self.first_searcher()
+                hash = hashlib.md5()
+                hash.update(self.get_neighbors())
+                if(last_hash != hash.digest()):
+                    self.logger.debug("Update map all servers")
+                    self.update_all()
+                    last_hash=hash.digest()
             sleep(self.TIME_AUTO_SCAN)
+
+    def update_all(self):
+        for server in (self.left_neighbor+self.right_neighbor):
+            if(server[1]!=0):
+                server_conn = self.server_obj.set_server(ip=server[1])
+                server_conn.update_neighbor()
 
     def verify_map(self):
         """
@@ -160,6 +179,7 @@ class Neighbor():
                 elif(int(map[len(map)//2][0],16) > Server.uid_int):
                     self.put_in_right(server)
 
+        self.update_all()
         self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
 
     def put_in_left(self, server):
