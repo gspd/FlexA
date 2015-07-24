@@ -21,11 +21,10 @@ class Client():
     configs = None
     
     #variables of control - Described in create_relatives_names_directory()
-    file_name_complete_relative = None
-    local_file = None
-    file_name_enc = None
-    local_file_enc = None
-    dir_file_local_enc = None
+    relative_filepath = None
+    local_filepath = None
+    enc_filename = None
+    local_enc_filepath = None
 
     rpc = rpc_client.RPC()
     user_id = None
@@ -68,32 +67,30 @@ class Client():
         with open(self.configs._config_path, mode='w', encoding='utf-8') as outfile:
             self.configs.loaded_config.write(outfile)
 
-    def create_relatives_names_directory(self, file_name):
+    def create_relatives_names_directory(self, filename):
         """ Function that make names relatives to file in FlexA system and
             our real directory in workstation
 
             Parameters:
-                file_name - name of file that will be process
+                filename - name of file that will be process
         """
-        # name with your relative position (directory) in flexa system
-        self.file_name_complete_relative = self.configs._dir_current_relative + file_name
+        # full filepath relative to FlexA file system
+        self.relative_filepath = self.configs._dir_current_relative + filename
 
-        #real directory in workstation of file
-        self.local_file = self.configs._dir_called + file_name
+        # local full filepath
+        self.local_filepath = self.configs._dir_called + filename
 
-        #name file encrypt
-        self.file_name_enc = file_name + ".enc"
+        # name of encrypted file
+        self.enc_filename = filename + ".enc"
 
-        #real directory in workstation of file encrypt (temp to send)
-        self.local_file_enc = self.configs._flexa_dir + self.file_name_enc
+        # full local filepath for the encrypted file (temporary to send and receive)
+        self.local_enc_filepath = self.configs._dir_called + self.enc_filename
 
-        #real directory in workstation of file encrypt (temp to receive)
-        self.dir_file_local_enc = self.configs._dir_called + self.file_name_enc
 
     def send_file_part(self, num_part, ip_server, port_server):
 
         host = (ip_server, port_server)
-        local_file_name_complete = self.local_file_enc + '.' + str(num_part)
+        local_file_name_complete = self.local_enc_filepath + '.' + str(num_part)
         # TODO: colocar um if no send_file para confirmar se o envio foi efetuado com sucesso
         misc.send_file(host, local_file_name_complete)
         os.remove(local_file_name_complete)
@@ -110,7 +107,7 @@ class Client():
         """
 
         # verify if exist file
-        if not os.path.exists(self.local_file):
+        if not os.path.exists(self.local_filepath):
             sys.exit("File not found.\nTry again.")
 
         user_id = self.configs.loaded_config.get( "User", "hash client" )
@@ -121,14 +118,14 @@ class Client():
         server_obj = rpc_client.RPC()
         server_conn = server_obj.get_next_server()
         # ask to server if is update or new file
-        salt = server_conn.get_salt( self.file_name_complete_relative, user_id )
+        salt = server_conn.get_salt( self.relative_filepath, user_id )
 
         # generate every keys in string return vector:
         # [0 - verify, 1 - write, 2 - read, 3 - salt]
         keys = crypto.keys_generator( self.configs.loaded_config.get("User", "private key"), salt ) 
-        crypto.encrypt_file(keys[2][0:32], self.local_file, self.local_file_enc, 16)
+        crypto.encrypt_file(keys[2][0:32], self.local_filepath, self.local_enc_filepath, 16)
         # verify if exist file
-        if not ( misc.split_file(self.local_file_enc, total_parts_file) ):
+        if not ( misc.split_file(self.local_enc_filepath, total_parts_file) ):
             sys.exit("Problems while splitting file.\nTry again.")
 
         # if salt has a value then is update. because server return a valid salt
@@ -142,14 +139,14 @@ class Client():
             keys[2] = 0
             for num_part in range(total_parts_file):
                 server_conn = server_obj.get_next_server( )
-                port_server = server_conn.negotiate_store_part(user_id, self.file_name_complete_relative, keys[0], dir_key, keys[1], keys[3], num_part)
+                port_server = server_conn.negotiate_store_part(user_id, self.relative_filepath, keys[0], dir_key, keys[1], keys[3], num_part)
                 self.send_file_part(num_part, server_obj.ip_server, port_server)
                 if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
                             write. \nTry again.")
 
         # remove temp crypt file
-        os.remove(self.local_file_enc)
+        os.remove(self.local_enc_filepath)
 
 
     def receive_file(self):
@@ -162,7 +159,7 @@ class Client():
 
         server_obj = rpc_client.RPC()
         server_conn = server_obj.get_next_server()
-        salt = server_conn.get_salt(self.file_name_complete_relative, self.user_id)
+        salt = server_conn.get_salt(self.relative_filepath, self.user_id)
     
         if (salt == 0):
             print("This file can't be found")
@@ -176,7 +173,7 @@ class Client():
         name_parts_file = []
         
         for num_part in range(total_parts_file):
-            name_file = self.dir_file_local_enc + '.' + str(num_part)
+            name_file = self.local_enc_filepath + '.' + str(num_part)
             name_parts_file.append(name_file)
             # make a thread that will receive file in socket
             thr = Thread(target=misc.receive_file, args=(sock, name_file))
@@ -188,15 +185,15 @@ class Client():
                 sys.exit("Some error occurs. Try again later.")
             thr.join()
 
-        misc.join_file(name_parts_file, self.file_name_enc)
+        misc.join_file(name_parts_file, self.enc_filename)
 
-        crypto.decrypt_file(keys[2][0:32], self.file_name_enc, self.local_file, 16)
+        crypto.decrypt_file(keys[2][0:32], self.enc_filename, self.local_filepath, 16)
 
         #remove temp files from  workstation -> parts
         for files_to_del in name_parts_file:
             os.remove(files_to_del)
         #remove temp files from  workstation -> complete
-        os.remove(self.dir_file_local_enc)
+        os.remove(self.local_enc_filepath)
 
     def list_files(self):
         """
