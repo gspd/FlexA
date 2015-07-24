@@ -48,7 +48,7 @@ class Client():
         if args.newkey:
             # Checks if the user already has a key
             if os.path.exists(self.configs.get('User', 'private key')):
-                confirm = misc.query_yes_no("There is already a generated key, "
+                confirm = misc.query_yes_no("A key is already in use, "
                         "generate another one?", default='no')
                 if not confirm:
                     sys.exit(2)
