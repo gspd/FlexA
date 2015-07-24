@@ -26,7 +26,7 @@ class Config(object):
     #file where put configurations
     _config_dir = _home + '/.flexa'
     #where directory flexa was called
-    _dir_called = os.getcwd()
+    _dir_called = os.getcwd()+ '/'
     #dir to save configs
     _config_path = _config_dir+'/flexa.ini'
     #mapped dir
@@ -49,19 +49,15 @@ class Config(object):
         '''
 
         if not os.path.exists(Config._config_dir):
-            print(Config._config_dir)
             #if don't exist diretory-flexa in user home then is your first time
             #is necessary create RSA and default directory
             self.first_time()
         else:
-            if ( not Config._flexa_dir in Config._dir_called+'/'):
+            if ( not Config._flexa_dir in Config._dir_called):
                 #flexa was invoked outside of mapped directory
                 sys.exit("You are calling FlexA outside your mapped directory.")
 
-        Config._dir_current_relative = Config._dir_called.split(Config._flexa_dir[:-1])[1] + '/'
-        if Config._dir_current_relative == '':
-            Config._dir_current_relative = '/'
-
+        Config._dir_current_relative = Config._dir_called.split(Config._flexa_dir[:-1])[1]
 
         parser = self.usage()
         Config.loaded_config = self.load_config()
@@ -86,7 +82,7 @@ class Config(object):
         group.add_argument('-g', '--get', metavar='FILE', nargs='+', help='receive file from server')
         group.add_argument('-l', '--list', action='count', default=0, help='list file from server')
         group.add_argument('-d', '--delete', metavar='FILE', nargs='+', help='delete file from server')
-        group.add_argument('-n', '--newkey', action='store_true', help='generate new user key')
+
         #These options can be used in combination with any other
         parser.add_argument('-v', '--verbose', action='count', default=0, help='increase output verbosity')
         version_info = '%(prog)s {}'.format(Config.__version__)

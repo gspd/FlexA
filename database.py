@@ -118,7 +118,7 @@ class DataBase():
 	def __init__(self, file_db='flexa.sqlite3'):
 
 		# Create local logging object
-		self.logger = logging.getLogger("DataBase")
+		self.logger = logging.getLogger("[DataBase]")
 
 		#model to connect database 'driver://user:pass@host/database'
 		engine = create_engine('sqlite:///{}'.format(file_db), connect_args={'check_same_thread':False}, echo= self._echo_db)
