@@ -62,9 +62,9 @@ class File(object):
                 ps: don't set read_key -> security key, but return your value to cipher file
         """
         # generate every keys in string return vector:
-        # [0 - verify, 1 - read, 2 - write, 3 - salt] -> read_key unsued
+        # [0 - verify, 1 - read, 2 - write, 3 - salt] -> read_key is secret
         keys = crypto.keys_generator(rsa_private, salt)
-        self.salt = salt
+        self.salt = keys[3]
         self.verify_key = keys[0]
         self.write_key = keys[2]
 
