@@ -44,17 +44,6 @@ class Client():
 
         args = Config.args
 
-        # Generate a new user key
-        if args.newkey:
-            # Checks if the user already has a key
-            if os.path.exists(self.configs.get('User', 'private key')):
-                confirm = misc.query_yes_no("A key is already in use, "
-                        "generate another one?", default='no')
-                if not confirm:
-                    sys.exit(2)
-    
-            # createNewUserKey(self.configs)
-
         self.user_id = self.configs.loaded_config.get("User", "hash client")
 
         # Send a file to server

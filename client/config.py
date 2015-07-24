@@ -86,7 +86,7 @@ class Config(object):
         group.add_argument('-g', '--get', metavar='FILE', nargs='+', help='receive file from server')
         group.add_argument('-l', '--list', action='count', default=0, help='list file from server')
         group.add_argument('-d', '--delete', metavar='FILE', nargs='+', help='delete file from server')
-        group.add_argument('-n', '--newkey', action='store_true', help='generate new user key')
+
         #These options can be used in combination with any other
         parser.add_argument('-v', '--verbose', action='count', default=0, help='increase output verbosity')
         version_info = '%(prog)s {}'.format(Config.__version__)
