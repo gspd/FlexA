@@ -18,13 +18,11 @@ class User(Base):
 	
 	uid = Column(String(64), primary_key=True)
 	name = Column(String(100), nullable=False)
-	home_key = Column(String(100))
 	rsa_pub = Column(String(100))
 	
-	def __init__(self, uid, name, home_key, rsa_pub):
+	def __init__(self, uid, name, rsa_pub):
 		self.uid = uid
 		self.name = name
-		self.home_key = home_key
 		self.rsa_pub = rsa_pub
 	
 	def __repr__(self):
