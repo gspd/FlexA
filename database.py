@@ -37,27 +37,35 @@ class File(Base):
 	salt = Column(String, nullable=False)
 	write_key = Column(String(100), nullable=False)
 	file_name = Column(String(255), nullable=False)
-	dir_key = Column(String(100), nullable=False)
 	num_parts = Column(Integer,nullable=False)
 	user_id = Column(String, ForeignKey('user.uid'), nullable=False)
-	type = Column(String(1))
 
 	size = Column(Integer)
 	create_date = Column(DateTime)
 	modify_date = Column(DateTime)
 
-	def __init__(self, verify_key, salt, write_key, file_name, dir_key, user_id, type, num_parts=0):
-		self.verify_key = verify_key
-		self.salt = salt
-		self.write_key = write_key
-		self.file_name = file_name
-		self.dir_key = dir_key
-		self.user_id = user_id
-		self.num_parts = num_parts
-		self.type = type
-		self.create_date = datetime.datetime.now()
-		self.modify_date = datetime.datetime.now()
-		self.size = 100 #FIXME: colocar o tamanho real do arquivo - teste
+	def __init__(self, verify_key=0, salt=0, write_key=0, file_name=0, dir_key=0, user_id=0,
+				num_parts=0, file_obj = None):
+		if(file_obj):
+			self.verify_key = file_obj.verify_key
+			self.salt = file_obj.salt
+			self.write_key = file_obj.write_key
+			self.file_name = file_obj.file_name
+			self.user_id = file_obj.user_id
+			self.num_parts = file_obj.num_parts
+			self.create_date = datetime.datetime.now()
+			self.modify_date = datetime.datetime.now()
+			self.size = 100 #FIXME: colocar o tamanho real do arquivo - teste
+		else:
+			self.verify_key = verify_key
+			self.salt = salt
+			self.write_key = write_key
+			self.file_name = file_name
+			self.user_id = user_id
+			self.num_parts = num_parts
+			self.create_date = datetime.datetime.now()
+			self.modify_date = datetime.datetime.now()
+			self.size = 100 #FIXME: colocar o tamanho real do arquivo - teste
 
 	def __repr__(self):
 		return '<File(vfk "{}", salt "{}", wtk "{}", name "{}", dir "{}", user "{}", type "{}",\
