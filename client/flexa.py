@@ -9,6 +9,7 @@ import crypto
 import sys
 import misc
 import os
+from file import file
 from client import rpc_client
 from threading import Thread
 
@@ -128,36 +129,33 @@ class Client():
         if not os.path.exists(self.local_file):
             sys.exit("File not found.\nTry again.")
 
-        user_id = self.configs.loaded_config.get( "User", "hash client" )
         # verify if this file exist (same name in this directory)
         dir_key = "/"  # FIXME set where is.... need more discussion
-        total_parts_file = 3
+        file_obj = file.File(name=self.file_name_complete_relative, user_id=self.user_id, 
+                             num_parts=3)
 
         server_obj = rpc_client.RPC()
         server_conn = server_obj.get_next_server()
         # ask to server if is update or new file
-        salt = server_conn.get_salt( self.file_name_complete_relative, user_id )
+        salt = server_conn.get_salt( file_obj.name, file_obj.user_id )
+        read_key = file_obj.set_keys(salt, self.configs.loaded_config.get("User", "private key"))
 
-        # generate every keys in string return vector:
-        # [0 - verify, 1 - write, 2 - read, 3 - salt]
-        keys = crypto.keys_generator( self.configs.loaded_config.get("User", "private key"), salt ) 
-        crypto.encrypt_file(keys[2][0:32], self.local_file, self.local_file_enc, 16)
+        crypto.encrypt_file(read_key, self.local_file, self.local_file_enc, 16)
         # verify if exist file
-        if not ( misc.split_file(self.local_file_enc, total_parts_file) ):
+        if not ( misc.split_file(self.local_file_enc, file_obj.num_parts) ):
             sys.exit("Problems while splitting file.\nTry again.")
 
         # if salt has a value then is update. because server return a valid salt
         if salt:
-            for num_part in range( total_parts_file ):
+            for num_part in range( file_obj.num_parts ):
                 server_conn = server_obj.get_next_server( )
-                port_server = server_conn.update_file( keys[0], keys[1], num_part )
+                port_server = server_conn.update_file( file_obj, num_part )
                 self.send_file_part( num_part, server_obj.ip_server, port_server )
         else:
             # server return port where will wait a file
-            keys[2] = 0
-            for num_part in range(total_parts_file):
+            for num_part in range(file_obj.num_parts):
                 server_conn = server_obj.get_next_server( )
-                port_server = server_conn.negotiate_store_part(user_id, self.file_name_complete_relative, keys[0], dir_key, keys[1], keys[3], num_part)
+                port_server = server_conn.negotiate_store_part(file_obj, dir_key, num_part)
                 self.send_file_part(num_part, server_obj.ip_server, port_server)
                 if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
@@ -178,14 +176,13 @@ class Client():
         server_obj = rpc_client.RPC()
         server_conn = server_obj.get_next_server()
         salt = server_conn.get_salt(self.file_name_complete_relative, self.user_id)
-    
+
         if (salt == 0):
             print("This file can't be found")
             return
 
+        file_obj = file.File()
         keys = crypto.keys_generator( self.configs.loaded_config.get("User", "private key"), salt )
-
-
 
         total_parts_file = 3  # FIXME: colocar para descobrir automaticamante numero de partes
         name_parts_file = []
