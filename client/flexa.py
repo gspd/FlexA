@@ -56,7 +56,7 @@ class Client():
         if args.get:
             for filename in args.get:
                 self.create_relatives_names_directory(filename)
-                self.recive_file()
+                self.receive_file()
 
         if args.list:
             self.list_files()
@@ -67,8 +67,6 @@ class Client():
         # Write configuration file
         with open(self.configs._config_path, mode='w', encoding='utf-8') as outfile:
             self.configs.loaded_config.write(outfile)
-
-        return
 
     def create_relatives_names_directory(self, file_name):
         """ Function that make names relatives to file in FlexA system and
@@ -91,8 +89,6 @@ class Client():
 
         #real directory in workstation of file encrypt (temp to receive)
         self.dir_file_local_enc = self.configs._dir_called + self.file_name_enc
-
-        return
 
     def send_file_part(self, num_part, ip_server, port_server):
 
@@ -156,9 +152,9 @@ class Client():
         os.remove(self.local_file_enc)
 
 
-    def recive_file(self):
+    def receive_file(self):
         """
-        recive file from server
+        receive file from server
         """
 
         port, sock = misc.port_using(4001)
@@ -182,11 +178,11 @@ class Client():
         for num_part in range(total_parts_file):
             name_file = self.dir_file_local_enc + '.' + str(num_part)
             name_parts_file.append(name_file)
-            # make a thread that will recive file in socket
+            # make a thread that will receive file in socket
             thr = Thread(target=misc.receive_file, args=(sock, name_file))
             thr.start()
             # ask to server a file with name (keys[0] = hash)
-            # client ip and your port to recive file
+            # client ip and your port to receive file
             if ( server_conn.give_file( misc.my_ip(),port,keys[0],num_part) ):
                 # exit with error and kill thread thr
                 sys.exit("Some error occurs. Try again later.")
