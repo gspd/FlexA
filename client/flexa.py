@@ -12,6 +12,7 @@ import os
 from file import file
 from client import rpc_client
 from threading import Thread
+from stat import S_ISREG
 
 class Client():
     '''
@@ -21,7 +22,7 @@ class Client():
     # object that have every configs and parser
     configs = None
     
-    #variables of control - Described in create_relatives_names_directory()
+    #variables of control - Described in set_relative_local_filepath()
     relative_filepath = None
     local_filepath = None
     enc_filename = None
@@ -49,13 +50,13 @@ class Client():
         # Send a file to server
         if args.put:
             for filename in args.put:
-                self.create_relatives_names_directory(filename)
+                self.set_relative_local_filepath(filename)
                 self.send_file()
 
         # Get a file from server
         if args.get:
             for filename in args.get:
-                self.create_relatives_names_directory(filename)
+                self.set_relative_local_filepath(filename)
                 self.receive_file()
 
         if args.list:
@@ -64,22 +65,24 @@ class Client():
         if args.delete:
             for filename in args.delete:
                 self.delete_file(filename)
+                
         # Write configuration file
         with open(self.configs._config_path, mode='w', encoding='utf-8') as outfile:
             self.configs.loaded_config.write(outfile)
 
-    def create_relatives_names_directory(self, filename):
-        """ Function that make names relatives to file in FlexA system and
+
+    def set_relative_local_filepath(self, filename):
+        """ Function that make names relative to file in FlexA system and
             our real directory in workstation
 
             Parameters:
                 filename - name of file that will be process
         """
         # full filepath relative to FlexA file system
-        self.relative_filepath = self.configs._dir_current_relative + filename
+        self.relative_filepath = os.path.join(self.configs._dir_current_relative, filename)
 
         # local full filepath
-        self.local_filepath = self.configs._dir_called + filename
+        self.local_filepath = os.path.join(self.configs._dir_called, filename)
 
         # name of encrypted file
         self.enc_filename = filename + ".enc"
@@ -107,9 +110,16 @@ class Client():
         send file from client to server
         """
 
-        # verify if exist file
+        # verify if file exists
         if not os.path.exists(self.local_filepath):
-            sys.exit("File not found.\nTry again.")
+            print("Skipping '" + self.local_filepath + "'."
+                  "File was not found.")
+            return
+        # verify if it's a regular file
+        elif not self.is_file(self.local_filepath):
+            print("Skipping '" + self.local_filepath + "'."
+                  "It's not a path to a regular file.")
+            return
 
         # verify if this file exist (same name in this directory)
         dir_key = "/"  # FIXME set where is.... need more discussion
@@ -160,7 +170,7 @@ class Client():
         server_obj = rpc_client.RPC()
         server_conn = server_obj.get_next_server()
         salt = server_conn.get_salt(self.relative_filepath, self.user_id)
-    
+
         if (salt == 0):
             print("This file can't be found")
             return
