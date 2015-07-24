@@ -16,8 +16,6 @@ class RPC(object):
         and making connection to rpc server
     '''
 
-    TIME_OUT_ANSWER = 0.3
-    TIME_ADD_PER_HOPE = 0.3
     MASK_SCAN = '255.255.255.255'
     MIN_SERVER = 1
     MAX_TIME_OUT_ANSWER = 1.5
@@ -49,19 +47,9 @@ class RPC(object):
         return None
         """
 
-        #set object and its configurations
-        
-        self.scan_ping.TIMEOUT_TO_ANSWER = self.TIME_OUT_ANSWER
-
         #scan network until at least a minimun number of online servers are found
         #or to break the timeout -> any one server was find
-        while len(self.scan_ping.online) < self.MIN_SERVER :
-            self.scan_ping.scan()
-            self.scan_ping.TIMEOUT_TO_ANSWER += self.TIME_ADD_PER_HOPE
-
-            if self.scan_ping.TIMEOUT_TO_ANSWER > self.MAX_TIME_OUT_ANSWER :
-                #if TIMEOUT stop the search
-                break
+        self.scan_ping.scan()
 
         #get list of servers online
         self.list_online = self.scan_ping.online
