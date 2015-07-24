@@ -9,7 +9,7 @@ import crypto
 import sys
 import misc
 import os
-from file import file
+from entity import file
 from client import rpc_client
 from threading import Thread
 from stat import S_ISREG

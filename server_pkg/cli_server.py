@@ -12,7 +12,7 @@ from threading import Thread
 import misc
 import database
 import logging
-from file import file
+from entity import file
 
 from server_pkg.server import Server
 from multiprocessing import Process  # @UnresolvedImport
