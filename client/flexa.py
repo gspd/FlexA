@@ -48,22 +48,22 @@ class Client():
 
         # Send a file to server
         if args.put:
-            for names in args.put:
-                self.create_relatives_names_directory(names)
+            for filename in args.put:
+                self.create_relatives_names_directory(filename)
                 self.send_file()
 
         # Get a file from server
         if args.get:
-            for names in args.get:
-                self.create_relatives_names_directory(names)
+            for filename in args.get:
+                self.create_relatives_names_directory(filename)
                 self.recive_file()
 
         if args.list:
             self.list_files()
 
         if args.delete:
-            for names in args.delete:
-                self.delete_file(names)
+            for filename in args.delete:
+                self.delete_file(filename)
         # Write configuration file
         with open(self.configs._config_path, mode='w', encoding='utf-8') as outfile:
             self.configs.loaded_config.write(outfile)
@@ -81,7 +81,7 @@ class Client():
         self.file_name_complete_relative = self.configs._dir_current_relative + file_name
 
         #real directory in workstation of file
-        self.local_file = self.configs._dir_called + "/" + file_name
+        self.local_file = self.configs._dir_called + file_name
 
         #name file encrypt
         self.file_name_enc = file_name + ".enc"
@@ -90,7 +90,7 @@ class Client():
         self.local_file_enc = self.configs._flexa_dir + self.file_name_enc
 
         #real directory in workstation of file encrypt (temp to receive)
-        self.dir_file_local_enc = self.configs._dir_called + '/' + self.file_name_enc
+        self.dir_file_local_enc = self.configs._dir_called + self.file_name_enc
 
         return
 
