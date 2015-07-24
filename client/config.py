@@ -24,13 +24,13 @@ class Config(object):
     #set where is client home
     _home = os.getenv("HOME")
     #file where put configurations
-    _config_dir = _home + '/.flexa'
+    _config_dir = os.path.join(_home, '.flexa')
+    #dir to save configs
+    _config_path = os.path.join(_config_dir, 'flexa.ini')
     #where directory flexa was called
     _dir_called = os.getcwd()+ '/'
-    #dir to save configs
-    _config_path = _config_dir+'/flexa.ini'
     #mapped dir
-    _flexa_dir = _home+"/drive/"
+    _flexa_dir = os.path.join(_home, 'drive/')
     #port connection server
     _PORT_SERVER = 5000
     #directory relative by system. directories of flexa
@@ -148,8 +148,8 @@ class Config(object):
         config = Config.load_config(Config._config_path)
 
         if (misc.query_yes_no('Do you want to create RSA key now?')):
-            filename = self.generate_new_key()
-            config.set('User', 'private key', filename)
+            key_filename = self.generate_new_key()
+            config.set('User', 'private key', key_filename)
 
             p = None
             try:
@@ -158,7 +158,7 @@ class Config(object):
                 sys.exit(2)
 
             try:
-                cryp = crypto.open_rsa_key(filename,p)
+                cryp = crypto.open_rsa_key(key_filename, p)
             except:
                 sys.exit(1)
 
@@ -176,9 +176,9 @@ class Config(object):
             except:
                 print("Can not write config file.")
         else:
-            print("Please, add path to your key in your flexa.ini manually")
+            print("Please add the path to your private key in flexa.ini")
 
-        print("Run FlexA again, to start with system configured.")
+        print("Run FlexA again, to start with the system configured.")
         sys.exit(0)
 
 
@@ -196,7 +196,7 @@ class Config(object):
                 sys.exit(2)
         if not filename:
             filename = "id_rsa"
-        filepath = Config._config_dir + "/" + filename
+        filepath = os.path.join(Config._config_dir, filename)
 
         password = ""
         if (misc.query_yes_no('Do you want to add a password?', default="no")):
@@ -209,4 +209,4 @@ class Config(object):
         crypto.generate_rsa_key(filepath, password)
         print('RSA key generated!')
 
-        return filepath 
+        return filepath
