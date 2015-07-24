@@ -11,7 +11,7 @@ class File(object):
     classdocs
     '''
 
-    file_name = 0
+    name = 0
     size = 0
     create_date = 0
     modify_date = 0
@@ -43,6 +43,9 @@ class File(object):
             self.modify_date = dict["modify_date"]
             self.user_id = dict["user_id"]
             self.num_parts = dict["num_parts"]
+            self.salt = dict["salt"]
+            self.verify_key = dict["verify_key"]
+            self.write_key = dict["write_key"]
         elif(name):
             self.name = name
             self.size = size
@@ -59,13 +62,13 @@ class File(object):
                 ps: don't set read_key -> security key, but return your value to cipher file
         """
         # generate every keys in string return vector:
-        # [0 - verify, 1 - write, 2 - read, 3 - salt] -> read_key unsued
+        # [0 - verify, 1 - read, 2 - write, 3 - salt] -> read_key unsued
         keys = crypto.keys_generator(rsa_private, salt)
         self.salt = salt
         self.verify_key = keys[0]
-        self.write_key = keys[1]
+        self.write_key = keys[2]
 
-        return keys[2]
+        return keys[1][0:32]
 
     def __repr__(self):
-        return '<name: "{}", size: "{}", create_date: "{}", modify_date: "{}", owner: "{}">'.format(self.file_name, self.size, self.create_date, self.modify_date, self.owner)
+        return '<name: "{}", size: "{}", create_date: "{}", modify_date: "{}", owner: "{}">'.format(self.name, self.size, self.create_date, self.modify_date, self.user_id)

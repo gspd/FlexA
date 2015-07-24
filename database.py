@@ -50,7 +50,7 @@ class File(Base):
 			self.verify_key = file_obj.verify_key
 			self.salt = file_obj.salt
 			self.write_key = file_obj.write_key
-			self.file_name = file_obj.file_name
+			self.file_name = file_obj.name
 			self.user_id = file_obj.user_id
 			self.num_parts = file_obj.num_parts
 			self.create_date = datetime.datetime.now()
@@ -70,7 +70,7 @@ class File(Base):
 	def __repr__(self):
 		return '<File(vfk "{}", salt "{}", wtk "{}", name "{}", dir "{}", user "{}", type "{}",\
 	    num_parts "{}")>'.format(self.verify_key, self.salt, self.write_key, self.file_name,
-	            self.dir_key, self.user_id, self.type, self.num_parts)
+	            self.user_id, self.num_parts)
 
 class Parts(Base):
 	__tablename__ = 'parts'
