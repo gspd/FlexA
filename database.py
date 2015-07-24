@@ -175,7 +175,8 @@ class DataBase():
 			else:
 				self.num_modifies = 0
 				self.commit_db()
-		except:
+		except Exception as error:
+			self.logger.debug("Error on commit:{}".format(error))
 			self.session.rollback()
 
 		#unblock semaphore
@@ -189,11 +190,11 @@ class DataBase():
 		if (file.one().write_key == write_key):
 			#have permission to write
 			try:
-				file.update({"type":"a"})
+				file.update({"modify_date":datetime.datetime.now()})
 				self.session.flush()
 			except:
 				self.commit_db() #FIXME para usar nos testes
-				file.update({"type":"a"})
+				file.update({"modify_date":datetime.datetime.now()})
 				self.session.flush()
 			#FIXME: update date time not type
 			return True
