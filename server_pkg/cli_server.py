@@ -138,7 +138,7 @@ class Client_Server(Process, Server):
 
 
 
-    def update_file(self, verify_key, write_key, num_part):
+    def update_file(self, file_dic, num_part):
         """
             if exist file, and client wanna send the same file (reference in db)
             the server_pkg update file in system
@@ -146,14 +146,16 @@ class Client_Server(Process, Server):
 
         self.logger.info("update_file invoked")
 
+        file_obj = file.File(dict=file_dic)
+
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)
 
-        if not (self.db.update_file(verify_key, write_key)):
+        if not (self.db.update_file(file_obj.verify_key, file_obj.write_key)):
             return False
 
-        file_name_to_save = self.configs._dir_file + verify_key + '.' + str(num_part)
-        thread = Thread(target = misc.receive_file, args = (sockt, file_name_to_save ))
+        filename_to_save = self.configs._dir_file + file_obj.verify_key + '.' + str(num_part)
+        thread = Thread(target = misc.receive_file, args = (sockt, filename_to_save ))
         thread.start()
         #TODO: set timout to thread
 
@@ -172,8 +174,7 @@ class Client_Server(Process, Server):
         return self.db.salt_file(file_name, user_id)
 
 
-
-    def negotiate_store_part(self, user_id, file_name, verify_key, directory_key, write_key, salt, part_number):
+    def negotiate_store_part(self, file_dict, directory_key, part_number):
         """
             Negotiate with client to server_pkg receive file part
             (0 verify_key, 1 write_key, 2 read_key (None), 3 salt)
@@ -181,13 +182,15 @@ class Client_Server(Process, Server):
 
         self.logger.info("negotiate_store_part invoked")
 
-        new_file = database.File(verify_key, salt, write_key, file_name, directory_key, user_id, part_number)
+        file_obj = file.File(dict=file_dict)
+
+        new_file = database.File(file_obj)
         self.db.add(new_file)
 
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)
 
-        file_name_to_get = self.configs._dir_file + verify_key + '.' + str(part_number)
+        file_name_to_get = self.configs._dir_file + file_obj.verify_key + '.' + str(part_number)
         thread = Thread(target = misc.receive_file, args = (sockt, file_name_to_get))
         thread.start()
 
