@@ -138,7 +138,7 @@ class Client_Server(Process, Server):
 
 
 
-    def update_file(self, file_dic, num_part):
+    def update_file(self, file_dict, num_part):
         """
             if exist file, and client wanna send the same file (reference in db)
             the server_pkg update file in system
@@ -146,7 +146,7 @@ class Client_Server(Process, Server):
 
         self.logger.info("update_file invoked")
 
-        file_obj = file.File(dict=file_dic)
+        file_obj = file.File(dict=file_dict)
 
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)
@@ -184,7 +184,7 @@ class Client_Server(Process, Server):
 
         file_obj = file.File(dict=file_dict)
 
-        new_file = database.File(file_obj)
+        new_file = database.File(file_obj=file_obj)
         self.db.add(new_file)
 
         #get a unusage port and mount a socket

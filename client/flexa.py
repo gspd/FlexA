@@ -166,7 +166,7 @@ class Client():
             return
 
         file_obj = file.File()
-        keys = crypto.keys_generator( self.configs.loaded_config.get("User", "private key"), salt )
+        read_key = file_obj.set_keys(self.configs.loaded_config.get("User", "private key"), salt)
 
         total_parts_file = 3  # FIXME: colocar para descobrir automaticamante numero de partes
         name_parts_file = []
@@ -179,14 +179,14 @@ class Client():
             thr.start()
             # ask to server a file with name (keys[0] = hash)
             # client ip and your port to receive file
-            if ( server_conn.give_file( misc.my_ip(),port,keys[0],num_part) ):
+            if ( server_conn.give_file( misc.my_ip(),port, file_obj.verify_key, num_part) ):
                 # exit with error and kill thread thr
                 sys.exit("Some error occurs. Try again later.")
             thr.join()
 
         misc.join_file(name_parts_file, self.enc_filename)
 
-        crypto.decrypt_file(keys[2][0:32], self.enc_filename, self.local_filepath, 16)
+        crypto.decrypt_file(read_key, self.enc_filename, self.local_filepath, 16)
 
         #remove temp files from  workstation -> parts
         for files_to_del in name_parts_file:
