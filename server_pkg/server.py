@@ -43,10 +43,10 @@ class Server(object):
             sync = sync_server.Sync_Server()
             cli = cli_server.Client_Server()
             sync.start()
-            #cli.start()
+            cli.start()
 
             try:
                 sync.join()
-                #cli.join()
+                cli.join()
             except:
                 exit(0)
