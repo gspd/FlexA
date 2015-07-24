@@ -112,7 +112,6 @@ class Config(object):
         #Verbose -v show general information; -vv show debug information
         if args.verbose == 1:
             logging.basicConfig(level=logging.INFO)
-            self.logRequests_servers = True
         elif args.verbose >= 2:
             logging.basicConfig(level=logging.DEBUG)
             self.logRequests_servers = True
