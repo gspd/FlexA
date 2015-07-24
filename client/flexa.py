@@ -12,7 +12,7 @@ import os
 from entity import file
 from client import rpc_client
 from threading import Thread
-from stat import S_ISREG
+from pathlib.Path import is_file
 
 class Client():
     '''
@@ -116,7 +116,7 @@ class Client():
                   "File was not found.")
             return
         # verify if it's a regular file
-        elif not self.is_file(self.local_filepath):
+        elif not is_file(self.local_filepath):
             print("Skipping '" + self.local_filepath + "'."
                   "It's not a path to a regular file.")
             return
