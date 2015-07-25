@@ -12,7 +12,7 @@ import os
 from entity import file
 from client import rpc_client
 from threading import Thread
-from pathlib.Path import is_file
+from _stat import S_ISREG
 
 class Client():
     '''
@@ -99,6 +99,8 @@ class Client():
         misc.send_file(host, local_file_name_complete)
         os.remove(local_file_name_complete)
 
+    def check_is_file(self, pathname):
+        return S_ISREG(os.stat(pathname).st_mode)
 
 ########################################################
 #########   OPERATIONS METHODS   #######################
@@ -116,7 +118,7 @@ class Client():
                   "File was not found.")
             return
         # verify if it's a regular file
-        elif not is_file(self.local_filepath):
+        elif not self.check_is_file(self.local_filepath):
             print("Skipping '" + self.local_filepath + "'."
                   "It's not a path to a regular file.")
             return
@@ -210,8 +212,8 @@ class Client():
             verify_key is directory where called this operation - answer is a dictionary of files and yours attributes 
         """
         server_conn = self.rpc.get_next_server()
-    
-        for dic_file in server_conn.list_files(self.configs._dir_current_relative):
+
+        for dic_file in server_conn.list_files(self.configs._dir_current_relative, self.user_id):
             print(dic_file['name'])
 
     def delete_file(self, name_file):

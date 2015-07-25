@@ -18,13 +18,11 @@ class User(Base):
 	
 	uid = Column(String(64), primary_key=True)
 	name = Column(String(100), nullable=False)
-	home_key = Column(String(100))
 	rsa_pub = Column(String(100))
 	
-	def __init__(self, uid, name, home_key, rsa_pub):
+	def __init__(self, uid, name, rsa_pub):
 		self.uid = uid
 		self.name = name
-		self.home_key = home_key
 		self.rsa_pub = rsa_pub
 	
 	def __repr__(self):
@@ -68,7 +66,7 @@ class File(Base):
 			self.size = 100 #FIXME: colocar o tamanho real do arquivo - teste
 
 	def __repr__(self):
-		return '<File(vfk "{}", salt "{}", wtk "{}", name "{}", dir "{}", user "{}", type "{}",\
+		return '<File(vfk "{}", salt "{}", wtk "{}", name "{}", user "{}",\
 	    num_parts "{}")>'.format(self.verify_key, self.salt, self.write_key, self.file_name,
 	            self.user_id, self.num_parts)
 
@@ -186,8 +184,8 @@ class DataBase():
 
 		self.logger.info("update_file invoked")
 
-		file = self.session.query(File).filter(File.verify_key == verify_key)
-		if (file.one().write_key == write_key):
+		file = self.session.query(File).get(verify_key)
+		if (file!=0 and file.write_key == write_key):
 			#have permission to write
 			try:
 				file.update({"modify_date":datetime.datetime.now()})
@@ -202,12 +200,13 @@ class DataBase():
 			#don't have permission to write
 			return False
 
-	def list_files(self, dir_key):
+	def list_files_by_dir(self, dirname, user_id):
 
 		self.logger.info("list_files invoked")
 
 		files = self.session.query(File)
-		files = files.filter(File.dir_key == dir_key)
+		files = files.filter(File.user_id == user_id)
+		files = files.filter( File.file_name.like(dirname+'%') )
 		return files.all()
 
 	def salt_file(self, file_name, user_id):
