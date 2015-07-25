@@ -17,25 +17,29 @@ class Config(object):
     '''
     Set every configs to client flexa
     '''
-        
+
     __version__ = "1.0"
 
-
     #set where is client home
-    _home = os.getenv("HOME")
-    #file where put configurations
-    _config_dir = os.path.join(_home, '.flexa')
-    #dir to save configs
-    _config_path = os.path.join(_config_dir, 'flexa.ini')
+    _home = None
+    
+    #mapped directory
+    _data_dir = None
+    
+    #directory where configurations are stored
+    _config_dir = None
+    
+    #file where configurations are stored
+    _config_filepath = None
+    
     #where directory flexa was called
-    _dir_called = os.getcwd()+ '/'
-    #mapped dir
-    _flexa_dir = os.path.join(_home, 'drive/')
-    #port connection server
-    _PORT_SERVER = 5000
+    _current_local_dir = None
+    
     #directory relative by system. directories of flexa
-    _dir_current_relative = None
-
+    _current_relative_dir = None
+    
+    #port connection server
+    #_PORT_SERVER = None
 
     #Every set args of parser
     args = None
@@ -47,20 +51,30 @@ class Config(object):
         '''
         Constructor
         '''
+        self._home = os.getenv("HOME")
+        self._data_dir = os.path.join(self._home, 'drive')
+        self._config_dir = os.path.join(self._home, '.flexa')
+        self._config_filepath = os.path.join(self._config_dir, 'flexa.ini')
+        self._current_local_dir = os.getcwd()
+        self._current_relative_dir = None
+        
+        #port connection server
+        #self._PORT_SERVER = 5000
 
-        if not os.path.exists(Config._config_dir):
+        if not os.path.exists(self._config_dir):
             #if don't exist diretory-flexa in user home then is your first time
             #is necessary create RSA and default directory
             self.first_time()
         else:
-            if ( not Config._flexa_dir in Config._dir_called):
+            if ( not self._data_dir in self._current_local_dir):
                 #flexa was invoked outside of mapped directory
                 sys.exit("You are calling FlexA outside your mapped directory.")
 
-        Config._dir_current_relative = Config._dir_called.split(Config._flexa_dir[:-1])[1]
+        self._current_relative_dir = self._current_local_dir.split(self._data_dir)[1]
+        self._current_relative_dir = os.path.join('/', self._current_relative_dir)
 
         parser = self.usage()
-        Config.loaded_config = self.load_config()
+        self.loaded_config = self.load_config()
 
         #If no option is given, show help and exit
         if len(sys.argv) == 1:
@@ -68,7 +82,7 @@ class Config(object):
             sys.exit(2)
     
         #Parse the user choices
-        Config.args = parser.parse_args()
+        self.args = parser.parse_args()
 
 
     def usage(self):
@@ -85,7 +99,7 @@ class Config(object):
 
         #These options can be used in combination with any other
         parser.add_argument('-v', '--verbose', action='count', default=0, help='increase output verbosity')
-        version_info = '%(prog)s {}'.format(Config.__version__)
+        version_info = '%(prog)s {}'.format(self.__version__)
         parser.add_argument('--version', action='version', version=version_info)
     
         return parser
@@ -94,7 +108,7 @@ class Config(object):
         """Load default config and parse user config file
     
         Input parameters:
-        _config_path -- path of the configuration file
+        _config_filepath -- path of the configuration file
         """
 
         default_config = """
@@ -116,7 +130,7 @@ class Config(object):
         config.read_string(default_config)
     
         #If no file is found or is empty, this is ignored
-        config.read(Config._config_path, encoding='utf-8')
+        config.read(self._config_filepath, encoding='utf-8')
 
         return config
 
@@ -131,21 +145,21 @@ class Config(object):
 
             # Create dir for store user file (MAPPED DIRECTORY)
             try:
-                os.makedirs(Config._flexa_dir)
+                os.makedirs(self._data_dir)
             except OSError:
-                sys.exit("ERROR: Couldn't create folder at '" + Config._flexa_dir + "'.")
+                sys.exit("ERROR: Couldn't create folder at '" + self._data_dir + "'.")
 
             # Create dir for store flexa config files
             try:
-                os.makedirs(Config._config_dir)
+                os.makedirs(self._config_dir)
             except OSError:
-                sys.exit("ERROR: Couldn't create folder at '" + Config._config_dir+ "'.")
+                sys.exit("ERROR: Couldn't create folder at '" + self._config_dir+ "'.")
 
         else:
             print("FlexA startup was canceled by the user.")
             sys.exit(1)
 
-        config = Config.load_config(Config._config_path)
+        config = self.load_config(self._config_filepath)
 
         if (misc.query_yes_no('Do you want to create RSA key now?')):
             key_filename = self.generate_new_key()
@@ -170,11 +184,11 @@ class Config(object):
 
             #Write configuration file          
             try:
-                with open(Config._config_path, mode='w', encoding='utf-8') as outfile:
-                    print("Your configuration file are at", Config._config_path)
+                with open(self._config_filepath, mode='w', encoding='utf-8') as outfile:
+                    print("FlexA configuration file is at ", self._config_filepath)
                     config.write(outfile)
             except:
-                print("Can not write config file.")
+                print("Couldn't write configuration file.")
         else:
             print("Please add the path to your private key in flexa.ini")
 
@@ -196,7 +210,7 @@ class Config(object):
                 sys.exit(2)
         if not filename:
             filename = "id_rsa"
-        filepath = os.path.join(Config._config_dir, filename)
+        filepath = os.path.join(self._config_dir, filename)
 
         password = ""
         if (misc.query_yes_no('Do you want to add a password?', default="no")):

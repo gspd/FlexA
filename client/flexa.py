@@ -12,21 +12,22 @@ import os
 from entity import file
 from client import rpc_client
 from threading import Thread
-from pathlib.Path import is_file
+from stat import S_ISREG
 
-class Client():
+class ClientFile(object):
+    filename = ''
+    enc_filename = ''
+    relative_filepath = ''
+    absolute_filepath = ''
+    absolute_enc_filepath = ''
+
+class Client(object):
     '''
     classdocs
     '''
     
     # object that have every configs and parser
     configs = None
-    
-    #variables of control - Described in set_relative_local_filepath()
-    relative_filepath = None
-    local_filepath = None
-    enc_filename = None
-    local_enc_filepath = None
 
     rpc = rpc_client.RPC()
     user_id = None
@@ -43,21 +44,25 @@ class Client():
         '''
         self.configs = Config()
 
-        args = Config.args
+        args = self.configs.args
 
         self.user_id = self.configs.loaded_config.get("User", "hash client")
 
         # Send a file to server
         if args.put:
             for filename in args.put:
-                self.set_relative_local_filepath(filename)
-                self.send_file()
+                file_info = ClientFile()
+                #file_info.filename = os.path.normpath(filename)
+                if self.set_file_info_to_send(file_info, filename):
+                    self.send_file(file_info)
 
         # Get a file from server
         if args.get:
             for filename in args.get:
-                self.set_relative_local_filepath(filename)
-                self.receive_file()
+                file_info = ClientFile()
+                file_info.filename = os.path.normpath(filename)
+                self.set_file_info_to_receive(file_info)
+                self.receive_file(file_info)
 
         if args.list:
             self.list_files()
@@ -67,37 +72,72 @@ class Client():
                 self.delete_file(filename)
                 
         # Write configuration file
-        with open(self.configs._config_path, mode='w', encoding='utf-8') as outfile:
+        with open(self.configs._config_filepath, mode='w', encoding='utf-8') as outfile:
             self.configs.loaded_config.write(outfile)
 
 
-    def set_relative_local_filepath(self, filename):
-        """ Function that make names relative to file in FlexA system and
-            our real directory in workstation
+    def set_file_info_to_receive(self, file_info):
+        # TODO add feature to check if file is outside mapped dir
+        file_info.relative_filepath = os.path.join(self.configs._current_relative_dir, file_info.filename)
+        file_info.absolute_filepath = os.path.join(self.configs._current_local_dir, file_info.filename)
+        #file_info.absolute_filepath = os.path.abspath(file_info.absolute_filepath)
+
+        file_info.enc_filename = file_info.filename + '.enc'
+        file_info.absolute_enc_filepath = file_info.absolute_filepath + '.enc'
+
+    def set_file_info_to_send(self, file_info, filename):
+        """ If the given filename exists, is a regular file and is inside
+            the mapped directory tracked by FlexA, this function:
+             -Finds names relative to FlexA system and absolute pathnames
+                for local file system
 
             Parameters:
+                file_info - object to store some info about the path in
+                    different environments (FlexA dir or local one)
                 filename - name of file that will be process
         """
-        # full filepath relative to FlexA file system
-        self.relative_filepath = os.path.join(self.configs._dir_current_relative, filename)
-
         # local full filepath
-        self.local_filepath = os.path.join(self.configs._dir_called, filename)
+        file_info.absolute_filepath = os.path.abspath(filename)
+
+        # verify if path exists
+        if not os.path.exists(file_info.absolute_filepath):
+            print("Skipping '" + file_info.absolute_filepath + "'. "
+                  "File was not found.")
+            return False
+        # verify if it's a regular file
+        elif not self.is_file(file_info.absolute_filepath):
+            print("Skipping '" + file_info.absolute_filepath + "'. "
+                  "It's not a path to a regular file.")
+            return False
+        elif not self.configs._data_dir in file_info.absolute_filepath:
+            print("Skipping '" + file_info.absolute_filepath + "'. "
+                    "File can't be located outside mapped directory")
+            return False
+
+        # full filepath relative to FlexA file system
+        file_info.relative_filepath = file_info.absolute_filepath.split(self.configs._current_local_dir)[1]
+
+        file_info.filename = file_info.relative_filepath.split('/')[-1]
 
         # name of encrypted file
-        self.enc_filename = filename + ".enc"
+        file_info.enc_filename = file_info.filename + ".enc"
 
         # full local filepath for the encrypted file (temporary to send and receive)
-        self.local_enc_filepath = self.configs._dir_called + self.enc_filename
+        file_info.absolute_enc_filepath = file_info.absolute_filepath + ".enc"
 
+        return True
 
-    def send_file_part(self, num_part, ip_server, port_server):
+    def send_file_part(self, num_part, ip_server, port_server, abs_enc_filepath):
 
         host = (ip_server, port_server)
-        local_file_name_complete = self.local_enc_filepath + '.' + str(num_part)
+        local_file_name_complete = abs_enc_filepath + '.' + str(num_part)
         # TODO: colocar um if no send_file para confirmar se o envio foi efetuado com sucesso
         misc.send_file(host, local_file_name_complete)
         os.remove(local_file_name_complete)
+
+
+    def is_file(self, pathname):
+        return S_ISREG(os.stat(pathname).st_mode)
 
 
 ########################################################
@@ -105,61 +145,52 @@ class Client():
 ########################################################
 
         
-    def send_file(self):
+    def send_file(self, file_info):
         """
         send file from client to server
         """
 
-        # verify if file exists
-        if not os.path.exists(self.local_filepath):
-            print("Skipping '" + self.local_filepath + "'."
-                  "File was not found.")
-            return
-        # verify if it's a regular file
-        elif not is_file(self.local_filepath):
-            print("Skipping '" + self.local_filepath + "'."
-                  "It's not a path to a regular file.")
-            return
-
         # verify if this file exist (same name in this directory)
         dir_key = "/"  # FIXME set where is.... need more discussion
-        file_obj = file.File(name=self.relative_filepath, user_id=self.user_id, 
+        file_obj = file.File(name=file_info.relative_filepath, user_id=self.user_id, 
                              num_parts=3)
+
 
         server_obj = rpc_client.RPC()
         server_conn = server_obj.get_next_server()
         # ask to server if is update or new file
 
-        salt = server_conn.get_salt( file_obj.name, file_obj.user_id )
+        salt = server_conn.get_salt( file_obj.name, file_obj.user_id)
         read_key = file_obj.set_keys(self.configs.loaded_config.get("User", "private key"), salt)
 
-        crypto.encrypt_file(read_key, self.local_filepath, self.local_enc_filepath, 16)
+        crypto.encrypt_file(read_key, file_info.absolute_filepath, file_info.absolute_enc_filepath, 16)
         # verify if exist file
 
-        if not ( misc.split_file(self.local_enc_filepath, file_obj.num_parts) ):
+        if not ( misc.split_file(file_info.absolute_enc_filepath, file_obj.num_parts) ):
             sys.exit("Problems while splitting file.\nTry again.")
-
+        
         # if salt has a value then is update. because server return a valid salt
         if salt:
             for num_part in range( file_obj.num_parts ):
                 server_conn = server_obj.get_next_server( )
                 port_server = server_conn.update_file( file_obj, num_part )
-                self.send_file_part( num_part, server_obj.ip_server, port_server )
+                self.send_file_part( num_part, server_obj.ip_server, port_server, file_info.absolute_enc_filepath )
         else:
             # server return port where will wait a file
             for num_part in range(file_obj.num_parts):
                 server_conn = server_obj.get_next_server( )
                 port_server = server_conn.negotiate_store_part(file_obj, dir_key, num_part)
-                self.send_file_part(num_part, server_obj.ip_server, port_server)
+                print("port   ", port_server)
+                self.send_file_part(num_part, server_obj.ip_server, port_server, file_info.absolute_enc_filepath)
                 if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
                             write. \nTry again.")
 
         # remove temp crypt file
-        os.remove(self.local_enc_filepath)
+        os.remove(file_info.absolute_enc_filepath)
 
 
-    def receive_file(self):
+    def receive_file(self, file_info):
         """
         receive file from server
         """
@@ -169,7 +200,7 @@ class Client():
 
         server_obj = rpc_client.RPC()
         server_conn = server_obj.get_next_server()
-        salt = server_conn.get_salt(self.relative_filepath, self.user_id)
+        salt = server_conn.get_salt(file_info.relative_filepath, self.user_id)
 
         if (salt == 0):
             print("This file can't be found")
@@ -182,7 +213,7 @@ class Client():
         name_parts_file = []
         
         for num_part in range(total_parts_file):
-            name_file = self.local_enc_filepath + '.' + str(num_part)
+            name_file = file_info.absolute_enc_filepath + '.' + str(num_part)
             name_parts_file.append(name_file)
             # make a thread that will receive file in socket
             thr = Thread(target=misc.receive_file, args=(sock, name_file))
@@ -191,18 +222,18 @@ class Client():
             # client ip and your port to receive file
             if ( server_conn.give_file( misc.my_ip(),port, file_obj.verify_key, num_part) ):
                 # exit with error and kill thread thr
-                sys.exit("Some error occurs. Try again later.")
+                sys.exit("An error occured. Try again later.")
             thr.join()
 
-        misc.join_file(name_parts_file, self.enc_filename)
+        misc.join_file(name_parts_file, file_info.enc_filename)
 
-        crypto.decrypt_file(read_key, self.enc_filename, self.local_filepath, 16)
+        crypto.decrypt_file(read_key, file_info.enc_filename, file_info.absolute_filepath, 16)
 
         #remove temp files from  workstation -> parts
-        for files_to_del in name_parts_file:
-            os.remove(files_to_del)
+        for file_to_rm in name_parts_file:
+            os.remove(file_to_rm)
         #remove temp files from  workstation -> complete
-        os.remove(self.local_enc_filepath)
+        os.remove(file_info.absolute_enc_filepath)
 
     def list_files(self):
         """
@@ -211,7 +242,7 @@ class Client():
         """
         server_conn = self.rpc.get_next_server()
     
-        for dic_file in server_conn.list_files(self.configs._dir_current_relative):
+        for dic_file in server_conn.list_files(self.configs._current_relative_dir):
             print(dic_file['name'])
 
     def delete_file(self, name_file):

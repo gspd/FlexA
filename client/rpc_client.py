@@ -6,7 +6,6 @@ Created on 16/12/2014
 from xmlrpc.client import ServerProxy
 import misc
 import sys
-from client.config import Config
 
 class RPC(object):
     '''
@@ -19,6 +18,7 @@ class RPC(object):
     MASK_SCAN = '255.255.255.255'
     MIN_SERVER = 3
     MAX_TIME_OUT_ANSWER = 1.5
+    PORT_SERVER = 5000
 
     list_online = []
     index_list_online = None
@@ -94,7 +94,7 @@ class RPC(object):
         self.ip_server = self.list_online[self.index_list_online]
         self.index_list_online += 1
         #make the structure to connect rpc_server
-        server_addr = 'http://{}:{}'.format(self.ip_server, Config._PORT_SERVER)
+        server_addr = 'http://{}:{}'.format(self.ip_server, self.PORT_SERVER)
 
         #return the object server_rpc
         return ServerProxy(server_addr)
