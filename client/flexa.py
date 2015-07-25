@@ -81,6 +81,12 @@ class Client(object):
         file_info.relative_filepath = os.path.join(self.configs._current_relative_dir, file_info.filename)
         file_info.absolute_filepath = os.path.join(self.configs._current_local_dir, file_info.filename)
         #file_info.absolute_filepath = os.path.abspath(file_info.absolute_filepath)
+        
+        #verify if it's withing FlexA data directory
+        if not self.configs._data_dir in file_info.absolute_filepath:
+            print("Skipping '" + file_info.absolute_filepath + "'. "
+                    "File can't be located outside mapped directory")
+            return False
 
         file_info.enc_filename = file_info.filename + '.enc'
         file_info.absolute_enc_filepath = file_info.absolute_filepath + '.enc'
@@ -109,6 +115,7 @@ class Client(object):
             print("Skipping '" + file_info.absolute_filepath + "'. "
                   "It's not a path to a regular file.")
             return False
+        #verify if it's withing FlexA data directory
         elif not self.configs._data_dir in file_info.absolute_filepath:
             print("Skipping '" + file_info.absolute_filepath + "'. "
                     "File can't be located outside mapped directory")
@@ -244,7 +251,7 @@ class Client(object):
         """
         server_conn = self.rpc.get_next_server()
 
-        for dic_file in server_conn.list_files(self.configs._dir_current_relative, self.user_id):
+        for dic_file in server_conn.list_files(self.configs._current_relative_dir, self.user_id):
             print(dic_file['name'])
 
     def delete_file(self, name_file):
