@@ -52,6 +52,7 @@ class Client(object):
         if args.put:
             for filename in args.put:
                 file_info = ClientFile()
+                # this can be either here or in the set_file_info function
                 #file_info.filename = os.path.normpath(filename)
                 if self.set_file_info_to_send(file_info, filename):
                     self.send_file(file_info)
@@ -61,8 +62,8 @@ class Client(object):
             for filename in args.get:
                 file_info = ClientFile()
                 file_info.filename = os.path.normpath(filename)
-                self.set_file_info_to_receive(file_info)
-                self.receive_file(file_info)
+                if self.set_file_info_to_receive(file_info):
+                    self.receive_file(file_info)
 
         if args.list:
             self.list_files()
@@ -80,7 +81,7 @@ class Client(object):
         # TODO add feature to check if file is outside mapped dir
         file_info.relative_filepath = os.path.join(self.configs._current_relative_dir, file_info.filename)
         file_info.absolute_filepath = os.path.join(self.configs._current_local_dir, file_info.filename)
-        #file_info.absolute_filepath = os.path.abspath(file_info.absolute_filepath)
+        file_info.absolute_filepath = os.path.normpath(file_info.absolute_filepath)
         
         #verify if it's withing FlexA data directory
         if not self.configs._data_dir in file_info.absolute_filepath:
@@ -90,6 +91,7 @@ class Client(object):
 
         file_info.enc_filename = file_info.filename + '.enc'
         file_info.absolute_enc_filepath = file_info.absolute_filepath + '.enc'
+        return True
 
     def set_file_info_to_send(self, file_info, filename):
         """ If the given filename exists, is a regular file and is inside
