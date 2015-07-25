@@ -135,6 +135,8 @@ class Client(object):
         misc.send_file(host, local_file_name_complete)
         os.remove(local_file_name_complete)
 
+    def check_is_file(self, pathname):
+        return S_ISREG(os.stat(pathname).st_mode)
 
     def is_file(self, pathname):
         return S_ISREG(os.stat(pathname).st_mode)
@@ -241,8 +243,8 @@ class Client(object):
             verify_key is directory where called this operation - answer is a dictionary of files and yours attributes 
         """
         server_conn = self.rpc.get_next_server()
-    
-        for dic_file in server_conn.list_files(self.configs._current_relative_dir):
+
+        for dic_file in server_conn.list_files(self.configs._dir_current_relative, self.user_id):
             print(dic_file['name'])
 
     def delete_file(self, name_file):

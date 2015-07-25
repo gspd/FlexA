@@ -29,7 +29,6 @@ class Client_Server(Process, Server):
 
     """
 
-
     def run(self):
         #connect database
         self.db = database.DataBase()
@@ -60,7 +59,6 @@ class Client_Server(Process, Server):
         """
         server.register_function(self.list_files)
         server.register_function(self.give_file)
-        server.register_function(self.get_file)
         server.register_function(self.get_salt)
         server.register_function(self.update_file)
         server.register_function(self.negotiate_store_part)
@@ -69,7 +67,7 @@ class Client_Server(Process, Server):
     def delete_file(self):
         pass
 
-    def list_files(self, verify_key):
+    def list_files(self, dirname, user_id):
         """
             Show every file in that directory
                 verify_key - verify_key of current directory
@@ -77,14 +75,14 @@ class Client_Server(Process, Server):
 
         self.logger.info("list_files invoked")
 
-        files_db = self.db.list_files(verify_key)
+        files_db = self.db.list_files_by_dir(dirname, user_id)
 
         list_file = []
         for file_obj in files_db:
+            #create a list of objects to transmit in xmlrpc
             list_file.append(file.File(file_db = file_obj ))
 
         return list_file
-
 
     def get_server_status(self):
         """
@@ -99,7 +97,6 @@ class Client_Server(Process, Server):
 
         return [1]
 
-
     def give_file(self, ip, port, verify_key, num_part):
         """ give file to client
             ip: string with ip, address of client
@@ -113,30 +110,6 @@ class Client_Server(Process, Server):
         misc.send_file(host, file_name_part)
         #FIXME every rpc call return something - put sent confirmation
         return 0
-
-
-    def get_file(self, file_name, keys, dir_key, user_id, type_file, num_part):
-        """get file from client
-           file_name: name of file that will save in init_server - verify_key
-           keys: tupĺe (0 verify_key, 1 write_key, 2 read_key (None), 3 salt) strings
-        """
-
-        self.logger.info("get_file invoked")
-
-        new_file = database.File(keys[0], keys[3], keys[1], file_name, dir_key, user_id, type_file, num_part)
-        self.db.add(new_file)
-
-        #get a unusage port and mount a socket
-        port, sockt = misc.port_using(5001)
-
-        file_name_to_get = self.configs._dir_file + keys[0] + '.' + str(num_part)
-        thread = Thread(target = misc.receive_file, args = (sockt, file_name_to_get))
-        thread.start()
-        #TODO: set timout to thread
-
-        return port
-
-
 
     def update_file(self, file_dict, num_part):
         """
@@ -161,18 +134,13 @@ class Client_Server(Process, Server):
 
         return port
 
-
-
     def get_salt(self, file_name, user_id):
         """make a call in data base to find file
             if exist file return your salt
             else return 0
-        """ 
-
+        """
         self.logger.info("get_salt invoked")
-
         return self.db.salt_file(file_name, user_id)
-
 
     def negotiate_store_part(self, file_dict, directory_key, part_number):
         """

@@ -27,7 +27,7 @@ class User(Base):
     
     def __repr__(self):
         return '<File({},{})>'.format(self.uid, self.name)
-	
+    
 class File(Base):
     __tablename__ = 'file'
 
@@ -43,7 +43,7 @@ class File(Base):
     modify_date = Column(DateTime)
 
     def __init__(self, verify_key=0, salt=0, write_key=0, file_name=0, dir_key=0, user_id=0,
-                        num_parts=0, file_obj = None):
+                    num_parts=0, file_obj = None):
         if(file_obj):
             self.verify_key = file_obj.verify_key
             self.salt = file_obj.salt
@@ -69,6 +69,7 @@ class File(Base):
         return '<File(vfk "{}", salt "{}", wtk "{}", name "{}", user "{}",\
             num_parts "{}")>'.format(self.verify_key, self.salt, self.write_key, self.file_name,
             self.user_id, self.num_parts)
+
 
 class Parts(Base):
     __tablename__ = 'parts'
@@ -121,8 +122,8 @@ class DataBase():
         #model to connect database 'driver://user:pass@host/database'
         engine = create_engine('sqlite:///{}'.format(file_db), connect_args={'check_same_thread':False}, echo= self._echo_db)
         if not os.path.exists(file_db):
-                self.logger.info("Make database {}".format(file_db))
-                Base.metadata.create_all(engine)
+            self.logger.info("Make database {}".format(file_db))
+            Base.metadata.create_all(engine)
         self.logger.info("Connecting database")
         Session = sessionmaker(bind=engine)
         self.session = Session()
@@ -185,28 +186,29 @@ class DataBase():
 
         self.logger.info("update_file invoked")
 
-        file = self.session.query(File).filter(File.verify_key == verify_key)
-        if (file.one().write_key == write_key):
+        file = self.session.query(File).get(verify_key)
+        if (file!=0 and file.write_key == write_key):
             #have permission to write
             try:
-                    file.update({"modify_date":datetime.datetime.now()})
-                    self.session.flush()
+                file.update({"modify_date":datetime.datetime.now()})
+                self.session.flush()
             except:
-                    self.commit_db() #FIXME para usar nos testes
-                    file.update({"modify_date":datetime.datetime.now()})
-                    self.session.flush()
+                self.commit_db() #FIXME para usar nos testes
+                file.update({"modify_date":datetime.datetime.now()})
+                self.session.flush()
             #FIXME: update date time not type
             return True
         else:
             #don't have permission to write
             return False
 
-    def list_files(self, dir_key):
+    def list_files_by_dir(self, dirname, user_id):
 
         self.logger.info("list_files invoked")
 
         files = self.session.query(File)
-        files = files.filter(File.dir_key == dir_key)
+        files = files.filter(File.user_id == user_id)
+        files = files.filter( File.file_name.like(dirname+'%') )
         return files.all()
 
     def salt_file(self, file_name, user_id):
