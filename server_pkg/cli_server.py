@@ -13,6 +13,7 @@ import misc
 import database
 import logging
 from entity import file
+import os
 
 from server_pkg.server import Server
 from multiprocessing import Process  # @UnresolvedImport
@@ -79,8 +80,11 @@ class Client_Server(Process, Server):
 
         list_file = []
         for file_obj in files_db:
-            #create a list of objects to transmit in xmlrpc
-            list_file.append(file.File(file_db = file_obj ))
+            # check if it's within directory
+            filename = os.path.basename(file_obj.file_name)
+            if os.path.join(dirname, filename) == file_obj.file_name:
+                #create a list of objects to transmit in xmlrpc
+                list_file.append(file.File(file_db = file_obj ))
 
         return list_file
 
