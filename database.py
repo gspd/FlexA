@@ -207,9 +207,20 @@ class DataBase():
         self.logger.info("list_files invoked")
 
         files = self.session.query(File)
-        files = files.filter(File.user_id == user_id)
-        files = files.filter( File.file_name.like(dirname+'%') )
-        return files.all()
+        user_files = files.filter(File.user_id == user_id)
+        dir_files = user_files.filter( File.file_name.like(dirname+'%') )
+        """
+         this returns everything that has the dirname as substring of its
+         file_name, so beware, it's not just the files within it but also
+         subdirectories and files.
+         eg: dirname = '/foo'
+         can return
+            '/foo.txt'
+            '/football'
+            /foo/* < which is correct
+            /foo/subfoo/*
+        """
+        return dir_files.all()
 
     def salt_file(self, file_name, user_id):
         """this function search in data base a file
