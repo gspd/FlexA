@@ -78,10 +78,10 @@ class Client(object):
 
 
     def set_file_info_to_receive(self, file_info):
-        # TODO add feature to check if file is outside mapped dir
-        file_info.relative_filepath = os.path.join(self.configs._current_relative_dir, file_info.filename)
         file_info.absolute_filepath = os.path.join(self.configs._current_local_dir, file_info.filename)
         file_info.absolute_filepath = os.path.normpath(file_info.absolute_filepath)
+        file_info.relative_filepath = os.path.join(self.configs._current_relative_dir, file_info.filename)
+        file_info.relative_filepath = os.path.normpath(file_info.relative_filepath)
         
         #verify if it's withing FlexA data directory
         if not self.configs._data_dir in file_info.absolute_filepath:
