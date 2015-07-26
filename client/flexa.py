@@ -191,7 +191,6 @@ class Client(object):
             for num_part in range(file_obj.num_parts):
                 server_conn = server_obj.get_next_server( )
                 port_server = server_conn.negotiate_store_part(file_obj, dir_key, num_part)
-                print("port   ", port_server)
                 self.send_file_part(num_part, server_obj.ip_server, port_server, file_info.absolute_enc_filepath)
                 if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
