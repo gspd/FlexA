@@ -13,6 +13,7 @@ from entity import file
 from client import rpc_client
 from threading import Thread
 from stat import S_ISREG
+from hashlib import md5
 
 class ClientFile(object):
     filename = ''
@@ -32,6 +33,8 @@ class Client(object):
     rpc = rpc_client.RPC()
     user_id = None
 
+    #hash md5 -> 128 bits for each file chunk
+    server_hash = []
 
 ########################################################
 ########  CONTROLLING METHODS  #########################
@@ -150,6 +153,28 @@ class Client(object):
     def is_file(self, pathname):
         return S_ISREG(os.stat(pathname).st_mode)
 
+    def set_server_hash(self):
+        """
+            Compute hash of primary servers and find what is your ip
+        """
+        rsa_pub_dir = self.configs.loaded_config.get("User", "private key") + ".pub"
+        rsa_pub = open(rsa_pub_dir, 'rb').read()
+
+        hash = md5()
+        hash.update(rsa_pub)
+        for i in range(3):
+            hash_chunk = hash.copy()
+            hash_chunk.update(i)
+            self.server_hash.append([hash_chunk.hexdigest()])
+
+    def find_server_by_hash(self):
+        """
+            Scan network end set ip using hash as parameter
+        """
+        server_obj = rpc_client.RPC()
+        server_conn = server_obj.get_next_server()
+
+        #unfinished
 
 ########################################################
 #########   OPERATIONS METHODS   #######################
