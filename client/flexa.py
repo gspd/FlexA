@@ -14,6 +14,7 @@ from client import rpc_client
 from threading import Thread
 from stat import S_ISREG
 from hashlib import md5
+from binascii import a2b_qp
 
 class ClientFile(object):
     filename = ''
@@ -50,6 +51,8 @@ class Client(object):
         args = self.configs.args
 
         self.user_id = self.configs.loaded_config.get("User", "hash client")
+
+        self.set_server_hash()
 
         # Send a file to server
         if args.put:
@@ -164,7 +167,8 @@ class Client(object):
         hash.update(rsa_pub)
         for i in range(3):
             hash_chunk = hash.copy()
-            hash_chunk.update(i)
+            #convert int->str->bin
+            hash_chunk.update(a2b_qp(str(i)))
             self.server_hash.append([hash_chunk.hexdigest()])
 
     def find_server_by_hash(self):
