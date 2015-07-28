@@ -23,30 +23,9 @@ class Server(object):
         '''
         Sets configurations
         '''
+        self.configs = config.Config()
+        self.uid_hex = self.configs.uid.hex
+        self.uid_int = self.configs.uid.int
+        self.ip = self.configs.ip
+        self.logRequests = self.configs.logRequests_servers
 
-        Server.configs = config.Config()
-        Server.uid_hex = Server.configs.uid.hex
-        Server.uid_int = Server.configs.uid.int
-        Server.ip = Server.configs.ip
-        Server.logRequests = Server.configs.logRequests_servers
-
-    def start_services(self):
-
-            #DON'T TOUCH IN THIS LINE. DON'T MOVE TO THE BEGINNING
-            #If put this line in the beginning circular imports will occurs
-            from server_pkg import sync_server, cli_server
-
-            #local network machines finder
-            scanner = misc.Ping("255.255.255.255")
-            scanner.daemon()
-
-            sync = sync_server.Sync_Server()
-            cli = cli_server.Client_Server()
-            sync.start()
-            cli.start()
-
-            try:
-                sync.join()
-                cli.join()
-            except:
-                exit(0)
