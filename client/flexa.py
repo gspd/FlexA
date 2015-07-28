@@ -214,6 +214,9 @@ class Client(object):
             for num_part in range( file_obj.num_parts ):
                 server_conn = server_obj.get_next_server( )
                 port_server = server_conn.update_file( file_obj, num_part )
+                if port_server == False:
+                    sys.exit("Some error occurred. Maybe you don't have permission to \
+                            write. \nTry again.")
                 self.send_file_part( num_part, server_obj.ip_server, port_server, file_info.absolute_enc_filepath )
         else:
             # server return port where will wait a file
