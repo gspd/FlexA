@@ -14,8 +14,8 @@ if __name__ == '__main__':
     #local network machines finder
     scanner = misc.Ping("255.255.255.255") 
     neighbor = neighbor.Neighbor(server)
-    sync = sync_server.Sync_Server(server=server, neighbor=neighbor)
-    cli = cli_server.Client_Server(server=server, neighbor=neighbor)
+    sync = sync_server.Sync_Server(server=server)
+    cli = cli_server.Client_Server(server=server)
 
     scanner.start() #daemon
     sync.start() #daemon
