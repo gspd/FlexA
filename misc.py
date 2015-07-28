@@ -6,10 +6,10 @@ import sys
 import socket
 import time
 import logging
-from threading import Thread
+from multiprocessing import Process
 from distutils.util import strtobool
 
-class Ping(object):
+class Ping(Process):
     """ Times to scan network
         the time between one scan and next is
         TIMEOUT_TO_ANSWER + TIME_AUTO_SCAN
@@ -27,18 +27,14 @@ class Ping(object):
         """ receive broadcast of network
             String like `192.168.2.255`
         """
+        super().__init__(daemon=True)
         self.broadcast = broadcast
         self.online = []
         self.logger = logging.getLogger("[Misc.Ping]")
 
-    def daemon(self):
-        #thread answer_scan
-        answer = Thread(target = self.answer_scan, daemon = True)
-        answer.start()
-
-        #thread to auto scan
-        scan = Thread(target = self.auto_scan, daemon=True)
-        scan.start()
+    def run(self):
+        #process that run answer_scan
+        self.answer_scan()
 
     def auto_scan(self):
         while True:
