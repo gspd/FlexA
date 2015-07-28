@@ -15,6 +15,7 @@ import logging
 from entity import file
 import os
 from multiprocessing import Process
+from xmlrpc.client import ServerProxy
 
 class Client_Server(Process):
     """Class that make rpc server_pkg
@@ -27,12 +28,11 @@ class Client_Server(Process):
 
     """
 
-    def __init__(self, server, neighbor):
+    def __init__(self, server):
 
         super().__init__()
 
         self.server_info = server
-        self.neighbor = neighbor
 
     def run(self):
 
@@ -69,6 +69,13 @@ class Client_Server(Process):
         server.register_function(self.update_file)
         server.register_function(self.negotiate_store_part)
         server.register_function(self.delete_file)
+        server.register_function(self.get_map)
+
+    def get_map(self):
+        addr = 'http://{}:{}'.format(self.server_info.ip, 30000)
+        server_conn = ServerProxy(addr)
+        result = server_conn.get_neighbors()
+        return result
 
     def delete_file(self):
         pass

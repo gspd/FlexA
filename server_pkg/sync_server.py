@@ -11,17 +11,17 @@ from rpc import RPCServerHandler
 from multiprocessing import Process
 from server_pkg.RPC import RPC
 import logging
+from xmlrpc.client import ServerProxy
 
 class Sync_Server(Process):
     """
     Class that start server_pkg to sync with others server_pkg client updates
     """
 
-    def __init__(self, server, neighbor):
+    def __init__(self, server):
 
         #execute constructor of Server (inheritance)
         super().__init__()
-        self.neighbor = neighbor
         self.server = server
 
     def run(self):
@@ -59,8 +59,13 @@ class Sync_Server(Process):
         return 1
 
     def get_neighbor_map(self):
-        return self.neighbor.get_neighbors()
+        addr = 'http://{}:{}'.format(self.server.ip, 30000)
+        server_conn = ServerProxy(addr)
+        result = server_conn.get_neighbors()
+        return result
 
     def update_neighbor(self):
-        self.neighbor.UPDATE.set()
+        addr = 'http://{}:{}'.format(self.server.ip, 30000)
+        server_conn = ServerProxy(addr)
+        server_conn.require_update()
 
