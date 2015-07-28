@@ -11,6 +11,10 @@ from multiprocessing import Process, Event
 from server_pkg.RPC import RPC
 import logging
 
+from rpc import RPCThreadingServer
+from rpc import RPCServerHandler
+from threading import Thread
+
 class Neighbor(Process):
     """
     Class dedicate to monitoring neighbors servers
@@ -32,7 +36,7 @@ class Neighbor(Process):
 
         super().__init__(daemon=True)
 
-        self.logger = logging.getLogger("[Sync Server - Neighbor]")
+        self.logger = logging.getLogger("[Neighbor]")
 
         self.server_obj = RPC()
         self.server_obj.scan_ping.LOCAL = True
@@ -41,18 +45,40 @@ class Neighbor(Process):
 
         self.server = server
 
+    def run(self):
+        """
+            Resposable to start auto scan in network in new process
+        """
+
+        connection = (self.server.ip, 30000)
+        server = RPCThreadingServer(connection, requestHandler=RPCServerHandler,
+                                    logRequests=self.server.logRequests)
+        ip, port = server.server_address
+        # Create local logging object
+        self.logger.info("Listening on {}:{}".format(ip, port))
+
+        thr_auto = Thread(target=self.auto_scan, daemon=True)
+        thr_auto.start()
+
+        self.register_operations(server)
+        server.serve_forever()
+
+    def register_operations(self, server):
+        """Register all operations supported by the init_server in the init_server
+        objects
+        """
+        server.register_function(self.get_neighbors)
+        server.register_function(self.require_update)
+
+    def require_update(self):
+        self.UPDATE.set()
+
     def zero_map(self):
         self.left_neighbor = []
         self.right_neighbor = []
         for _ in range(self.window_size//2):
             self.left_neighbor.append(["0",0])
             self.right_neighbor.append(["0",0])
-
-    def run(self):
-        """
-            Resposable to start auto scan in network in new process
-        """
-        self.auto_scan()
 
     def auto_scan(self):
         """
