@@ -8,14 +8,21 @@ from server_pkg.server import Server
 from server_pkg import neighbor
 from rpc import RPCThreadingServer
 from rpc import RPCServerHandler
-import multiprocessing
+from multiprocessing import Process
 from server_pkg.RPC import RPC
 import logging
 
-class Sync_Server(multiprocessing.Process, Server):
+class Sync_Server(Process):
     """
     Class that start server_pkg to sync with others server_pkg client updates
     """
+
+    def __init__(self, server, neighbor):
+
+        #execute constructor of Server (inheritance)
+        super().__init__()
+        self.neighbor = neighbor
+        self.server = server
 
     def run(self):
         """
@@ -23,18 +30,15 @@ class Sync_Server(multiprocessing.Process, Server):
             set attibutes of class sync_server and start xmlrpc server
         """
 
-        connection = (self.configs.ip, self.configs.sync_port)
+        connection = (self.server.ip, self.server.configs.sync_port)
 
         server = RPCThreadingServer(addr=connection, requestHandler=RPCServerHandler, 
-                                    logRequests=Server.logRequests, allow_none=True)
+                                    logRequests=self.server.logRequests, allow_none=True)
         ip, port = server.server_address
         # Create local logging object
         self.logger = logging.getLogger("[Sync Server]")
 
         self.server_obj = RPC()
-
-        self.neighbor = neighbor.Neighbor()
-        self.neighbor.daemon()
 
         # register all functions
         self.register_operations(server)

@@ -14,12 +14,9 @@ import database
 import logging
 from entity import file
 import os
+from multiprocessing import Process
 
-from server_pkg.server import Server
-from multiprocessing import Process  # @UnresolvedImport
-
-
-class Client_Server(Process, Server):
+class Client_Server(Process):
     """Class that make rpc server_pkg
 
         your constructor make configs to start server_pkg
@@ -30,13 +27,21 @@ class Client_Server(Process, Server):
 
     """
 
+    def __init__(self, server, neighbor):
+
+        super().__init__()
+
+        self.server_info = server
+        self.neighbor = neighbor
+
     def run(self):
+
         #connect database
         self.db = database.DataBase()
 
-        connection = (self.configs.ip, self.configs.cli_port)
+        connection = (self.server_info.ip, self.server_info.configs.cli_port)
         server = RPCThreadingServer(connection, requestHandler=RPCServerHandler,
-                                    logRequests=Server.logRequests)
+                                    logRequests=self.server_info.logRequests)
         ip, port = server.server_address
         # Create local logging object
         self.logger = logging.getLogger("[Server Cli]")
@@ -110,7 +115,7 @@ class Client_Server(Process, Server):
         self.logger.info("give_file invoked")
 
         host = (ip, port)
-        file_name_part = self.configs._dir_file + verify_key + '.' + str(num_part)
+        file_name_part = self.server_info.configs._dir_file + verify_key + '.' + str(num_part)
         misc.send_file(host, file_name_part)
         #FIXME every rpc call return something - put sent confirmation
         return 0
@@ -131,7 +136,7 @@ class Client_Server(Process, Server):
         if not (self.db.update_file(file_obj.verify_key, file_obj.write_key)):
             return False
 
-        filename_to_save = self.configs._dir_file + file_obj.verify_key + '.' + str(num_part)
+        filename_to_save = self.server_info.configs._dir_file + file_obj.verify_key + '.' + str(num_part)
         thread = Thread(target = misc.receive_file, args = (sockt, filename_to_save ))
         thread.start()
         #TODO: set timout to thread
@@ -162,7 +167,7 @@ class Client_Server(Process, Server):
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)
 
-        file_name_to_get = self.configs._dir_file + file_obj.verify_key + '.' + str(part_number)
+        file_name_to_get = self.server_info.configs._dir_file + file_obj.verify_key + '.' + str(part_number)
         thread = Thread(target = misc.receive_file, args = (sockt, file_name_to_get))
         thread.start()
 

@@ -7,12 +7,11 @@ Created on 24/07/2015
 import hashlib
 from time import sleep
 import binascii
-from server_pkg.server import Server
-import multiprocessing
+from multiprocessing import Process, Event
 from server_pkg.RPC import RPC
 import logging
 
-class Neighbor():
+class Neighbor(Process):
     """
     Class dedicate to monitoring neighbors servers
     """
@@ -27,15 +26,20 @@ class Neighbor():
     left_neighbor = []
     right_neighbor = []
     
-    UPDATE = multiprocessing.Event()
+    UPDATE = Event()
 
-    def __init__(self):
+    def __init__(self, server):
+
+        super().__init__(daemon=True)
+
         self.logger = logging.getLogger("[Sync Server - Neighbor]")
 
         self.server_obj = RPC()
         self.server_obj.scan_ping.LOCAL = True
 
         self.zero_map()
+
+        self.server = server
 
     def zero_map(self):
         self.left_neighbor = []
@@ -44,13 +48,11 @@ class Neighbor():
             self.left_neighbor.append(["0",0])
             self.right_neighbor.append(["0",0])
 
-    def daemon(self):
+    def run(self):
         """
             Resposable to start auto scan in network in new process
         """
-
-        proc = multiprocessing.Process(target=self.auto_scan, daemon=True)
-        proc.start()
+        self.auto_scan()
 
     def auto_scan(self):
         """
@@ -98,7 +100,7 @@ class Neighbor():
 
     def get_neighbors(self):
         #return a growing list of [uid, ips]
-        return (self.left_neighbor[::-1]+[[Server.uid_hex,Server.ip]]+self.right_neighbor)
+        return (self.left_neighbor[::-1]+[[self.server.uid_hex,self.server.ip]]+self.right_neighbor)
 
     def first_searcher(self):
         """
@@ -112,11 +114,11 @@ class Neighbor():
         #using the first map go to the next server
         #stop when find a map whose id can be placed in the middle
         # only one of the following while(s) will be executed
-        while( (int(map[0][0],16)<Server.uid_int) and (map[0][0]!='0') ):
+        while( (int(map[0][0],16)<self.server.uid_int) and (map[0][0]!='0') ):
             server_conn = self.server_obj.set_server(map[0][1])
             map = server_conn.get_neighbor_map()
 
-        while( (int(map[len(map)-1][0],16)>Server.uid_int) and
+        while( (int(map[len(map)-1][0],16)>self.server.uid_int) and
                (map[len(map)-1][0]!='0') ):
             server_conn = self.server_obj.set_server(map[(len(map)//2)-1][1])
             map = server_conn.get_neighbor_map()
@@ -128,18 +130,18 @@ class Neighbor():
             for _ in range( len(self.server_obj.list_online) ):
                 server_conn = self.server_obj.get_next_server()
                 map = server_conn.get_neighbor_map()
-                if(int(map[len(map)//2][0],16) < Server.uid_int):
+                if(int(map[len(map)//2][0],16) < self.server.uid_int):
                     #then this server is in left
                     self.put_in_left(map[len(map)//2])
-                elif(int(map[len(map)//2][0],16) > Server.uid_int):
+                elif(int(map[len(map)//2][0],16) > self.server.uid_int):
                     self.put_in_right(map[len(map)//2])
         else:
             #if find a map that your id can put in the middle
             for server in map:
-                if(int(server[0],16) < Server.uid_int):
+                if(int(server[0],16) < self.server.uid_int):
                     #then this server is in left
                     self.put_in_left(server)
-                elif(int(map[len(map)//2][0],16) > Server.uid_int):
+                elif(int(map[len(map)//2][0],16) > self.server.uid_int):
                     self.put_in_right(server)
 
         self.update_all()
