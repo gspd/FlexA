@@ -186,21 +186,25 @@ class DataBase():
 
         self.logger.info("update_file invoked")
 
-        file = self.session.query(File).get(verify_key)
-        if (file!=0 and file.write_key == write_key):
-            #have permission to write
-            try:
-                file.update({"modify_date":datetime.datetime.now()})
-                self.session.flush()
-            except:
-                self.commit_db() #FIXME para usar nos testes
-                file.update({"modify_date":datetime.datetime.now()})
-                self.session.flush()
-            #FIXME: update date time not type
-            return True
-        else:
-            #don't have permission to write
+        file = self.session.query(File).filter(File.verify_key == verify_key)
+
+        try:
+            if (file.one().write_key != write_key):
+                #don't have permition to write
+                return False
+        except:
+            #can't find file -> one() return except
             return False
+
+        #have permission to write
+        try:
+            file.update({"modify_date":datetime.datetime.now()})
+            self.session.flush()
+        except:
+            self.commit_db() #FIXME para usar nos testes
+            file.update({"modify_date":datetime.datetime.now()})
+            self.session.flush()
+        return True
 
     def list_files_by_dir(self, dirname, user_id):
 
