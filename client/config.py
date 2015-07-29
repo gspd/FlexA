@@ -91,11 +91,12 @@ class Config(object):
         parser = argparse.ArgumentParser(
                 description='A New Flexible and Distributed File System')
         #The following options are mutually exclusive
-        group = parser.add_mutually_exclusive_group()
-        group.add_argument('-p', '--put', metavar='FILE', nargs='+', help='send file to server')
-        group.add_argument('-g', '--get', metavar='FILE', nargs='+', help='receive file from server')
-        group.add_argument('-l', '--list', action='count', default=0, help='list file from server')
-        group.add_argument('-d', '--delete', metavar='FILE', nargs='+', help='delete file from server')
+        mxg = parser.add_mutually_exclusive_group()
+        mxg.add_argument('-p', '--put', metavar='FILE', nargs='+', help='send file to server')
+        mxg.add_argument('-g', '--get', metavar='FILE', nargs='+', help='receive file from server')
+        mxg.add_argument('-l', '--list', action='count', default=0, help='list current directory\'s files from server')
+        mxg.add_argument('-L', '--recursive-list', action='count', default=0, help='list current directory\'s tree from server')
+        mxg.add_argument('-d', '--delete', metavar='FILE', nargs='+', help='delete file from server')
 
         #These options can be used in combination with any other
         parser.add_argument('-v', '--verbose', action='count', default=0, help='increase output verbosity')
