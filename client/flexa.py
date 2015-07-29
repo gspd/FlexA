@@ -72,7 +72,16 @@ class Client(object):
                     self.receive_file(file_info)
 
         if args.list:
-            self.list_files()
+            if args.list == 1:
+                self.list_files()
+            else:
+                self.list_files(more_info=True)
+
+        if args.recursive_list:
+            if args.recursive_list == 1:
+                self.list_files(recursive=True)
+            else:
+                self.list_files(recursive=True, more_info=True)
 
         if args.delete:
             for filename in args.delete:
@@ -277,14 +286,28 @@ class Client(object):
         #remove temp files from  workstation -> complete
         os.remove(file_info.absolute_enc_filepath)
 
-    def list_files(self):
+    def list_files(self, recursive=False, more_info=False):
         """
         Search every file from verify_key
             verify_key is directory where called this operation - answer is a dictionary of files and yours attributes 
         """
         server_conn = self.rpc.get_next_server()
 
-        for dic_file in server_conn.list_files(self.configs._current_relative_dir, self.user_id):
+        # just to clean a bit this huge var name
+        cur_dir = self.configs._current_relative_dir
+        for dic_file in server_conn.list_files(cur_dir, self.user_id):
+            if not recursive:
+                # check if it's within directory
+                filename = os.path.basename(dic_file['name'])
+                if os.path.join(cur_dir, filename) != dic_file['name']:
+                    # filename is not located in dir_name
+                    continue
+            else:
+                # check if it's followed by '/'
+                if not os.path.join(cur_dir, '') in dic_file['name']:
+                    # cur_dir must be a substring of another directory or file
+                    continue
+            # TODO print more info if more_info == True
             print(dic_file['name'])
 
     def delete_file(self, name_file):
