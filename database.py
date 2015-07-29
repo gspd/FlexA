@@ -210,9 +210,10 @@ class DataBase():
 
         self.logger.info("list_files invoked")
 
-        files = self.session.query(File)
-        user_files = files.filter(File.user_id == user_id)
-        dir_files = user_files.filter( File.file_name.like(dirname+'%') )
+        files = self.session.query(File).\
+                filter(File.user_id == user_id).\
+                filter(File.file_name.like(dirname+'%')).\
+                order_by(File.file_name)
         """
          this returns everything that has the dirname as substring of its
          file_name, so beware, it's not just the files within it but also
@@ -224,7 +225,7 @@ class DataBase():
             /foo/* < which is correct
             /foo/subfoo/*
         """
-        return dir_files.all()
+        return files.all()
 
     def salt_file(self, file_name, user_id):
         """this function search in data base a file
