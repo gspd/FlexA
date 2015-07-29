@@ -296,16 +296,11 @@ class Client(object):
         # just to clean a bit this huge var name
         cur_dir = self.configs._current_relative_dir
         for dic_file in server_conn.list_files(cur_dir, self.user_id):
-            if not recursive:
-                # check if it's within directory
-                filename = os.path.basename(dic_file['name'])
-                if os.path.join(cur_dir, filename) != dic_file['name']:
-                    # filename is not located in dir_name
+            if not recursive: # check if it's within directory
+                if cur_dir != os.path.dirname(dic_file['name']):
                     continue
-            else:
-                # check if it's followed by '/'
-                if not os.path.join(cur_dir, '') in dic_file['name']:
-                    # cur_dir must be a substring of another directory or file
+            else: # check if current dir is substring at the beginning
+                if not os.path.dirname(dic_file['name']).startswith(cur_dir):
                     continue
             # TODO print more info if more_info == True
             print(dic_file['name'])
