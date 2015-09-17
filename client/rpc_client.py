@@ -98,3 +98,8 @@ class RPC(object):
 
         #return the object server_rpc
         return ServerProxy(server_addr)
+
+    def set_server(self, ip):
+        server_addr = 'http://{}:{}'.format(ip, self.PORT_SERVER)
+        #return the object server_rpc
+        return ServerProxy(server_addr)
