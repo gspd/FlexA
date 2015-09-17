@@ -178,7 +178,43 @@ class Client(object):
         server_obj = rpc_client.RPC()
         server_conn = server_obj.get_next_server()
 
-        #unfinished
+        map = server_conn.get_map()
+
+        primary_server = []
+        for current_hash in self.server_hash:
+            #search the primary server
+            while(True):
+                #if this hash is lowest -> your primary server is in right
+                if( int(current_hash) > int( map[len(map)-1][0] ) ):
+                    server_obj.set_server(map[len(map)-1][1])
+
+                #if this hash is biggest -> your primary server is in left
+                elif( int(current_hash) < int( map[0][0] ) ):
+                    server_obj.set_server(map[0][1])
+
+                #is in the middle of the map
+                else:
+                    #find who is your primary server in this map
+                    distance = int(current_hash)-int(map[0][0]), 0
+                    distance_aux = int(current_hash)-int(map[1][0])
+                    index = 1
+
+                    #while that find the closer uid
+                    while( abs(distance) > abs(distance_aux) ):
+                        distance = distance_aux
+                        index = index + 1
+                        #verify if index is out of range
+                        if(index == len(map)):
+                            #primary server is in leftmost -> break
+                            break
+                        distance_aux = int(current_hash)-int(map[index][0])
+
+                    index = index-1
+                    primary_server.append(map[index])
+
+                    #stop first while -> stop search the correct map
+                    break
+
 
 ########################################################
 #########   OPERATIONS METHODS   #######################
