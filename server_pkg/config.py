@@ -32,7 +32,11 @@ class Config(object):
     ''' 
 
     #where directory flexa was called
-    _dir_called = os.getcwd()
+    ## issue18 -> the home directory is mapped through each cluster node (in the cluster used for tests)
+    ##            so the identifier for each server is replicated if located in this directory.
+    ##            To avoid so, in this cluster, we moved the identification info to a local directory (/tmp).
+    ##_dir_called = os.getcwd()
+    _dir_called = "/tmp"
     _dir_file = _dir_called + "/data/"
     __version__ = '0.1'
 
