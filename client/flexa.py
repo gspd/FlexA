@@ -52,7 +52,9 @@ class Client(object):
 
         self.user_id = self.configs.loaded_config.get("User", "hash client")
 
+        self.primary_server = []
         self.set_server_hash()
+        self.find_server_by_hash()
 
         # Send a file to server
         if args.put:
@@ -169,7 +171,7 @@ class Client(object):
             hash_chunk = hash.copy()
             #convert int->str->bin
             hash_chunk.update(a2b_qp(str(i)))
-            self.server_hash.append([hash_chunk.hexdigest()])
+            self.server_hash.append(hash_chunk.hexdigest())
 
     def find_server_by_hash(self):
         """
@@ -178,25 +180,27 @@ class Client(object):
         server_obj = rpc_client.RPC()
         server_conn = server_obj.get_next_server()
 
-        map = server_conn.get_map()
+        mapp = server_conn.get_map()
 
-        primary_server = []
         for current_hash in self.server_hash:
             #search the primary server
             while(True):
                 #if this hash is lowest -> your primary server is in right
-                if( int(current_hash) > int( map[len(map)-1][0] ) ):
-                    server_obj.set_server(map[len(map)-1][1])
+                if( int(current_hash, 16) > int( mapp[len(mapp)-1][0], 16 ) ):
+                    server_conn = server_obj.set_server(mapp[len(mapp)-1][1])
+                    mapp = server_conn.get_map()
 
                 #if this hash is biggest -> your primary server is in left
-                elif( int(current_hash) < int( map[0][0] ) ):
-                    server_obj.set_server(map[0][1])
+                elif( int(current_hash, 16) < int( mapp[0][0], 16) ):
+                    server_obj.set_server(mapp[0][1])
+                    server_conn = server_obj.set_server(mapp[len(mapp)-1][1])
+                    mapp = server_conn.get_map()
 
-                #is in the middle of the map
+                #is in the middle of the mapp
                 else:
-                    #find who is your primary server in this map
-                    distance = int(current_hash)-int(map[0][0]), 0
-                    distance_aux = int(current_hash)-int(map[1][0])
+                    #find who is your primary server in this mapp
+                    distance = int(current_hash, 16)-int(mapp[0][0], 16)
+                    distance_aux = int(current_hash, 16)-int(mapp[1][0], 16)
                     index = 1
 
                     #while that find the closer uid
@@ -204,15 +208,15 @@ class Client(object):
                         distance = distance_aux
                         index = index + 1
                         #verify if index is out of range
-                        if(index == len(map)):
+                        if(index == len(mapp)):
                             #primary server is in leftmost -> break
                             break
-                        distance_aux = int(current_hash)-int(map[index][0])
+                        distance_aux = int(current_hash, 16)-int(mapp[index][0], 16)
 
                     index = index-1
-                    primary_server.append(map[index])
+                    self.primary_server.append(mapp[index])
 
-                    #stop first while -> stop search the correct map
+                    #stop first while -> stop search the correct mapp
                     break
 
 
