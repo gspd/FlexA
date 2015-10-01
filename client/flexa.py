@@ -54,7 +54,7 @@ class Client(object):
 
         self.primary_server = []
         self.set_server_hash()
-        self.find_server_by_hash()
+        self.organize_servers_by_state()
 
         # Send a file to server
         if args.put:
@@ -219,7 +219,7 @@ class Client(object):
                     #stop first while -> stop search the correct mapp
                     break
 
-    def find_lazy_server(self):
+    def organize_servers_by_state(self):
         """
             Get the list map result of 'find_server_by_hash' and find the lazy server
             This function ask to the servers your state and organize in growing map based in your state
