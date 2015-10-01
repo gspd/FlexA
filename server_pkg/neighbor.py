@@ -29,7 +29,8 @@ class Neighbor(Process):
     #array to save neighbors - [[uid,ip]]
     left_neighbor = []
     right_neighbor = []
-    
+
+    TIMES_TO_UPDATE_MAP = 15
     UPDATE = Event()
 
     def __init__(self, server):
@@ -86,20 +87,20 @@ class Neighbor(Process):
         """
         self.first_searcher()
         last_hash=b'0'
-        count=5
+        count=self.TIMES_TO_UPDATE_MAP
         while True:
             self.verify_map()
             count-=1
             if(count<=0 or self.UPDATE.is_set()):
                 self.UPDATE.clear()
-                count=5
+                count=self.TIMES_TO_UPDATE_MAP
                 self.first_searcher()
-                hash = hashlib.md5()
-                hash.update( binascii.a2b_qp(str(self.get_neighbors())) )
-                if(last_hash != hash.digest()):
+                hash_ = hashlib.md5()
+                hash_.update( binascii.a2b_qp(str(self.get_neighbors())) )
+                if(last_hash != hash_.digest()):
                     self.logger.debug("Update map all servers")
                     self.update_all()
-                    last_hash=hash.digest()
+                    last_hash=hash_.digest()
             sleep(self.TIME_AUTO_SCAN)
 
     def update_all(self):
@@ -135,39 +136,39 @@ class Neighbor(Process):
         """
         #searching servers with ping
         server_conn = self.server_obj.get_next_server()
-        map = server_conn.get_neighbor_map()
+        map_ = server_conn.get_neighbor_map()
 
         #using the first map go to the next server
         #stop when find a map whose id can be placed in the middle
         # only one of the following while(s) will be executed
-        while( (int(map[0][0],16)<self.server.uid_int) and (map[0][0]!='0') ):
-            server_conn = self.server_obj.set_server(map[0][1])
-            map = server_conn.get_neighbor_map()
+        while( (int(map_[0][0],16)<self.server.uid_int) and (map_[0][0]!='0') ):
+            server_conn = self.server_obj.set_server(map_[0][1])
+            map_ = server_conn.get_neighbor_map()
 
-        while( (int(map[len(map)-1][0],16)>self.server.uid_int) and
-               (map[len(map)-1][0]!='0') ):
-            server_conn = self.server_obj.set_server(map[(len(map)//2)-1][1])
-            map = server_conn.get_neighbor_map()
+        while( (int(map_[len(map_)-1][0],16)>self.server.uid_int) and
+               (map_[len(map_)-1][0]!='0') ):
+            server_conn = self.server_obj.set_server(map_[(len(map_)//2)-1][1])
+            map_ = server_conn.get_neighbor_map()
 
-        if('0' in dict(map)):
+        if('0' in dict(map_)):
             self.zero_map()
             self.server_obj.scan_online_servers()
             #this is a signal that all machines just started or something went wrong -> verify all servers with ping
             for _ in range( len(self.server_obj.list_online) ):
                 server_conn = self.server_obj.get_next_server()
-                map = server_conn.get_neighbor_map()
-                if(int(map[len(map)//2][0],16) < self.server.uid_int):
+                map_ = server_conn.get_neighbor_map()
+                if(int(map_[len(map_)//2][0],16) < self.server.uid_int):
                     #then this server is in left
-                    self.put_in_left(map[len(map)//2])
-                elif(int(map[len(map)//2][0],16) > self.server.uid_int):
-                    self.put_in_right(map[len(map)//2])
+                    self.put_in_left(map_[len(map_)//2])
+                elif(int(map_[len(map_)//2][0],16) > self.server.uid_int):
+                    self.put_in_right(map_[len(map_)//2])
         else:
             #if find a map that your id can put in the middle
-            for server in map:
+            for server in map_:
                 if(int(server[0],16) < self.server.uid_int):
                     #then this server is in left
                     self.put_in_left(server)
-                elif(int(map[len(map)//2][0],16) > self.server.uid_int):
+                elif(int(map_[len(map_)//2][0],16) > self.server.uid_int):
                     self.put_in_right(server)
 
         self.update_all()
