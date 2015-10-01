@@ -70,6 +70,7 @@ class Client_Server(Process):
         server.register_function(self.negotiate_store_part)
         server.register_function(self.delete_file)
         server.register_function(self.get_map)
+        server.register_function(self.get_state)
 
     def get_map(self):
         addr = 'http://{}:{}'.format(self.server_info.ip, 30000)
