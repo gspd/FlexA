@@ -219,6 +219,22 @@ class Client(object):
                     #stop first while -> stop search the correct mapp
                     break
 
+    def find_lazy_server(self):
+        """
+            Get the list map result of 'find_server_by_hash' and find the lazy server
+            This function ask to the servers your state and organize in growing map based in your state
+                first is the lazy server and last is busy server.
+            This function is used to make load balacing.
+
+            Use variable primary_server -> [ [uid,ip], [uid,ip] ... ]
+        """
+
+        server_obj = rpc_client.RPC()
+        for server in self.primary_server:
+            server_conn = server_obj.set_server(server[1])
+            state = server_conn.get_status()
+            server.append(state)
+        sorted(self.primary_server, key= lambda state:state[2])
 
 ########################################################
 #########   OPERATIONS METHODS   #######################
