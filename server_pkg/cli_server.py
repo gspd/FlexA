@@ -180,3 +180,11 @@ class Client_Server(Process):
 
         return port
         #TODO: set timout to thread
+
+    def get_state(self):
+        """
+            Return status to client
+                if lazy -> small number
+                if buzy -> big number
+        """
+        return 1
