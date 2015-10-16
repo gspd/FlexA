@@ -34,8 +34,6 @@ class Client(object):
     rpc = rpc_client.RPC()
     user_id = None
 
-    #hash md5 -> 128 bits for each file chunk
-    server_hash = []
 
 ########################################################
 ########  CONTROLLING METHODS  #########################
@@ -52,8 +50,11 @@ class Client(object):
 
         self.user_id = self.configs.loaded_config.get("User", "hash client")
 
+        #hash md5 -> 128 bits for each file chunk
+        self.server_hash = []
         self.primary_server = []
         self.set_server_hash()
+        self.find_server_by_hash()
         self.organize_servers_by_state()
 
         # Send a file to server
@@ -90,7 +91,7 @@ class Client(object):
         file_info.absolute_filepath = os.path.normpath(file_info.absolute_filepath)
         file_info.relative_filepath = os.path.join(self.configs._current_relative_dir, file_info.filename)
         file_info.relative_filepath = os.path.normpath(file_info.relative_filepath)
-        
+
         #verify if it's withing FlexA data directory
         if not self.configs._data_dir in file_info.absolute_filepath:
             print("Skipping '" + file_info.absolute_filepath + "'. "
@@ -232,9 +233,13 @@ class Client(object):
         server_obj = rpc_client.RPC()
         for server in self.primary_server:
             server_conn = server_obj.set_server(server[1])
-            state = server_conn.get_status()
+            if(not server_conn):
+                #set the high ocupation
+                server.append(10)
+                continue
+            state = server_conn.get_state()
             server.append(state)
-        sorted(self.primary_server, key= lambda state:state[2])
+        self.primary_server = sorted(self.primary_server, key= lambda state:state[2])
 
 ########################################################
 #########   OPERATIONS METHODS   #######################
@@ -251,9 +256,8 @@ class Client(object):
         file_obj = file.File(name=file_info.relative_filepath, user_id=self.user_id, 
                              num_parts=3)
 
-
-        server_obj = rpc_client.RPC()
-        server_conn = server_obj.get_next_server()
+        #Use variable primary_server -> [ [uid,ip], [uid,ip] ... ]
+        server_conn = self.rpc.set_server(self.primary_server[0][1])
         # ask to server if is update or new file
 
         salt = server_conn.get_salt( file_obj.name, file_obj.user_id)
@@ -264,22 +268,20 @@ class Client(object):
 
         if not ( misc.split_file(file_info.absolute_enc_filepath, file_obj.num_parts) ):
             sys.exit("Problems while splitting file.\nTry again.")
-        
+
         # if salt has a value then is update. because server return a valid salt
         if salt:
             for num_part in range( file_obj.num_parts ):
-                server_conn = server_obj.get_next_server( )
                 port_server = server_conn.update_file( file_obj, num_part )
                 if port_server == False:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
                             write. \nTry again.")
-                self.send_file_part( num_part, server_obj.ip_server, port_server, file_info.absolute_enc_filepath )
+                self.send_file_part( num_part, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath )
         else:
             # server return port where will wait a file
             for num_part in range(file_obj.num_parts):
-                server_conn = server_obj.get_next_server( )
                 port_server = server_conn.negotiate_store_part(file_obj, dir_key, num_part)
-                self.send_file_part(num_part, server_obj.ip_server, port_server, file_info.absolute_enc_filepath)
+                self.send_file_part(num_part, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath)
                 if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
                             write. \nTry again.")
