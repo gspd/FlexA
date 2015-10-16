@@ -30,6 +30,10 @@ class Neighbor(Process):
     left_neighbor = []
     right_neighbor = []
 
+    #array to save neighbors - [[uid,ip]] -> auxiliar
+    left_neighbor_aux = []
+    right_neighbor_aux = []
+
     TIMES_TO_UPDATE_MAP = 15
     UPDATE = Event()
 
@@ -77,15 +81,25 @@ class Neighbor(Process):
     def zero_map(self):
         self.left_neighbor = []
         self.right_neighbor = []
+        self.left_neighbor_aux = []
+        self.right_neighbor_aux = []
         for _ in range(self.window_size//2):
             self.left_neighbor.append(["0",0])
             self.right_neighbor.append(["0",0])
+            self.left_neighbor_aux.append(["0",0])
+            self.right_neighbor_aux.append(["0",0])
+
+    def replace_aux(self):
+        self.left_neighbor = self.left_neighbor_aux
+        self.right_neighbor = self.right_neighbor_aux
 
     def auto_scan(self):
         """
             Make scan in network to verify if servers is online
         """
         self.first_searcher()
+        self.update_all()
+        self.replace_aux()
         last_hash=b'0'
         count=self.TIMES_TO_UPDATE_MAP
         while True:
@@ -99,6 +113,7 @@ class Neighbor(Process):
                 hash_.update( binascii.a2b_qp(str(self.get_neighbors())) )
                 if(last_hash != hash_.digest()):
                     self.logger.debug("Update map all servers")
+                    self.replace_aux()
                     self.update_all()
                     last_hash=hash_.digest()
             sleep(self.TIME_AUTO_SCAN)
@@ -171,7 +186,6 @@ class Neighbor(Process):
                 elif(int(map_[len(map_)//2][0],16) > self.server.uid_int):
                     self.put_in_right(server)
 
-        self.update_all()
         self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
 
     def put_in_left(self, server):
@@ -182,11 +196,11 @@ class Neighbor(Process):
         """
         aux_next = server
         for i in range(self.window_size//2):
-            if(self.left_neighbor[i] == server):
+            if(self.left_neighbor_aux[i] == server):
                 break
-            if(int(self.left_neighbor[i][0],16)<int(server[0],16)):
+            if(int(self.left_neighbor_aux[i][0],16)<int(server[0],16)):
                 #start to change vector
-                aux_next, self.left_neighbor[i] = self.left_neighbor[i], aux_next
+                aux_next, self.left_neighbor_aux[i] = self.left_neighbor_aux[i], aux_next
 
     def put_in_right(self, server):
         """insert server in left list
@@ -196,8 +210,8 @@ class Neighbor(Process):
         """
         aux_next = server
         for i in range(self.window_size//2):
-            if(self.right_neighbor[i] == server):
+            if(self.right_neighbor_aux[i] == server):
                 break
-            if( (self.right_neighbor[i][0]=='0') or (int(self.right_neighbor[i][0],16)>int(server[0],16)) ):
+            if( (self.right_neighbor_aux[i][0]=='0') or (int(self.right_neighbor_aux[i][0],16)>int(server[0],16)) ):
                 #start to change vector
-                aux_next, self.right_neighbor[i] = self.right_neighbor[i], aux_next
+                aux_next, self.right_neighbor_aux[i] = self.right_neighbor_aux[i], aux_next
