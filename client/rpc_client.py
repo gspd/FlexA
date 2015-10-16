@@ -101,5 +101,15 @@ class RPC(object):
 
     def set_server(self, ip):
         server_addr = 'http://{}:{}'.format(ip, self.PORT_SERVER)
+
+        server_conn = ServerProxy(server_addr)
+
+        try:
+            server_conn.still_alive()
+            self.ip_server = ip
+        except:
+            server_conn = 0
+            self.ip_server = 0
+
         #return the object server_rpc
-        return ServerProxy(server_addr)
+        return server_conn

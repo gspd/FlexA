@@ -71,6 +71,10 @@ class Client_Server(Process):
         server.register_function(self.delete_file)
         server.register_function(self.get_map)
         server.register_function(self.get_state)
+        server.register_function(self.still_alive)
+
+    def still_alive(self):
+        return 1
 
     def get_map(self):
         addr = 'http://{}:{}'.format(self.server_info.ip, 30000)
