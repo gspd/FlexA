@@ -34,7 +34,7 @@ class Neighbor(Process):
     left_neighbor_aux = []
     right_neighbor_aux = []
 
-    TIMES_TO_UPDATE_MAP = 15
+    TIMES_TO_UPDATE_MAP = 2
     UPDATE = Event()
 
     def __init__(self, server):
@@ -46,7 +46,13 @@ class Neighbor(Process):
         self.server_obj = RPC()
         self.server_obj.scan_ping.LOCAL = True
 
-        self.zero_map()
+        self.left_neighbor = []
+        self.right_neighbor = []
+        for _ in range(self.window_size//2):
+            self.left_neighbor.append(["0",0])
+            self.right_neighbor.append(["0",0])
+
+        self.zero_map_aux()
 
         self.server = server
 
@@ -76,16 +82,13 @@ class Neighbor(Process):
         server.register_function(self.require_update)
 
     def require_update(self):
+        self.logger.debug("require_update called" )
         self.UPDATE.set()
 
-    def zero_map(self):
-        self.left_neighbor = []
-        self.right_neighbor = []
+    def zero_map_aux(self):
         self.left_neighbor_aux = []
         self.right_neighbor_aux = []
         for _ in range(self.window_size//2):
-            self.left_neighbor.append(["0",0])
-            self.right_neighbor.append(["0",0])
             self.left_neighbor_aux.append(["0",0])
             self.right_neighbor_aux.append(["0",0])
 
@@ -100,6 +103,7 @@ class Neighbor(Process):
         self.first_searcher()
         self.update_all()
         self.replace_aux()
+        self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
         last_hash=b'0'
         count=self.TIMES_TO_UPDATE_MAP
         while True:
@@ -112,10 +116,11 @@ class Neighbor(Process):
                 hash_ = hashlib.md5()
                 hash_.update( binascii.a2b_qp(str(self.get_neighbors())) )
                 if(last_hash != hash_.digest()):
-                    self.logger.debug("Update map all servers")
+                    self.logger.debug("Update map all servers>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
                     self.replace_aux()
                     self.update_all()
                     last_hash=hash_.digest()
+                self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
             sleep(self.TIME_AUTO_SCAN)
 
     def update_all(self):
@@ -141,6 +146,7 @@ class Neighbor(Process):
                 break
 
     def get_neighbors(self):
+        self.logger.debug("get_neighbors called" )
         #return a growing list of [uid, ips]
         return (self.left_neighbor[::-1]+[[self.server.uid_hex,self.server.ip]]+self.right_neighbor)
 
@@ -166,7 +172,7 @@ class Neighbor(Process):
             map_ = server_conn.get_neighbor_map()
 
         if('0' in dict(map_)):
-            self.zero_map()
+            self.zero_map_aux()
             self.server_obj.scan_online_servers()
             #this is a signal that all machines just started or something went wrong -> verify all servers with ping
             for _ in range( len(self.server_obj.list_online) ):
@@ -186,7 +192,6 @@ class Neighbor(Process):
                 elif(int(map_[len(map_)//2][0],16) > self.server.uid_int):
                     self.put_in_right(server)
 
-        self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
 
     def put_in_left(self, server):
         """insert server in left list
