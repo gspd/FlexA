@@ -84,6 +84,9 @@ class Neighbor(Process):
     def require_update(self):
         self.logger.debug("require_update called" )
         self.UPDATE.set()
+        self.first_searcher()
+        self.replace_aux()
+        self.UPDATE.clear()
 
     def zero_map_aux(self):
         self.left_neighbor_aux = []
@@ -109,8 +112,7 @@ class Neighbor(Process):
         while True:
             self.verify_map()
             count-=1
-            if(count<=0 or self.UPDATE.is_set()):
-                self.UPDATE.clear()
+            if(count<=0 and not self.UPDATE.is_set()):
                 count=self.TIMES_TO_UPDATE_MAP
                 self.first_searcher()
                 hash_ = hashlib.md5()
