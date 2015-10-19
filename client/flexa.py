@@ -15,6 +15,7 @@ from threading import Thread
 from stat import S_ISREG
 from hashlib import md5
 from binascii import a2b_qp
+from itertools import cycle
 
 class ClientFile(object):
     filename = ''
@@ -55,7 +56,7 @@ class Client(object):
         self.primary_server = []
         self.set_server_hash()
         self.find_server_by_hash()
-        self.organize_servers_by_state()
+        #self.organize_servers_by_state()
 
         # Send a file to server
         if args.put:
@@ -187,12 +188,12 @@ class Client(object):
             #search the primary server
             while(True):
                 #if this hash is lowest -> your primary server is in right
-                if( int(current_hash, 16) > int( mapp[len(mapp)-1][0], 16 ) ):
+                if( int(current_hash, 16) > int( mapp[len(mapp)-1][0], 16 ) and not mapp[len(mapp)-1][0] ):
                     server_conn = server_obj.set_server(mapp[len(mapp)-1][1])
                     mapp = server_conn.get_map()
 
                 #if this hash is biggest -> your primary server is in left
-                elif( int(current_hash, 16) < int( mapp[0][0], 16) ):
+                elif( int(current_hash, 16) < int( mapp[0][0], 16) and not mapp[0][0]):
                     server_obj.set_server(mapp[0][1])
                     server_conn = server_obj.set_server(mapp[len(mapp)-1][1])
                     mapp = server_conn.get_map()
@@ -256,8 +257,11 @@ class Client(object):
         file_obj = file.File(name=file_info.relative_filepath, user_id=self.user_id, 
                              num_parts=3)
 
+        #make list of server ip (without uid) be a circular list
+        server_cycle = cycle([item[0] for item in self.primary_server])
+
         #Use variable primary_server -> [ [uid,ip], [uid,ip] ... ]
-        server_conn = self.rpc.set_server(self.primary_server[0][1])
+        server_conn = self.rpc.set_server(next(server_cycle))
         # ask to server if is update or new file
 
         salt = server_conn.get_salt( file_obj.name, file_obj.user_id)
@@ -277,6 +281,7 @@ class Client(object):
                     sys.exit("Some error occurred. Maybe you don't have permission to \
                             write. \nTry again.")
                 self.send_file_part( num_part, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath )
+                server_conn = self.rpc.set_server(next(server_cycle))
         else:
             # server return port where will wait a file
             for num_part in range(file_obj.num_parts):
@@ -285,6 +290,7 @@ class Client(object):
                 if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
                             write. \nTry again.")
+                server_conn = self.rpc.set_server(next(server_cycle))
 
         # remove temp crypt file
         os.remove(file_info.absolute_enc_filepath)
