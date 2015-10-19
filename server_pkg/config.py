@@ -105,7 +105,7 @@ class Config(object):
         args = parser.parse_args()
     
         #Name of the server_pkg config file
-        config_path = 'flexa-server.ini'
+        config_path = self._dir_called + "/" + 'flexa-server.ini'
         config = self.load_config(config_path)
     
         #directory to save file
