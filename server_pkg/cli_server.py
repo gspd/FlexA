@@ -97,11 +97,8 @@ class Client_Server(Process):
 
         list_file = []
         for file_obj in files_db:
-            # check if it's within directory
-            filename = os.path.basename(file_obj.file_name)
-            if os.path.join(dirname, filename) == file_obj.file_name:
-                #create a list of objects to transmit in xmlrpc
-                list_file.append(file.File(file_db = file_obj ))
+            #create a list of objects to transmit in xmlrpc
+            list_file.append(file.File(file_db = file_obj ))
 
         return list_file
 
