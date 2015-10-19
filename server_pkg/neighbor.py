@@ -116,7 +116,7 @@ class Neighbor(Process):
                 hash_ = hashlib.md5()
                 hash_.update( binascii.a2b_qp(str(self.get_neighbors())) )
                 if(last_hash != hash_.digest()):
-                    self.logger.debug("Update map all servers>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
+                    self.logger.debug("Update map all servers")
                     self.replace_aux()
                     self.update_all()
                     last_hash=hash_.digest()

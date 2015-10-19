@@ -188,22 +188,28 @@ class Client(object):
             #search the primary server
             while(True):
                 #if this hash is lowest -> your primary server is in right
-                if( int(current_hash, 16) > int( mapp[len(mapp)-1][0], 16 ) and not mapp[len(mapp)-1][0] ):
+                if( (int(current_hash, 16) > int( mapp[len(mapp)-1][0], 16 )) and ( mapp[len(mapp)-1][1]) ):
                     server_conn = server_obj.set_server(mapp[len(mapp)-1][1])
                     mapp = server_conn.get_map()
 
                 #if this hash is biggest -> your primary server is in left
-                elif( int(current_hash, 16) < int( mapp[0][0], 16) and not mapp[0][0]):
-                    server_obj.set_server(mapp[0][1])
-                    server_conn = server_obj.set_server(mapp[len(mapp)-1][1])
+                elif( int(current_hash, 16) < int( mapp[0][0], 16)):
+                    server_conn = server_obj.set_server(mapp[0][1])
                     mapp = server_conn.get_map()
 
                 #is in the middle of the mapp
                 else:
-                    #find who is your primary server in this mapp
-                    distance = int(current_hash, 16)-int(mapp[0][0], 16)
-                    distance_aux = int(current_hash, 16)-int(mapp[1][0], 16)
                     index = 1
+                    if(not mapp[0][1]):
+                        #if first item is '0' (null)
+                        index = index + 1
+                        if(not mapp[1][1]):
+                            #if second item is '0' (null)
+                            index = index + 1
+
+                    #find who is your primary server in this mapp
+                    distance = int(current_hash, 16)-int(mapp[index-1][0], 16)
+                    distance_aux = int(current_hash, 16)-int(mapp[index][0], 16)
 
                     #while that find the closer uid
                     while( abs(distance) > abs(distance_aux) ):
@@ -258,7 +264,7 @@ class Client(object):
                              num_parts=3)
 
         #make list of server ip (without uid) be a circular list
-        server_cycle = cycle([item[0] for item in self.primary_server])
+        server_cycle = cycle([item[1] for item in self.primary_server])
 
         #Use variable primary_server -> [ [uid,ip], [uid,ip] ... ]
         server_conn = self.rpc.set_server(next(server_cycle))
