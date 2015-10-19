@@ -24,7 +24,7 @@ class Neighbor(Process):
     window_size = 4
 
     #interval between scans to verify if server is online (seconds)
-    TIME_AUTO_SCAN =3
+    TIME_AUTO_SCAN =15
 
     #array to save neighbors - [[uid,ip]]
     left_neighbor = []
@@ -34,7 +34,7 @@ class Neighbor(Process):
     left_neighbor_aux = []
     right_neighbor_aux = []
 
-    TIMES_TO_UPDATE_MAP = 2
+    TIMES_TO_UPDATE_MAP = 10
     UPDATE = Event()
 
     def __init__(self, server):
