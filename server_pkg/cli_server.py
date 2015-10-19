@@ -37,7 +37,7 @@ class Client_Server(Process):
     def run(self):
 
         #connect database
-        self.db = database.DataBase()
+        self.db = database.DataBase("/tmp/flexa.sqlite3")
 
         connection = (self.server_info.ip, self.server_info.configs.cli_port)
         server = RPCThreadingServer(connection, requestHandler=RPCServerHandler,
