@@ -101,8 +101,8 @@ class Neighbor(Process):
             Make scan in network to verify if servers is online
         """
         self.first_searcher()
-        self.update_all()
         self.replace_aux()
+        self.update_all()
         self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
         last_hash=b'0'
         count=self.TIMES_TO_UPDATE_MAP
@@ -168,9 +168,8 @@ class Neighbor(Process):
             server_conn = self.server_obj.set_server(map_[0][1])
             map_ = server_conn.get_neighbor_map()
 
-        while( (int(map_[len(map_)-1][0],16)>self.server.uid_int) and
-               (map_[len(map_)-1][0]!='0') ):
-            server_conn = self.server_obj.set_server(map_[(len(map_)//2)-1][1])
+        while( (int(map_[len(map_)-1][0],16)>self.server.uid_int) and (map_[len(map_)-1][0]!='0') ):
+            server_conn = self.server_obj.set_server(map_[len(map_)-1][1])
             map_ = server_conn.get_neighbor_map()
 
         if('0' in dict(map_)):
