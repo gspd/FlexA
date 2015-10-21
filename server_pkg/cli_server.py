@@ -203,6 +203,5 @@ class Client_Server(Process):
         new_user = database.User(name, user_id, rsa_pub)
 
         self.logger.info("Register_user involked, user name: ", name)
-        self.db.add(new_user)
 
-        return 1
+        return self.db.add(new_user)

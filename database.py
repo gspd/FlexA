@@ -178,9 +178,14 @@ class DataBase():
         except Exception as error:
             self.logger.debug("Error on commit:{}".format(error))
             self.session.rollback()
+            self.modify_db.release()
+            return 0
+            
 
         #unblock semaphore
         self.modify_db.release()
+
+        return 1
 
     def update_file(self, verify_key, write_key):
 
