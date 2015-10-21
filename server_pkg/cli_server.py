@@ -72,6 +72,7 @@ class Client_Server(Process):
         server.register_function(self.get_map)
         server.register_function(self.get_state)
         server.register_function(self.still_alive)
+        server.register_function(self.register_user)
 
     def still_alive(self):
         return 1
@@ -190,3 +191,16 @@ class Client_Server(Process):
                 if buzy -> big number
         """
         return 1
+
+
+#############################################################
+####          Implementação tecnica temporária           ####
+#### Resumindo não tive tempo de implementar isso melhor ####
+#############################################################
+
+    def register_user(self, name, user_id, rsa_pub):
+
+        new_user = database.User(name, user_id, rsa_pub)
+
+        self.logger.info("Register_user involked, user name: ", name)
+        self.db.add(new_user)
