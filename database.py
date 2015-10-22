@@ -20,7 +20,7 @@ class User(Base):
     name = Column(String(100), nullable=False)
     rsa_pub = Column(String(100))
     
-    def __init__(self, uid, name, rsa_pub):
+    def __init__(self, name, uid, rsa_pub):
         self.uid = uid
         self.name = name
         self.rsa_pub = rsa_pub
