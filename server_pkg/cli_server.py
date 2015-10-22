@@ -193,10 +193,14 @@ class Client_Server(Process):
         return 1
 
 
-#############################################################
-####          Implementação tecnica temporária           ####
-#### Resumindo não tive tempo de implementar isso melhor ####
-#############################################################
+###############################################################
+#####          Implementação técnica temporária           #####
+##### Resumindo não tive tempo de implementar isso melhor #####
+###############################################################
+#  As funções de admin inseridas aqui não estão passando      #
+# por autenticação. Portanto esses códigos não deveriam estar #
+# aqui acessiveis para qualquer um.                           #
+###############################################################
 
     def register_user(self, name, user_id, rsa_pub):
 
