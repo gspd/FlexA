@@ -149,6 +149,8 @@ class DataBase():
         self.logger.info("Storing last changes into database")
         self.save_db.acquire()
         self.session.commit()
+        self.flushed_added_obj_list = []
+        self.flushed_updated_obj_list = []
         self.save_db.release()
 
     def handling_rollback(self, error="unidentified"):
@@ -161,12 +163,15 @@ class DataBase():
         self.session.rollback()
 
         #verify if list is not empty
-        if(self.flushed_added_obj_list == []):
+        if(not self.flushed_added_obj_list == []):
             self.session.add_all(self.flushed_added_obj_list)
+            self.flushed_added_obj_list = []
 
         for update_vk in self.flushed_updated_obj_list:
             file = self.session.query(File).filter(File.verify_key == update_vk)
             file.one().update({"modify_date":datetime.datetime.now()})
+
+        self.flushed_updated_obj_list = []
 
         self.commit_db()
 
