@@ -302,11 +302,10 @@ class Client(object):
             # server return port where will wait a file
             for num_part in range(file_obj.num_parts):
                 port_server = server_conn.negotiate_store_part(file_obj, dir_key, num_part)
+                if not port_server:
+                    sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
                 print("[sem salt] enviando o arquivo para ", self.rpc.ip_server, " parte ", num_part)
                 self.send_file_part(num_part, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath)
-                if not port_server:
-                    sys.exit("Some error occurred. Maybe you don't have permission to \
-                            write. \nTry again.")
                 server_conn = self.rpc.set_server(next(server_cycle))
 
         # remove temp crypt file
