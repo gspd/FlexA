@@ -183,7 +183,6 @@ class Client(object):
             #convert int->str->bin
             hash_chunk.update(a2b_qp(str(i)))
             self.server_hash.append(hash_chunk.hexdigest())
-        print("valor das hashes", self.server_hash)
 
     def find_server_by_hash(self):
         """
