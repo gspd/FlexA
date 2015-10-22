@@ -7,6 +7,8 @@ Created on 19/10/2015
 from hashlib import md5, sha256
 from binascii import a2b_qp
 from xmlrpc.client import ServerProxy
+import sys
+
 
 #some server to first connection
 ip='192.168.2.22'
@@ -14,16 +16,24 @@ ip='192.168.2.22'
 
 def register_user():
     name_user = input("Enter user name: ")
-    rsa_pub = input("Paste the client rsa.pub: ")
+
+    rsa_pub = ""
+    aux = input("Paste the client rsa.pub: ") + "\n"
+    while( not aux == "-----END PUBLIC KEY-----"+ "\n"):
+        rsa_pub = rsa_pub + aux
+        aux = input() + "\n"
+    rsa_pub = rsa_pub+"-----END PUBLIC KEY-----"
+
+    hashe = sha256()
+    uid_user = hashe.update(a2b_qp(rsa_pub))
+
     server_hashs = set_server_hash(rsa_pub)
     primary_server = find_server_by_hash(server_hashs)
-
-    uid_user = 123
 
     for server in primary_server:
         print("conectando em ", server)
         conn = set_server(server[1])
-        if( conn.register_user(name_user, uid_user, rsa_pub) ):
+        if( conn.register_user(name_user, uid_user.decode("ascii"), rsa_pub) ):
             print("       ->Usuário adicionado com sucesso")
         else:
             print("       ->Algum problema aconteceu.    :(")
