@@ -24,8 +24,9 @@ def register_user():
         aux = input() + "\n"
     rsa_pub = rsa_pub+"-----END PUBLIC KEY-----"
 
-    hashe = sha256()
-    uid_user = hashe.update(a2b_qp(rsa_pub))
+    hash_ = sha256()
+    hash_.update(a2b_qp(rsa_pub))
+    uid_user = hash_.hexdigest()
 
     server_hashs = set_server_hash(rsa_pub)
     primary_server = find_server_by_hash(server_hashs)
@@ -33,7 +34,7 @@ def register_user():
     for server in primary_server:
         print("conectando em ", server)
         conn = set_server(server[1])
-        if( conn.register_user(name_user, uid_user.decode("ascii"), rsa_pub) ):
+        if( conn.register_user(name_user, uid_user, rsa_pub) ):
             print("       ->Usuário adicionado com sucesso")
         else:
             print("       ->Algum problema aconteceu.    :(")
