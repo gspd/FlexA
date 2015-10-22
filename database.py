@@ -268,6 +268,15 @@ class DataBase():
         """
         return files.all()
 
+    def get_user_rsa_pub(self, user_id):
+
+        user_rsa = self.session.query(User).filter(User.user_id == user_id)
+
+        try:
+            return user_rsa.one().rsa_pub
+        except:
+            return 0
+
     def salt_file(self, file_name, user_id):
         """this function search in data base a file
         and return your salt

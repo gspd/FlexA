@@ -171,6 +171,11 @@ class Client_Server(Process):
 
         file_obj = file.File(dict=file_dict)
 
+        #verify if user is okay
+        if(not self.db.get_user_rsa_pub(file_obj.user_id)):
+            #if return 0, this user ins't registered
+            return 0
+
         new_file = database.File(file_obj=file_obj)
         self.db.add(new_file)
 
