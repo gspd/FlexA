@@ -119,6 +119,9 @@ class DataBase():
         # Create local logging object
         self.logger = logging.getLogger("[DataBase]")
 
+        self.flushed_added_obj_list = []
+        self.flushed_updated_obj_list = []
+
         #model to connect database 'driver://user:pass@host/database'
         engine = create_engine('sqlite:///{}'.format(file_db), connect_args={'check_same_thread':False}, echo= self._echo_db)
         if not os.path.exists(file_db):
@@ -141,12 +144,31 @@ class DataBase():
 
     def commit_db(self):
         """This function make commit in data base.
-           It can't call in anywhere, this function is controled by Semaphores (save_db, modify_db, num_modifies) 
+           It can't call in anywhere, this function is controlled by Semaphores (save_db, modify_db, num_modifies) 
         """
         self.logger.info("Storing last changes into database")
         self.save_db.acquire()
         self.session.commit()
         self.save_db.release()
+
+    def handling_rollback(self, error="unidentified"):
+        """
+            Rollback the database and commit all before changes
+            *it's implements to be called protect by modify_db*
+        """
+
+        self.logger.debug("Error on commit:{}".format(error))
+        self.session.rollback()
+
+        #verify if list is not empty
+        if(self.flushed_added_obj_list == []):
+            self.session.add_all(self.flushed_added_obj_list)
+
+        for update_vk in self.flushed_updated_obj_list:
+            file = self.session.query(File).filter(File.verify_key == update_vk)
+            file.one().update({"modify_date":datetime.datetime.now()})
+
+        self.commit_db()
 
     def daemon_commit(self):
         while True:
@@ -168,6 +190,8 @@ class DataBase():
         try:
             self.session.add(new_obj)
             self.session.flush()
+            #if don't have problem add on list
+            self.flushed_added_obj_list.append(new_obj)
 
             #verify if have more then 10 modifies
             if self.num_modifies < self._max_modifies:
@@ -176,8 +200,7 @@ class DataBase():
                 self.num_modifies = 0
                 self.commit_db()
         except Exception as error:
-            self.logger.debug("Error on commit:{}".format(error))
-            self.session.rollback()
+            self.handling_rollback(error)
             self.modify_db.release()
             return 0
             
@@ -190,6 +213,9 @@ class DataBase():
     def update_file(self, verify_key, write_key):
 
         self.logger.info("update_file invoked")
+
+        #block semaphore
+        self.modify_db.acquire()
 
         file = self.session.query(File).filter(File.verify_key == verify_key)
 
@@ -205,10 +231,15 @@ class DataBase():
         try:
             file.update({"modify_date":datetime.datetime.now()})
             self.session.flush()
-        except:
-            self.commit_db() #FIXME para usar nos testes
-            file.update({"modify_date":datetime.datetime.now()})
-            self.session.flush()
+            self.flushed_updated_obj_list.append(verify_key)
+        except Exception as error:
+            self.handling_rollback(error)
+            self.modify_db.release()
+            return 0
+
+        #unblock semaphore
+        self.modify_db.release()
+
         return True
 
     def list_files_by_dir(self, dirname, user_id):
