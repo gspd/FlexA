@@ -160,7 +160,7 @@ class Config(object):
             print("FlexA startup was canceled by the user.")
             sys.exit(1)
 
-        config = self.load_config(self._config_filepath)
+        config = self.load_config()
 
         if (misc.query_yes_no('Do you want to create RSA key now?')):
             key_filename = self.generate_new_key()
@@ -178,7 +178,7 @@ class Config(object):
                 sys.exit(1)
 
             hashe = hashlib.sha256()
-            hashe.update(cryp.exportKey(format='DER'))
+            hashe.update(cryp.publickey().exportKey('PEM'))
 
             config.set('User', 'hash client', hashe.hexdigest())
             print("Configurations done.")
