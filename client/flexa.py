@@ -183,6 +183,7 @@ class Client(object):
             #convert int->str->bin
             hash_chunk.update(a2b_qp(str(i)))
             self.server_hash.append(hash_chunk.hexdigest())
+        print("valor das hashes", self.server_hash)
 
     def find_server_by_hash(self):
         """
@@ -292,6 +293,7 @@ class Client(object):
         if salt:
             for num_part in range( file_obj.num_parts ):
                 port_server = server_conn.update_file( file_obj, num_part )
+                print("enviando o arquivo para ", self.rpc.ip_server, " parte ", num_part)
                 if port_server == False:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
                             write. \nTry again.")
@@ -301,6 +303,7 @@ class Client(object):
             # server return port where will wait a file
             for num_part in range(file_obj.num_parts):
                 port_server = server_conn.negotiate_store_part(file_obj, dir_key, num_part)
+                print("[sem salt] enviando o arquivo para ", self.rpc.ip_server, " parte ", num_part)
                 self.send_file_part(num_part, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath)
                 if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
@@ -318,9 +321,11 @@ class Client(object):
 
         port, sock = misc.port_using(4001)
 
+        #make list of server ip (without uid) be a circular list
+        server_cycle = cycle([item[1] for item in self.primary_server])
+        #Use variable primary_server -> [ [uid,ip], [uid,ip] ... ]
+        server_conn = self.rpc.set_server(next(server_cycle))
 
-        server_obj = rpc_client.RPC()
-        server_conn = server_obj.get_next_server()
         salt = server_conn.get_salt(file_info.relative_filepath, self.user_id)
 
         if (salt == 0):
@@ -345,6 +350,7 @@ class Client(object):
                 # exit with error and kill thread thr
                 sys.exit("An error occured. Try again later.")
             thr.join()
+            server_conn = self.rpc.set_server(next(server_cycle))
 
         misc.join_file(name_parts_file, file_info.enc_filename)
 
