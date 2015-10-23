@@ -13,9 +13,8 @@ from entity import file
 from client import rpc_client
 from threading import Thread
 from stat import S_ISREG
-from hashlib import md5
-from binascii import a2b_qp
 from itertools import cycle
+from entity import user
 
 class ClientFile(object):
     filename = ''
@@ -33,7 +32,6 @@ class Client(object):
     configs = None
 
     rpc = rpc_client.RPC()
-    user_id = None
 
 
 ########################################################
@@ -49,14 +47,8 @@ class Client(object):
 
         args = self.configs.args
 
-        self.user_id = self.configs.loaded_config.get("User", "hash client")
-
-        #hash md5 -> 128 bits for each file chunk
-        self.server_hash = []
-        self.primary_server = []
-        self.set_server_hash()
-        self.find_server_by_hash()
-        #self.organize_servers_by_state()
+        self.user = user.User()
+        self.user.set_attr()
 
         # Send a file to server
         if args.put:
@@ -169,93 +161,6 @@ class Client(object):
     def is_file(self, pathname):
         return S_ISREG(os.stat(pathname).st_mode)
 
-    def set_server_hash(self):
-        """
-            Compute hash of primary servers and find what is your ip
-        """
-        rsa_pub_dir = self.configs.loaded_config.get("User", "private key") + ".pub"
-        rsa_pub = open(rsa_pub_dir, 'rb').read()
-
-        hash = md5()
-        hash.update(rsa_pub)
-        for i in range(3):
-            hash_chunk = hash.copy()
-            #convert int->str->bin
-            hash_chunk.update(a2b_qp(str(i)))
-            self.server_hash.append(hash_chunk.hexdigest())
-
-    def find_server_by_hash(self):
-        """
-            Scan network end set ip using hash as parameter
-        """
-        server_obj = rpc_client.RPC()
-        server_conn = server_obj.get_next_server()
-
-        mapp = server_conn.get_map()
-
-        for current_hash in self.server_hash:
-            #search the primary server
-            while(True):
-                #if this hash is lowest -> your primary server is in right
-                if( (int(current_hash, 16) > int( mapp[len(mapp)-1][0], 16 )) and ( mapp[len(mapp)-1][1]) ):
-                    server_conn = server_obj.set_server(mapp[len(mapp)-1][1])
-                    mapp = server_conn.get_map()
-
-                #if this hash is biggest -> your primary server is in left
-                elif( int(current_hash, 16) < int( mapp[0][0], 16)):
-                    server_conn = server_obj.set_server(mapp[0][1])
-                    mapp = server_conn.get_map()
-
-                #is in the middle of the mapp
-                else:
-                    index = 1
-                    if(not mapp[0][1]):
-                        #if first item is '0' (null)
-                        index = index + 1
-                        if(not mapp[1][1]):
-                            #if second item is '0' (null)
-                            index = index + 1
-
-                    #find who is your primary server in this mapp
-                    distance = int(current_hash, 16)-int(mapp[index-1][0], 16)
-                    distance_aux = int(current_hash, 16)-int(mapp[index][0], 16)
-
-                    #while that find the closer uid
-                    while( abs(distance) > abs(distance_aux) ):
-                        distance = distance_aux
-                        index = index + 1
-                        #verify if index is out of range
-                        if(index == len(mapp)):
-                            #primary server is in leftmost -> break
-                            break
-                        distance_aux = int(current_hash, 16)-int(mapp[index][0], 16)
-
-                    index = index-1
-                    self.primary_server.append(mapp[index])
-
-                    #stop first while -> stop search the correct mapp
-                    break
-
-    def organize_servers_by_state(self):
-        """
-            Get the list map result of 'find_server_by_hash' and find the lazy server
-            This function ask to the servers your state and organize in growing map based in your state
-                first is the lazy server and last is busy server.
-            This function is used to make load balacing.
-
-            Use variable primary_server -> [ [uid,ip], [uid,ip] ... ]
-        """
-
-        server_obj = rpc_client.RPC()
-        for server in self.primary_server:
-            server_conn = server_obj.set_server(server[1])
-            if(not server_conn):
-                #set the high ocupation
-                server.append(10)
-                continue
-            state = server_conn.get_state()
-            server.append(state)
-        self.primary_server = sorted(self.primary_server, key= lambda state:state[2])
 
 ########################################################
 #########   OPERATIONS METHODS   #######################
@@ -269,13 +174,13 @@ class Client(object):
 
         # verify if this file exist (same name in this directory)
         dir_key = "/"  # FIXME set where is.... need more discussion
-        file_obj = file.File(name=file_info.relative_filepath, user_id=self.user_id, 
+        file_obj = file.File(name=file_info.relative_filepath, user_id=self.user.uid, 
                              num_parts=3)
 
         #make list of server ip (without uid) be a circular list
-        server_cycle = cycle([item[1] for item in self.primary_server])
+        server_cycle = cycle([item[1] for item in self.user.primary_servers])
 
-        #Use variable primary_server -> [ [uid,ip], [uid,ip] ... ]
+        #Use variable primary_servers -> [ [uid,ip], [uid,ip] ... ]
         server_conn = self.rpc.set_server(next(server_cycle))
         # ask to server if is update or new file
 
@@ -320,11 +225,11 @@ class Client(object):
         port, sock = misc.port_using(4001)
 
         #make list of server ip (without uid) be a circular list
-        server_cycle = cycle([item[1] for item in self.primary_server])
-        #Use variable primary_server -> [ [uid,ip], [uid,ip] ... ]
+        server_cycle = cycle([item[1] for item in self.user.primary_servers])
+        #Use variable primary_servers -> [ [uid,ip], [uid,ip] ... ]
         server_conn = self.rpc.set_server(next(server_cycle))
 
-        salt = server_conn.get_salt(file_info.relative_filepath, self.user_id)
+        salt = server_conn.get_salt(file_info.relative_filepath, self.user.uid)
 
         if (salt == 0):
             print("This file can't be found")
@@ -369,7 +274,7 @@ class Client(object):
 
         # just to clean a bit this huge var name
         cur_dir = self.configs._current_relative_dir
-        for dic_file in server_conn.list_files(cur_dir, self.user_id):
+        for dic_file in server_conn.list_files(cur_dir, self.user.uid):
             if not recursive: # check if it's within directory
                 if cur_dir != os.path.dirname(dic_file['name']):
                     continue
