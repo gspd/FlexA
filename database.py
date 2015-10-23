@@ -136,7 +136,7 @@ class DataBase():
         self.save_db = Lock()
         #modify_db is used to add, modify, flush in :memory: database - fast
         self.modify_db = Lock()
-        #modifies start in 0
+        #modifies start in 0 -> auto commit if have modifies
         self.num_modifies = 0
 
         thr_daemon = Thread(target = self.daemon_commit, daemon = True)
@@ -149,6 +149,7 @@ class DataBase():
         self.logger.info("Storing last changes into database")
         self.save_db.acquire()
         self.session.commit()
+        self.num_modifies = 0
         self.flushed_added_obj_list = []
         self.flushed_updated_obj_list = []
         self.save_db.release()
@@ -178,7 +179,8 @@ class DataBase():
     def daemon_commit(self):
         while True:
             time.sleep(self._time_to_commit)
-            self.commit_db()
+            if(self.modify_db):
+                self.commit_db()
 
     def add(self, new_obj):
         """Put a new object in database
@@ -202,7 +204,6 @@ class DataBase():
             if self.num_modifies < self._max_modifies:
                 self.num_modifies+= 1
             else:
-                self.num_modifies = 0
                 self.commit_db()
         except Exception as error:
             self.handling_rollback(error)
@@ -235,8 +236,13 @@ class DataBase():
         #have permission to write
         try:
             file.update({"modify_date":datetime.datetime.now()})
-            self.session.flush()
             self.flushed_updated_obj_list.append(verify_key)
+            #verify if have more then 10 modifies
+            if self.num_modifies < self._max_modifies:
+                self.num_modifies+= 1
+                self.session.flush()
+            else:
+                self.commit_db()
         except Exception as error:
             self.handling_rollback(error)
             self.modify_db.release()
