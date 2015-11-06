@@ -12,6 +12,7 @@ import getpass
 import sys
 import hashlib
 import configparser
+import logging
 
 class Config(object):
     '''
@@ -84,6 +85,12 @@ class Config(object):
         #Parse the user choices
         self.args = parser.parse_args()
 
+        #Parse args and set the user choices
+        #Verbose -v show general information; -vv show debug information
+        if self.args.verbose == 1:
+            logging.basicConfig(level=logging.INFO)
+        elif self.args.verbose >= 2:
+            logging.basicConfig(level=logging.DEBUG)
 
     def usage(self):
         """Generate user help and parse user choices"""

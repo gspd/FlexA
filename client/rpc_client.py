@@ -6,6 +6,7 @@ Created on 16/12/2014
 from xmlrpc.client import ServerProxy
 import misc
 import sys
+import logging
 
 class RPC(object):
     '''
@@ -31,7 +32,7 @@ class RPC(object):
         '''
         Start object with first scan
         '''
-        
+        self.logger = logging.getLogger("[RPC client]")
         self.index_list_online = 0
 
         return
@@ -48,11 +49,10 @@ class RPC(object):
         scan_ping = misc.Ping(self.MASK_SCAN)
         scan_ping.TIMEOUT_TO_ANSWER = self.TIME_OUT_ANSWER
 
-        print("searching servers", end='')
+        self.logger.info("searching servers")
         #scan network until at least a minimun number of online servers are found
         #or to break the timeout -> any one server was find
         while len(scan_ping.online) < self.MIN_SERVER :
-            print(".", end='', flush=True)
             scan_ping.scan()
             scan_ping.TIMEOUT_TO_ANSWER += self.TIME_ADD_PER_HOPE
 
@@ -100,7 +100,11 @@ class RPC(object):
         return ServerProxy(server_addr)
 
     def set_server(self, ip):
+        
+        self.logger.info("set_server invoked")
+        
         server_addr = 'http://{}:{}'.format(ip, self.PORT_SERVER)
+        self.logger.debug("set_server: conn {}".format(server_addr))
 
         server_conn = ServerProxy(server_addr)
 
@@ -108,8 +112,14 @@ class RPC(object):
             server_conn.still_alive()
             self.ip_server = ip
         except:
+            self.logger.debug("set_server: Server {} is offline".format(ip))
+            print("set_server: Server {} is offline".format(ip))
             server_conn = 0
             self.ip_server = 0
 
         #return the object server_rpc
         return server_conn
+
+
+
+

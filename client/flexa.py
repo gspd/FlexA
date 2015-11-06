@@ -6,15 +6,17 @@ Created on 15/12/2014
 # import class that set every configs
 from client.config import Config
 import crypto
-import sys
 import misc
 import os
+import sys
 from entity import file
 from client import rpc_client
 from threading import Thread
 from stat import S_ISREG
 from itertools import cycle
 from entity import user
+import time
+import logging
 
 class ClientFile(object):
     filename = ''
@@ -30,6 +32,8 @@ class Client(object):
     
     # object that have every configs and parser
     configs = None
+
+    inicio = time.time()
 
     rpc = rpc_client.RPC()
 
@@ -52,6 +56,7 @@ class Client(object):
 
         # Send a file to server
         if args.put:
+            self.logger = logging.getLogger("[Flexa_cli - send_file]")
             for filename in args.put:
                 file_info = ClientFile()
                 # this can be either here or in the set_file_info function
@@ -61,6 +66,7 @@ class Client(object):
 
         # Get a file from server
         if args.get:
+            self.logger = logging.getLogger("[Flexa_cli - recv_file]")
             for filename in args.get:
                 file_info = ClientFile()
                 file_info.filename = os.path.normpath(filename)
@@ -87,6 +93,9 @@ class Client(object):
         with open(self.configs._config_filepath, mode='w', encoding='utf-8') as outfile:
             self.configs.loaded_config.write(outfile)
 
+        fim = time.time()
+        
+        print(fim - self.inicio)
 
     def set_file_info_to_receive(self, file_info):
         file_info.absolute_filepath = os.path.join(self.configs._current_local_dir, file_info.filename)
@@ -196,8 +205,7 @@ class Client(object):
         # if salt has a value then is update. because server return a valid salt
         if salt:
             for num_part in range( file_obj.num_parts ):
-                port_server = server_conn.update_file( file_obj, num_part )
-                print("enviando o arquivo para ", self.rpc.ip_server, " parte ", num_part)
+                port_server = server_conn.update_file( file_obj, num_part, self.user.primary_servers )
                 if port_server == False:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
                             write. \nTry again.")
@@ -206,10 +214,10 @@ class Client(object):
         else:
             # server return port where will wait a file
             for num_part in range(file_obj.num_parts):
-                port_server = server_conn.negotiate_store_part(file_obj, dir_key, num_part)
+                self.logger.info("Send new file: part {} to server {}".format(num_part, self.rpc.ip_server))
+                port_server = server_conn.negotiate_store_part(file_obj, dir_key, num_part, self.user.primary_servers)
                 if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
-                print("[sem salt] enviando o arquivo para ", self.rpc.ip_server, " parte ", num_part)
                 self.send_file_part(num_part, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath)
                 server_conn = self.rpc.set_server(next(server_cycle))
 

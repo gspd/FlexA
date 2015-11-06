@@ -5,7 +5,7 @@ Created on 28/06/2015
 '''
 
 from server_pkg import config
-import misc
+import database
 
 class Server(object):
     '''
@@ -19,6 +19,8 @@ class Server(object):
 
     logRequests = None
 
+    db = None
+
     def __init__(self):
         '''
         Sets configurations
@@ -28,4 +30,6 @@ class Server(object):
         self.uid_int = self.configs.uid.int
         self.ip = self.configs.ip
         self.logRequests = self.configs.logRequests_servers
+
+        self.db = database.DataBase("/tmp/flexa.sqlite3")
 

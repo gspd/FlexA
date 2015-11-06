@@ -5,28 +5,37 @@ Created on 24/07/2015
 '''
 
 from client.config import Config
-from hashlib import md5
+from hashlib import md5, sha256
 from binascii import a2b_qp
 from client import rpc_client
+import sys
+import logging
 
 class User(object):
 
     uid = None
     name = None
     rsa_pub = None
+    #primary_servers -> [ [uid,ip], [uid,ip] ... ]
     primary_servers = []
     #hash md5 -> 128 bits for each file chunk
-    server_hashes = []
+    server_hash = []
 
-    def __init__(self, uid=None, name=None, rsa_pub=None, primary_server=None, user_dict=None):
+    def __init__(self, uid=None, name=None, rsa_pub=None, primary_server=[], user_db = None, user_dict=None):
+
+        self.logger = logging.getLogger("[User]")
 
         if(user_dict):
             self.uid = user_dict["user_id"]
             self.name = user_dict["name"]
             self.rsa_pub = user_dict["rsa_pub"]
             self.primary_servers = user_dict["primary_servers"]
-        elif(uid):
-            self.user_id = uid
+        elif(user_db):
+            self.uid = user_db.uid
+            self.name = user_db.name
+            self.rsa_pub = user_db.rsa_pub
+        elif(uid or rsa_pub):
+            self.uid = uid
             self.name = name
             self.rsa_pub = rsa_pub
             self.primary_servers = primary_server
@@ -44,12 +53,17 @@ class User(object):
 
 
 
-    def set_server_hash(self, configs):
+    def set_server_hash(self, configs = None):
         """
             Compute hash of primary servers and find what is your ip
         """
-        rsa_pub_dir = configs.loaded_config.get("User", "private key") + ".pub"
-        rsa_pub = open(rsa_pub_dir, 'rb').read()
+        if(configs):
+            rsa_pub_dir = configs.loaded_config.get("User", "private key") + ".pub"
+            rsa_pub = open(rsa_pub_dir, 'rb').read()
+        elif(self.rsa_pub):
+            rsa_pub = self.rsa_pub
+        else:
+            sys.exit("Error: set_server_hash was called without parameters necessary")
 
         hash_ = md5()
         hash_.update(rsa_pub)
@@ -63,6 +77,7 @@ class User(object):
         """
             Scan network end set ip using hash as parameter
         """
+        self.logger.info("Find_server_by_hash invoked")
         server_obj = rpc_client.RPC()
         server_conn = server_obj.get_next_server()
 
@@ -74,11 +89,24 @@ class User(object):
                 #if this hash is lowest -> your primary server is in right
                 if( (int(current_hash, 16) > int( mapp[len(mapp)-1][0], 16 )) and ( mapp[len(mapp)-1][1]) ):
                     server_conn = server_obj.set_server(mapp[len(mapp)-1][1])
+                    if ( not server_conn ):
+                        #force serve update you map
+                        self.logger.debug("Find_server_by_hash has a problem with map, try again")
+                        server_conn = server_obj.set_server(mapp[(len(mapp)-1)//2][1])
+                        server_conn.update_neighbor()
+                        self.find_server_by_hash()
+                        return
                     mapp = server_conn.get_map()
 
                 #if this hash is biggest -> your primary server is in left
-                elif( int(current_hash, 16) < int( mapp[0][0], 16)):
+                elif( ( int(current_hash, 16) < int( mapp[0][0], 16) ) and (mapp[0][1])):
                     server_conn = server_obj.set_server(mapp[0][1])
+                    if ( not server_conn ):
+                        self.logger.debug("Find_server_by_hash has a problem with map, try again")
+                        server_conn = server_obj.set_server(mapp[(len(mapp)-1)//2][1])
+                        server_conn.update_neighbor()
+                        self.find_server_by_hash()
+                        return
                     mapp = server_conn.get_map()
 
                 #is in the middle of the mapp
@@ -131,3 +159,14 @@ class User(object):
             state = server_conn.get_state()
             server.append(state)
         self.primary_servers = sorted(self.primary_servers, key= lambda state:state[2])
+
+    def set_uid_user(self):
+
+        hash_ = sha256()
+        hash_.update(a2b_qp(self.rsa_pub))
+        self.uid = hash_.hexdigest()
+
+
+
+
+    

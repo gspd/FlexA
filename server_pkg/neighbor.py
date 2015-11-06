@@ -7,7 +7,7 @@ Created on 24/07/2015
 import hashlib
 from time import sleep
 import binascii
-from multiprocessing import Process, Event
+from multiprocessing import Process  # @UnresolvedImport
 from server_pkg.RPC import RPC
 import logging
 
@@ -24,7 +24,9 @@ class Neighbor(Process):
     window_size = 4
 
     #interval between scans to verify if server is online (seconds)
-    TIME_AUTO_SCAN =15
+    TIME_AUTO_SCAN =20
+    #times (hop) necessary to update -> total time until total update = TIME_AUTO_SCAN * TIMES_TO_UPDATE_MAP
+    TIMES_TO_UPDATE_MAP = 10
 
     #array to save neighbors - [[uid,ip]]
     left_neighbor = []
@@ -34,10 +36,7 @@ class Neighbor(Process):
     left_neighbor_aux = []
     right_neighbor_aux = []
 
-    TIMES_TO_UPDATE_MAP = 10
-    UPDATE = Event()
-
-    def __init__(self, server):
+    def __init__(self, server_conf):
 
         super().__init__(daemon=True)
 
@@ -54,16 +53,20 @@ class Neighbor(Process):
 
         self.zero_map_aux()
 
-        self.server = server
+        self.server_conf = server_conf
 
     def run(self):
         """
-            Resposable to start auto scan in network in new process
+             Resposable to start auto scan in network in new process
+            
+             This class has a open port (30'000), because its necessary share information
+            about map, I try share memory but i didn't obtain successfully.
         """
 
-        connection = (self.server.ip, 30000)
-        server = RPCThreadingServer(connection, requestHandler=RPCServerHandler,
-                                    logRequests=self.server.logRequests)
+        #connection opened to transfer information about map between processes 
+        connection = (self.server_conf.ip, 30000)
+        server = RPCThreadingServer(connection, requestHandler=RPCServerHandler, allow_none=True,
+                                    logRequests=False)#self.server_conf.logRequests)
         ip, port = server.server_address
         # Create local logging object
         self.logger.info("Listening on {}:{}".format(ip, port))
@@ -75,18 +78,24 @@ class Neighbor(Process):
         server.serve_forever()
 
     def register_operations(self, server):
-        """Register all operations supported by the init_server in the init_server
-        objects
+        """
+            Register all operations supported in Neighbor
+            
+            ps.: All function here are called by sync_server in localhost 
         """
         server.register_function(self.get_neighbors)
         server.register_function(self.require_update)
 
+
+    #################################
+    ###### Scanner map - Begin ######
+    #################################
+
     def require_update(self):
         self.logger.debug("require_update called" )
-        self.UPDATE.set()
         self.first_searcher()
         self.replace_aux()
-        self.UPDATE.clear()
+        self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
 
     def zero_map_aux(self):
         self.left_neighbor_aux = []
@@ -112,7 +121,7 @@ class Neighbor(Process):
         while True:
             self.verify_map()
             count-=1
-            if(count<=0 and not self.UPDATE.is_set()):
+            if(count<=0):
                 count=self.TIMES_TO_UPDATE_MAP
                 self.first_searcher()
                 hash_ = hashlib.md5()
@@ -120,7 +129,6 @@ class Neighbor(Process):
                 if(last_hash != hash_.digest()):
                     self.logger.debug("Update map all servers")
                     self.replace_aux()
-                    self.update_all()
                     last_hash=hash_.digest()
                 self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
             sleep(self.TIME_AUTO_SCAN)
@@ -139,7 +147,9 @@ class Neighbor(Process):
             Make a verify if servers is online in current map, if some one is offline try to find next
         """
 
-        for server in self.get_neighbors():
+        map_ = self.get_neighbors()
+
+        for server in map_:
             if( not server[1] ):
                 continue
             server_conn = self.server_obj.set_server(ip=server[1])
@@ -150,9 +160,9 @@ class Neighbor(Process):
                 break
 
     def get_neighbors(self):
-        self.logger.debug("get_neighbors called" )
+        self.logger.info("get_neighbors invoked" )
         #return a growing list of [uid, ips]
-        return (self.left_neighbor[::-1]+[[self.server.uid_hex,self.server.ip]]+self.right_neighbor)
+        return (self.left_neighbor[::-1]+[[self.server_conf.uid_hex,self.server_conf.ip]]+self.right_neighbor)
 
     def first_searcher(self):
         """
@@ -166,11 +176,11 @@ class Neighbor(Process):
         #using the first map go to the next server
         #stop when find a map whose id can be placed in the middle
         # only one of the following while(s) will be executed
-        while( (int(map_[0][0],16)<self.server.uid_int) and (map_[0][0]!='0') ):
+        while( (int(map_[0][0],16)<self.server_conf.uid_int) and (map_[0][0]!='0') ):
             server_conn = self.server_obj.set_server(map_[0][1])
             map_ = server_conn.get_neighbor_map()
 
-        while( (int(map_[len(map_)-1][0],16)>self.server.uid_int) and (map_[len(map_)-1][0]!='0') ):
+        while( (int(map_[len(map_)-1][0],16)>self.server_conf.uid_int) and (map_[len(map_)-1][0]!='0') ):
             server_conn = self.server_obj.set_server(map_[len(map_)-1][1])
             map_ = server_conn.get_neighbor_map()
 
@@ -181,18 +191,18 @@ class Neighbor(Process):
             for _ in range( len(self.server_obj.list_online) ):
                 server_conn = self.server_obj.get_next_server()
                 map_ = server_conn.get_neighbor_map()
-                if(int(map_[len(map_)//2][0],16) < self.server.uid_int):
+                if(int(map_[len(map_)//2][0],16) < self.server_conf.uid_int):
                     #then this server is in left
                     self.put_in_left(map_[len(map_)//2])
-                elif(int(map_[len(map_)//2][0],16) > self.server.uid_int):
+                elif(int(map_[len(map_)//2][0],16) > self.server_conf.uid_int):
                     self.put_in_right(map_[len(map_)//2])
         else:
             #if find a map that your id can put in the middle
             for server in map_:
-                if(int(server[0],16) < self.server.uid_int):
+                if(int(server[0],16) < self.server_conf.uid_int):
                     #then this server is in left
                     self.put_in_left(server)
-                elif(int(map_[len(map_)//2][0],16) > self.server.uid_int):
+                elif(int(map_[len(map_)//2][0],16) > self.server_conf.uid_int):
                     self.put_in_right(server)
 
 
@@ -223,3 +233,10 @@ class Neighbor(Process):
             if( (self.right_neighbor_aux[i][0]=='0') or (int(self.right_neighbor_aux[i][0],16)>int(server[0],16)) ):
                 #start to change vector
                 aux_next, self.right_neighbor_aux[i] = self.right_neighbor_aux[i], aux_next
+
+
+    #################################
+    ###### Scanner map - End ########
+    #################################
+
+

@@ -32,6 +32,7 @@ def encrypt_file(key, in_filename, out_filename=None, chunksize=64*1024):
     Based on: http://goo.gl/jJuYe8
 
     """
+
     if not out_filename:
         out_filename = in_filename + '.enc'
 
@@ -61,6 +62,7 @@ def encrypt_file(key, in_filename, out_filename=None, chunksize=64*1024):
                 plaintext = infile.read(bytes_left)
                 # encrypt and write
                 outfile.write(cipher.encrypt(plaintext))
+
 
 def decrypt_file(key, in_filename, out_filename=None, chunksize=24*1024):
     """Decrypts a file using AES (CBC mode) with the given key.

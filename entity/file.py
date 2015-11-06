@@ -23,7 +23,7 @@ class File(object):
     write_key = None
 
     def __init__(self, name=0, size=0, create_date=0, modify_date=0, user_id=0, num_parts=1,
-                 salt=0, file_db = None, dict = None):
+                 salt=0, file_db = None, dictinary = None):
         '''
         Constructor
         You can make obj File put your attributes or put a fatabase.File obj.
@@ -36,16 +36,18 @@ class File(object):
             self.modify_date = file_db.modify_date
             self.user_id = file_db.user_id
             self.num_parts = file_db.num_parts
-        elif(dict):
-            self.name = dict["name"]
-            self.size = dict["size"]
-            self.create_date = dict["create_date"]
-            self.modify_date = dict["modify_date"]
-            self.user_id = dict["user_id"]
-            self.num_parts = dict["num_parts"]
-            self.salt = dict["salt"]
-            self.verify_key = dict["verify_key"]
-            self.write_key = dict["write_key"]
+            self.verify_key = file_db.verify_key
+            self.write_key = file_db.write_key
+        elif(dictinary):
+            self.name = dictinary["name"]
+            self.size = dictinary["size"]
+            self.create_date = dictinary["create_date"]
+            self.modify_date = dictinary["modify_date"]
+            self.user_id = dictinary["user_id"]
+            self.num_parts = dictinary["num_parts"]
+            self.salt = dictinary["salt"]
+            self.verify_key = dictinary["verify_key"]
+            self.write_key = dictinary["write_key"]
         elif(name):
             self.name = name
             self.size = size

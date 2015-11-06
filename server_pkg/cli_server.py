@@ -13,8 +13,7 @@ import misc
 import database
 import logging
 from entity import file
-import os
-from multiprocessing import Process
+from multiprocessing import Process  # @UnresolvedImport
 from xmlrpc.client import ServerProxy
 
 class Client_Server(Process):
@@ -28,20 +27,20 @@ class Client_Server(Process):
 
     """
 
-    def __init__(self, server):
+    def __init__(self, server_conf):
 
         super().__init__()
 
-        self.server_info = server
+        self.server_info = server_conf
+
+        #connect database
+        self.db = server_conf.db
 
     def run(self):
 
-        #connect database
-        self.db = database.DataBase("/tmp/flexa.sqlite3")
-
         connection = (self.server_info.ip, self.server_info.configs.cli_port)
         server = RPCThreadingServer(connection, requestHandler=RPCServerHandler,
-                                    logRequests=self.server_info.logRequests)
+                                    logRequests=False)#self.server_info.logRequests)
         ip, port = server.server_address
         # Create local logging object
         self.logger = logging.getLogger("[Server Cli]")
@@ -73,14 +72,21 @@ class Client_Server(Process):
         server.register_function(self.get_state)
         server.register_function(self.still_alive)
         server.register_function(self.register_user)
+        server.register_function(self.update_neighbor)
 
     def still_alive(self):
         return 1
 
     def get_map(self):
         addr = 'http://{}:{}'.format(self.server_info.ip, 30000)
-        server_conn = ServerProxy(addr)
-        result = server_conn.get_neighbors()
+        sync_server_conn = ServerProxy(addr)
+        result = sync_server_conn.get_neighbors()
+        return result
+
+    def update_neighbor(self):
+        addr = 'http://{}:{}'.format(self.server_info.ip, 30000)
+        sync_server_conn = ServerProxy(addr)
+        result = sync_server_conn.update_neighbor()
         return result
 
     def delete_file(self):
@@ -130,7 +136,7 @@ class Client_Server(Process):
         #FIXME every rpc call return something - put sent confirmation
         return 0
 
-    def update_file(self, file_dict, num_part):
+    def update_file(self, file_dict, num_part, server_receive_file):
         """
             if exist file, and client wanna send the same file (reference in db)
             the server_pkg update file in system
@@ -138,13 +144,19 @@ class Client_Server(Process):
 
         self.logger.info("update_file invoked")
 
-        file_obj = file.File(dict=file_dict)
-
+        file_obj = file.File(dictinary=file_dict)
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)
 
         if not (self.db.update_file(file_obj.verify_key, file_obj.write_key)):
             return False
+
+        #add in database where is the parts in system
+        num_part = 0
+        for server_part in server_receive_file:
+            num_part = num_part + 1
+            part_obj = database.Parts(file_obj.verify_key, server_part[1], num_part)
+            self.db.add(part_obj)
 
         filename_to_save = self.server_info.configs._dir_file + file_obj.verify_key + '.' + str(num_part)
         thread = Thread(target = misc.receive_file, args = (sockt, filename_to_save ))
@@ -161,15 +173,17 @@ class Client_Server(Process):
         self.logger.info("get_salt invoked")
         return self.db.salt_file(file_name, user_id)
 
-    def negotiate_store_part(self, file_dict, directory_key, part_number):
+    def negotiate_store_part(self, file_dict, directory_key, part_number, server_receive_file):
         """
             Negotiate with client to server_pkg receive file part
-            (0 verify_key, 1 write_key, 2 read_key (None), 3 salt)
+            
+            server_receive_file -> is the list with all servers that receive this file
+                                   [ [uid, ip], [uid, ip]] ... ]
         """
 
         self.logger.info("negotiate_store_part invoked")
 
-        file_obj = file.File(dict=file_dict)
+        file_obj = file.File(dictinary=file_dict)
 
         #verify if user is okay
         if(not self.db.get_user_rsa_pub(file_obj.user_id)):
@@ -178,6 +192,13 @@ class Client_Server(Process):
 
         new_file = database.File(file_obj=file_obj)
         self.db.add(new_file)
+
+        #add in database where is the parts in system
+        num_part = 0
+        for server_part in server_receive_file:
+            num_part = num_part + 1
+            part_obj = database.Parts(file_obj.verify_key, server_part[1], num_part)
+            self.db.add(part_obj)
 
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)
@@ -202,15 +223,18 @@ class Client_Server(Process):
 #####          Implementação técnica temporária           #####
 ##### Resumindo não tive tempo de implementar isso melhor #####
 ###############################################################
-#  As funções de admin inseridas aqui não estão passando      #
+#  As funções de admin_operations inseridas aqui não estão passando      #
 # por autenticação. Portanto esses códigos não deveriam estar #
 # aqui acessiveis para qualquer um.                           #
 ###############################################################
 
     def register_user(self, name, user_id, rsa_pub):
 
+        self.logger.info("Register_user involked, user name: {}".format(name) )
+
         new_user = database.User(name, user_id, rsa_pub)
 
-        self.logger.info("Register_user involked, user name: ", name)
+        print("O objeto user", new_user)
+
 
         return self.db.add(new_user)

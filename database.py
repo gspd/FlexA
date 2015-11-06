@@ -19,15 +19,20 @@ class User(Base):
     uid = Column(String(64), primary_key=True)
     name = Column(String(100), nullable=False)
     rsa_pub = Column(String(100))
-    
-    def __init__(self, name, uid, rsa_pub):
-        self.uid = uid
-        self.name = name
-        self.rsa_pub = rsa_pub
-    
+
+    def __init__(self, name=None, uid=None, rsa_pub=None, user_obj=None):
+        if(name):
+            self.uid = uid
+            self.name = name
+            self.rsa_pub = rsa_pub
+        elif(user_obj):
+            self.uid = user_obj.uid
+            self.name = user_obj.name
+            self.rsa_pub = user_obj.rsa_pub
+
     def __repr__(self):
-        return '<File({},{})>'.format(self.uid, self.name)
-    
+        return '<User({},{})>'.format(self.uid, self.name)
+
 class File(Base):
     __tablename__ = 'file'
 
@@ -73,23 +78,23 @@ class File(Base):
 
 class Parts(Base):
     __tablename__ = 'parts'
-    
+
     uid = Column(Integer, Sequence('parts_id_seq'), primary_key=True)
     verify_key = Column(String(100), ForeignKey('file.verify_key'), nullable=False)
     server_id = Column(String(40), ForeignKey('server.uid'))
     num_part = Column(Integer, nullable=False)
-    
+
     def __init__(self, verify_key, server_id, num_part):
         self.verify_key = verify_key
         self.server_id = server_id
         self.num_part = num_part
 
     def __repr__(self):
-        return '<File({})>'.format(self.num_part, self.server_id)
+        return '<Part({})>'.format(self.num_part, self.server_id)
 
 class Server(Base):
     __tablename__ = 'server'
-    
+
     uid = Column(String(40), nullable=False, primary_key=True)
     ip = Column(String(15), nullable=False)
     last_seen = Column(DateTime)
@@ -100,10 +105,14 @@ class Server(Base):
         self.last_seen = last_seen
 
     def __repr__(self):
-        return '<File({} {} {})>'.format(self.id, self.ip, self.last_seen)
+        return '<Server({} {} {})>'.format(self.id, self.ip, self.last_seen)
 
 class DataBase():
-    """class responsible for make every change and query in data base
+    """
+        Class responsible for make every change and query in data base
+        
+            This class is respossible to control access in database, then to control the 
+           concurrency this class has one session shared by every process. 
     """
 
     #variable to control max changes in data base before commit
@@ -206,11 +215,11 @@ class DataBase():
             else:
                 self.commit_db()
         except Exception as error:
+            self.logger.debug("->erro in add func: try to rollback and add again")
             self.handling_rollback(error)
             self.modify_db.release()
             return 0
             
-
         #unblock semaphore
         self.modify_db.release()
 
@@ -299,5 +308,32 @@ class DataBase():
             return 0
         else:
             return result[0].salt
+
+    def get_all_users(self):
+        """
+            Query all users and return a LIST of USERS with your attr
+        """
+
+        self.logger.info("get_all_users invoked")
+
+        return self.session.query(User).all()
+
+    def get_all_files_by_user(self, user_id):
+        """
+            Query all metadata of files from a user
+        """
+        
+        self.logger.info("get_all_files_by_user")
+        
+        return self.session.query(File).filter(File.user_id == user_id).all()
+        
+    def get_all_parts_file_by_vk(self, verify_key):
+        """
+            Query all metadata of parts (file)
+        """
+        
+        self.logger.info("get_all_parts_file_by_vk")
+        
+        return self.session.query(Parts).filter(Parts.verify_key == verify_key).all()
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
