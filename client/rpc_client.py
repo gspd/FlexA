@@ -59,7 +59,7 @@ class RPC(object):
             if scan_ping.TIMEOUT_TO_ANSWER > self.MAX_TIME_OUT_ANSWER :
                 #if TIMEOUT stop the search
                 break
-        print()
+
         #get list of servers online
         self.list_online = scan_ping.online
 

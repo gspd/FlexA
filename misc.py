@@ -20,6 +20,9 @@ class Ping(Process):
 
     online = None
 
+    #some network don't use broadcast
+    enable_broadcast = False
+
     #flag to enable local servers - default: enable 
     LOCAL = True
 
@@ -47,6 +50,13 @@ class Ping(Process):
            send mensage in broadcast and wait answers
            wait no more then TIMEOUT_TO_ANSWER
         """
+
+        #if broadcast is disable
+        if (  not self.enable_broadcast ):
+            self.scan_ip_list_server()
+            return
+
+        self.logger.info("scan invoked")
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -70,6 +80,38 @@ class Ping(Process):
             except socket.timeout:
                 self.online = online
                 break
+
+    def scan_ip_list_server(self):
+        """
+           send mensage to ip list and wait answers
+           wait no more then TIMEOUT_TO_ANSWER
+
+           this function is necessary in network that don't work with 
+           broadcast, like cloud service.
+           The list of ip servers is in file called "host.dat" 
+
+        """
+
+        self.logger.info("scan_ip_list_server invoked")
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        s.settimeout(self.TIMEOUT_TO_ANSWER)
+
+        online = []
+        myip = my_ip()
+
+        for ip in open("host.dat").read().splitlines():
+            if(ip != myip) or (self.LOCAL):
+                try:
+                    s.sendto(b'Alive?', ( ip, self.MYPORT))
+                    message, address = s.recvfrom(4096)
+                    if (message == b'I am here'):
+                        online.append(address[0])
+                except socket.timeout:
+                    pass
+                except:
+                    print("An error occurs. in scan_ip_list_server")
+        self.online=online
 
     def answer_scan(self):
         """
