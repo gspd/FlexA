@@ -21,7 +21,7 @@ class Ping(Process):
     online = None
 
     #some network don't use broadcast
-    enable_broadcast = False
+    enable_broadcast = True
 
     #flag to enable local servers - default: enable 
     LOCAL = True
