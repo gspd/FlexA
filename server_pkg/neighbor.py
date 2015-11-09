@@ -151,7 +151,7 @@ class Neighbor(Process):
 
         for server in map_:
             if( not server[1] ):
-                continue
+                self.first_searcher()
             server_conn = self.server_obj.set_server(ip=server[1])
             try:
                 server_conn.still_alive()
