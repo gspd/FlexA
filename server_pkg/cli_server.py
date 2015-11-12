@@ -100,7 +100,7 @@ class Client_Server(Process):
 
         self.logger.info("list_files invoked")
 
-        files_db = self.db.list_files_by_dir(dirname, user_id)
+        files_db = self.db.get_all_files_by_dir(dirname, user_id)
 
         list_file = []
         for file_obj in files_db:

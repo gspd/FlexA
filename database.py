@@ -262,27 +262,6 @@ class DataBase():
 
         return True
 
-    def list_files_by_dir(self, dirname, user_id):
-
-        self.logger.info("list_files invoked")
-
-        files = self.session.query(File).\
-                filter(File.user_id == user_id).\
-                filter(File.file_name.like(dirname+'%')).\
-                order_by(File.file_name)
-        """
-         this returns everything that has the dirname as substring of its
-         file_name, so beware, it's not just the files within it but also
-         subdirectories and files.
-         eg: dirname = '/foo'
-         can return
-            '/foo.txt'
-            '/football'
-            /foo/* < which is correct
-            /foo/subfoo/*
-        """
-        return files.all()
-
     def get_user_rsa_pub(self, user_id):
 
         user_rsa = self.session.query(User).filter(User.uid == user_id)
@@ -308,6 +287,27 @@ class DataBase():
             return 0
         else:
             return result[0].salt
+        
+    def get_all_files_by_dir(self, dirname, user_id):
+
+        self.logger.info("get_all_files_by_dir invoked")
+
+        files = self.session.query(File).\
+                filter(File.user_id == user_id).\
+                filter(File.file_name.like(dirname+'%')).\
+                order_by(File.file_name)
+        """
+         this returns everything that has the dirname as substring of its
+         file_name, so beware, it's not just the files within it but also
+         subdirectories and files.
+         eg: dirname = '/foo'
+         can return
+            '/foo.txt'
+            '/football'
+            /foo/* < which is correct
+            /foo/subfoo/*
+        """
+        return files.all()
 
     def get_all_users(self):
         """
