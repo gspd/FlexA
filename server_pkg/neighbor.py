@@ -150,7 +150,7 @@ class Neighbor(Process):
             try:
                 server_conn.still_alive()
             except:
-                self.lost_server(server[0])
+                self.first_searcher()
                 break
 
     def get_neighbors(self):
