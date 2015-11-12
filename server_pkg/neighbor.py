@@ -151,6 +151,8 @@ class Neighbor(Process):
                 server_conn.still_alive()
             except:
                 self.first_searcher()
+                self.logger.debug("Lost a server, maybe crashed and now is offline")
+                self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
                 break
 
     def get_neighbors(self):
