@@ -157,8 +157,48 @@ class Neighbor(Process):
             try:
                 server_conn.still_alive()
             except:
-                self.first_searcher()
+                self.lost_server(server[0])
                 break
+
+    def lost_server(self, uid_lost_server):
+        """
+            handling the exception when one server trun off
+        """
+        
+        if(uid_lost_server in dict(self.left_neighbor)):
+            if(self.left_neighbor[0][0] == uid_lost_server):
+                try:
+                    conn = self.server_obj.set_server(self.left_neighbor[1][1])
+                    map_ = conn.get_neighbor_map()
+                    self.left_neighbor[0] = map_[0]
+                except:
+                    pass
+            if(self.left_neighbor[1][0] == uid_lost_server):
+                try:
+                    self.left_neighbor[1] = self.left_neighbor[0]
+                    conn = self.server_obj.set_server(self.left_neighbor[1][1])
+                    map_ = conn.get_neighbor_map()
+                    self.left_neighbor[0] = map_[1]
+                except:
+                    pass
+
+        if(uid_lost_server in dict(self.right_neighbor)):
+            if(self.right_neighbor[-1][0] == uid_lost_server):
+                try:
+                    conn = self.server_obj.set_server(self.left_neighbor[-2][1])
+                    map_ = conn.get_neighbor_map()
+                    self.left_neighbor[-1] = map_[-1]
+                except:
+                    pass
+            if(self.right_neighbor[-2][0] == uid_lost_server):
+                try:
+                    self.left_neighbor[-2] = self.left_neighbor[-1]
+                    conn = self.server_obj.set_server(self.left_neighbor[-2][1])
+                    map_ = conn.get_neighbor_map()
+                    self.left_neighbor[0] = map_[-2]
+                except:
+                    pass
+        
 
     def get_neighbors(self):
         self.logger.info("get_neighbors invoked" )
