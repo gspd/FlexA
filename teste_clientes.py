@@ -19,7 +19,7 @@ iter_receb = {key: 0 for key in lista_arquivos}
 
 #envia os arquivos primeira vez para não dar erro de não encontrado
 for arquivo in lista_arquivos:
-    subprocess.check_output("~/git/flexa-ng/flexa.py -p {}".format(arquivo), shell=True)
+    subprocess.check_output("~/FlexA/flexa.py -p {}".format(arquivo), shell=True)
 
 print("Começando os testes.")
 while(True):
@@ -34,7 +34,7 @@ while(True):
 
     print(nome_arquivo_result)
     with open(nome_arquivo_result, "a") as file:
-        saida = subprocess.check_output("~/git/flexa-ng/flexa.py {} {}".format(operacao, arquivo), shell=True)
+        saida = subprocess.check_output("~/FlexA/flexa.py {} {}".format(operacao, arquivo), shell=True)
         try:
             tempo=float(saida)
         except:
