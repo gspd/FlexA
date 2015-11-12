@@ -179,7 +179,7 @@ class DataBase():
 
         for update_vk in self.flushed_updated_obj_list:
             file = self.session.query(File).filter(File.verify_key == update_vk)
-            file.one().update({"modify_date":datetime.datetime.now()})
+            file.update({"modify_date":datetime.datetime.now()})
 
         self.flushed_updated_obj_list = []
 

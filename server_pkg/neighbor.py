@@ -171,6 +171,7 @@ class Neighbor(Process):
             Used when system start or is unstable
         """
         #searching servers with ping
+        self.server_obj.scan_online_servers()
         server_conn = self.server_obj.get_next_server()
         map_ = server_conn.get_neighbor_map()
 
