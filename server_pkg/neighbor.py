@@ -94,7 +94,6 @@ class Neighbor(Process):
     def require_update(self):
         self.logger.debug("require_update called" )
         self.first_searcher()
-        self.replace_aux()
         self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
 
     def zero_map_aux(self):
@@ -113,7 +112,6 @@ class Neighbor(Process):
             Make scan in network to verify if servers is online
         """
         self.first_searcher()
-        self.replace_aux()
         self.update_all()
         self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
         last_hash=b'0'
@@ -124,12 +122,7 @@ class Neighbor(Process):
             if(count<=0):
                 count=self.TIMES_TO_UPDATE_MAP
                 self.first_searcher()
-                hash_ = hashlib.md5()
-                hash_.update( binascii.a2b_qp(str(self.get_neighbors())) )
-                if(last_hash != hash_.digest()):
-                    self.logger.debug("Update map all servers")
-                    self.replace_aux()
-                    last_hash=hash_.digest()
+                self.logger.debug("Update map all servers")
                 self.logger.debug(" Neighbors map:\n {}".format( str(self.get_neighbors()) ) )
             sleep(self.TIME_AUTO_SCAN)
 
@@ -159,46 +152,6 @@ class Neighbor(Process):
             except:
                 self.lost_server(server[0])
                 break
-
-    def lost_server(self, uid_lost_server):
-        """
-            handling the exception when one server trun off
-        """
-        
-        if(uid_lost_server in dict(self.left_neighbor)):
-            if(self.left_neighbor[0][0] == uid_lost_server):
-                try:
-                    conn = self.server_obj.set_server(self.left_neighbor[1][1])
-                    map_ = conn.get_neighbor_map()
-                    self.left_neighbor[0] = map_[0]
-                except:
-                    pass
-            if(self.left_neighbor[1][0] == uid_lost_server):
-                try:
-                    self.left_neighbor[1] = self.left_neighbor[0]
-                    conn = self.server_obj.set_server(self.left_neighbor[1][1])
-                    map_ = conn.get_neighbor_map()
-                    self.left_neighbor[0] = map_[1]
-                except:
-                    pass
-
-        if(uid_lost_server in dict(self.right_neighbor)):
-            if(self.right_neighbor[-1][0] == uid_lost_server):
-                try:
-                    conn = self.server_obj.set_server(self.left_neighbor[-2][1])
-                    map_ = conn.get_neighbor_map()
-                    self.left_neighbor[-1] = map_[-1]
-                except:
-                    pass
-            if(self.right_neighbor[-2][0] == uid_lost_server):
-                try:
-                    self.left_neighbor[-2] = self.left_neighbor[-1]
-                    conn = self.server_obj.set_server(self.left_neighbor[-2][1])
-                    map_ = conn.get_neighbor_map()
-                    self.left_neighbor[0] = map_[-2]
-                except:
-                    pass
-        
 
     def get_neighbors(self):
         self.logger.info("get_neighbors invoked" )
@@ -252,6 +205,8 @@ class Neighbor(Process):
                     self.put_in_left(server)
                 elif(int(map_[len(map_)//2][0],16) > self.server_conf.uid_int):
                     self.put_in_right(server)
+        #set the alterations
+        self.replace_aux()
 
 
     def put_in_left(self, server):
