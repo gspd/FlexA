@@ -179,12 +179,18 @@ class Neighbor(Process):
         #stop when find a map whose id can be placed in the middle
         # only one of the following while(s) will be executed
         while( (int(map_[0][0],16)<self.server_conf.uid_int) and (map_[0][0]!='0') ):
-            server_conn = self.server_obj.set_server(map_[0][1])
-            map_ = server_conn.get_neighbor_map()
+            try:
+                server_conn = self.server_obj.set_server(map_[0][1])
+                map_ = server_conn.get_neighbor_map()
+            except:
+                map_[0][0]='0'
 
-        while( (int(map_[len(map_)-1][0],16)>self.server_conf.uid_int) and (map_[len(map_)-1][0]!='0') ):
-            server_conn = self.server_obj.set_server(map_[len(map_)-1][1])
-            map_ = server_conn.get_neighbor_map()
+        while( (map_[len(map_)-1][0]!='0') and (int(map_[len(map_)-1][0],16)>self.server_conf.uid_int) ):
+            try:
+                server_conn = self.server_obj.set_server(map_[len(map_)-1][1])
+                map_ = server_conn.get_neighbor_map()
+            except:
+                map_[len(map_)-1][0]='0'
 
         if('0' in dict(map_)):
             self.zero_map_aux()
