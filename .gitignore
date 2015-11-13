@@ -5,9 +5,5 @@
 !.gitignore
 #-Arquivos de código do Python
 !*.py
-#-Arquivos de script em Bash
-!*.sh
 #-Arquivos de markdown
 !*.md
-# Bloqueia o conteúdo do diretório script
-script/*
