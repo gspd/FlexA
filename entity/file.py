@@ -23,7 +23,7 @@ class File(object):
     write_key = None
 
     def __init__(self, name=0, size=0, create_date=0, modify_date=0, user_id=0, num_parts=1,
-                 salt=0, file_db = None, dictinary = None):
+                 salt=0, file_db = None, dictinary = None, parse_to_str=False):
         '''
         Constructor
         You can make obj File put your attributes or put a fatabase.File obj.
@@ -55,6 +55,14 @@ class File(object):
             self.modify_date = modify_date
             self.user_id = user_id
             self.num_parts = num_parts
+
+        # Parses numeric and datetime types to string
+        #     * used by list_files
+        if(parse_to_str):
+            self.size = str(self.size)
+            self.create_date = self.create_date.strftime("%Y-%m-%d %H:%M:%S")
+            self.modify_date = self.modify_date.strftime("%Y-%m-%d %H:%M:%S")
+            self.num_parts = str(file_db.num_parts)
 
     def set_keys(self, rsa_private, salt):
         """

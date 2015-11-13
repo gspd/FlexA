@@ -74,16 +74,8 @@ class Client(object):
                     self.receive_file(file_info)
 
         if args.list:
-            if args.list == 1:
-                self.list_files()
-            else:
-                self.list_files(more_info=True)
-
-        if args.recursive_list:
-            if args.recursive_list == 1:
-                self.list_files(recursive=True)
-            else:
-                self.list_files(recursive=True, more_info=True)
+            self.logger = logging.getLogger("[Flexa_cli - list_file]")
+            self.list_files()
 
         if args.delete:
             for filename in args.delete:
@@ -183,8 +175,10 @@ class Client(object):
 
         # verify if this file exist (same name in this directory)
         dir_key = "/"  # FIXME set where is.... need more discussion
-        file_obj = file.File(name=file_info.relative_filepath, user_id=self.user.uid, 
-                             num_parts=3)
+        f_name = file_info.relative_filepath
+        f_size=os.path.getsize(file_info.absolute_filepath)
+        file_obj = file.File(name=f_name, user_id=self.user.uid,
+                             size=f_size, num_parts=3)
 
         #make list of server ip (without uid) be a circular list
         server_cycle = cycle([item[1] for item in self.user.primary_servers])
@@ -273,24 +267,54 @@ class Client(object):
         #remove temp files from  workstation -> complete
         os.remove(file_info.absolute_enc_filepath)
 
-    def list_files(self, recursive=False, more_info=False):
+    def list_files(self):
         """
         Search every file from verify_key
             verify_key is directory where called this operation - answer is a dictionary of files and yours attributes 
         """
-        server_conn = self.rpc.get_next_server()
+        #server_conn = self.rpc.get_next_server()
+        #make list of server ip (without uid) be a circular list
+        server_cycle = cycle([item[1] for item in self.user.primary_servers])
+        #Use variable primary_servers -> [ [uid,ip], [uid,ip] ... ]
+        server_conn = self.rpc.set_server(next(server_cycle))
 
-        # just to clean a bit this huge var name
+        # just to clean a bit these huge var names
         cur_dir = self.configs._current_relative_dir
-        for dic_file in server_conn.list_files(cur_dir, self.user.uid):
-            if not recursive: # check if it's within directory
-                if cur_dir != os.path.dirname(dic_file['name']):
-                    continue
-            else: # check if current dir is substring at the beginning
-                if not os.path.dirname(dic_file['name']).startswith(cur_dir):
-                    continue
-            # TODO print more info if more_info == True
-            print(dic_file['name'])
+        file_dictionaries = server_conn.list_files(cur_dir, self.user.uid)
+
+        columns = file_dictionaries[0].keys()
+        
+        all_widths = []
+        for file_dict in file_dictionaries:
+            all_widths.append([len(v) for v in file_dict.values()])
+        
+        widths = [max(row_lenghts) for row_lenghts in zip(*all_widths)]
+        header = dict(zip(columns, widths))
+        
+        
+        print("Created on".ljust(header["create_date"]), end="  ")
+        print("Last modified on".ljust(header["modify_date"]), end="  ")
+        print("Size".ljust(header["size"]), end="  ")
+        print("Name".ljust(header["name"]))
+        
+        # print info for every file
+        for file_dict in file_dictionaries:
+            # check if it's within current directory
+            if cur_dir != os.path.dirname(file_dict['name']):
+                #print("-".ljust(header["create_date"]), end="  ")
+                #print("-".ljust(header["modify_date"]), end="  ")
+                #print("-".ljust(header["size"]), end="  ")
+                #print(file_dict["name"].ljust(header["name"])) TODO parse the name
+                continue
+
+            print(file_dict["create_date"].ljust(header["create_date"]), end="  ")
+            print(file_dict["modify_date"].ljust(header["modify_date"]), end="  ")
+            print(file_dict["size"].ljust(header["size"]), end="  ")
+            print(file_dict["name"].ljust(header["name"]))
+            
+        #else: # check if current dir is substring at the beginning
+        #    if not os.path.dirname(dic_file['name']).startswith(cur_dir):
+        #        continue
 
     def delete_file(self, name_file):
         """

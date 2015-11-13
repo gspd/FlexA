@@ -48,7 +48,7 @@ class File(Base):
     modify_date = Column(DateTime)
 
     def __init__(self, verify_key=0, salt=0, write_key=0, file_name=0, dir_key=0, user_id=0,
-                    num_parts=0, file_obj = None):
+                    num_parts=0, size=0, file_obj = None):
         if(file_obj):
             self.verify_key = file_obj.verify_key
             self.salt = file_obj.salt
@@ -58,7 +58,7 @@ class File(Base):
             self.num_parts = file_obj.num_parts
             self.create_date = datetime.datetime.now()
             self.modify_date = datetime.datetime.now()
-            self.size = 100 #FIXME: colocar o tamanho real do arquivo - teste
+            self.size = file_obj.size
         else:
             self.verify_key = verify_key
             self.salt = salt
@@ -68,7 +68,7 @@ class File(Base):
             self.num_parts = num_parts
             self.create_date = datetime.datetime.now()
             self.modify_date = datetime.datetime.now()
-            self.size = 100 #FIXME: colocar o tamanho real do arquivo - teste
+            self.size = size
 
     def __repr__(self):
         return '<File(vfk "{}", salt "{}", wtk "{}", name "{}", user "{}",\
@@ -225,17 +225,17 @@ class DataBase():
 
         return 1
 
-    def update_file(self, verify_key, write_key):
+    def update_file(self, file_obj):
 
         self.logger.info("update_file invoked")
 
         #block semaphore
         self.modify_db.acquire()
 
-        file = self.session.query(File).filter(File.verify_key == verify_key)
+        file = self.session.query(File).filter(File.verify_key == file_obj.verify_key)
 
         try:
-            if (file.one().write_key != write_key):
+            if (file.one().write_key != file_obj.write_key):
                 #don't have permition to write
                 return False
         except:
@@ -244,8 +244,9 @@ class DataBase():
 
         #have permission to write
         try:
-            file.update({"modify_date":datetime.datetime.now()})
-            self.flushed_updated_obj_list.append(verify_key)
+            file.update({"modify_date":datetime.datetime.now(),
+                         "size":file_obj.size})
+            self.flushed_updated_obj_list.append(file_obj.verify_key)
             #verify if have more then 10 modifies
             if self.num_modifies < self._max_modifies:
                 self.num_modifies+= 1

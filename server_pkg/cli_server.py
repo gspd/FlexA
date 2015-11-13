@@ -105,7 +105,7 @@ class Client_Server(Process):
         list_file = []
         for file_obj in files_db:
             #create a list of objects to transmit in xmlrpc
-            list_file.append(file.File(file_db = file_obj ))
+            list_file.append(file.File(file_db = file_obj, parse_to_str = True))
 
         return list_file
 
@@ -148,7 +148,7 @@ class Client_Server(Process):
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)
 
-        if not (self.db.update_file(file_obj.verify_key, file_obj.write_key)):
+        if not (self.db.update_file(file_obj)):
             return False
 
         #add in database where is the parts in system
