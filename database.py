@@ -239,7 +239,7 @@ class DataBase():
                 #don't have permition to write
                 return False
         except:
-            #can't find file -> one() return except
+            #can't find file.one() return except
             return False
 
         #have permission to write
