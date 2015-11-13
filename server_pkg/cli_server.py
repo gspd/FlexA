@@ -136,7 +136,7 @@ class Client_Server(Process):
         #FIXME every rpc call return something - put sent confirmation
         return 0
 
-    def update_file(self, file_dict, num_part, server_receive_file):
+    def update_file(self, file_dict, part_number, server_receive_file):
         """
             if exist file, and client wanna send the same file (reference in db)
             the server_pkg update file in system
@@ -145,25 +145,28 @@ class Client_Server(Process):
         self.logger.info("update_file invoked")
 
         file_obj = file.File(dictinary=file_dict)
-        #get a unusage port and mount a socket
-        port, sockt = misc.port_using(5001)
 
         if not (self.db.update_file(file_obj)):
             return False
 
-        #add in database where is the parts in system
+        #add in database in which servers the parts are stored
         num_part = 0
         for server_part in server_receive_file:
             num_part = num_part + 1
+            self.logger.info("Updating part {} metadata @ {}".format(num_part, server_part[1]))
             part_obj = database.Parts(file_obj.verify_key, server_part[1], num_part)
             self.db.add(part_obj)
 
-        filename_to_save = self.server_info.configs._dir_file + file_obj.verify_key + '.' + str(num_part)
+        #get a unusage port and mount a socket
+        port, sockt = misc.port_using(5001)
+
+        self.logger.info("Storing part {} @ {}".format(part_number, server_part[1]))
+        filename_to_save = self.server_info.configs._dir_file + file_obj.verify_key + '.' + str(part_number)
         thread = Thread(target = misc.receive_file, args = (sockt, filename_to_save ))
         thread.start()
-        #TODO: set timout to thread
 
         return port
+        #TODO: set timout to thread
 
     def get_salt(self, file_name, user_id):
         """make a call in data base to find file
@@ -197,12 +200,14 @@ class Client_Server(Process):
         num_part = 0
         for server_part in server_receive_file:
             num_part = num_part + 1
+            self.logger.info("Creating part {} metadata @ {}".format(num_part, server_part[1]))
             part_obj = database.Parts(file_obj.verify_key, server_part[1], num_part)
             self.db.add(part_obj)
 
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)
 
+        self.logger.info("Storing part {} @ {}".format(part_number, server_part[1]))
         file_name_to_get = self.server_info.configs._dir_file + file_obj.verify_key + '.' + str(part_number)
         thread = Thread(target = misc.receive_file, args = (sockt, file_name_to_get))
         thread.start()

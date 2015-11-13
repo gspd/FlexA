@@ -24,6 +24,7 @@ class ClientFile(object):
     relative_filepath = ''
     absolute_filepath = ''
     absolute_enc_filepath = ''
+    size=0
 
 class Client(object):
     '''
@@ -62,7 +63,11 @@ class Client(object):
                 # this can be either here or in the set_file_info function
                 #file_info.filename = os.path.normpath(filename)
                 if self.set_file_info_to_send(file_info, filename):
-                    self.send_file(file_info)
+                    if self.send_file(file_info):
+                        print(filename, " was sent succesfully.")
+                    else:
+                        print(filename, " couldn't be sent.")
+                    
 
         # Get a file from server
         if args.get:
@@ -134,6 +139,8 @@ class Client(object):
             print("Skipping '" + file_info.absolute_filepath + "'. "
                     "File can't be located outside mapped directory")
             return False
+        
+        file.size = os.path.getsize(file_info.absolute_filepath)
 
         # full filepath relative to FlexA file system
         file_info.relative_filepath = file_info.absolute_filepath.split(self.configs._current_local_dir)[1]
@@ -152,7 +159,6 @@ class Client(object):
 
         host = (ip_server, port_server)
         local_file_name_complete = abs_enc_filepath + '.' + str(num_part)
-        # TODO: colocar um if no send_file para confirmar se o envio foi efetuado com sucesso
         misc.send_file(host, local_file_name_complete)
         os.remove(local_file_name_complete)
 
@@ -176,7 +182,7 @@ class Client(object):
         # verify if this file exist (same name in this directory)
         dir_key = "/"  # FIXME set where is.... need more discussion
         f_name = file_info.relative_filepath
-        f_size=os.path.getsize(file_info.absolute_filepath)
+        f_size = file_info.size
         file_obj = file.File(name=f_name, user_id=self.user.uid,
                              size=f_size, num_parts=3)
 
@@ -185,38 +191,41 @@ class Client(object):
 
         #Use variable primary_servers -> [ [uid,ip], [uid,ip] ... ]
         server_conn = self.rpc.set_server(next(server_cycle))
-        # ask to server if is update or new file
 
+        # ask to server if it's an update or a new file
         salt = server_conn.get_salt( file_obj.name, file_obj.user_id)
         read_key = file_obj.set_keys(self.configs.loaded_config.get("User", "private key"), salt)
 
+        # encrypt file
         crypto.encrypt_file(read_key, file_info.absolute_filepath, file_info.absolute_enc_filepath, 16)
-        # verify if exist file
-
+        # and split it
         if not ( misc.split_file(file_info.absolute_enc_filepath, file_obj.num_parts) ):
             sys.exit("Problems while splitting file.\nTry again.")
 
         # if salt has a value then is update. because server return a valid salt
         if salt:
-            for num_part in range( file_obj.num_parts ):
-                port_server = server_conn.update_file( file_obj, num_part, self.user.primary_servers )
+            for part_number in range( file_obj.num_parts ):
+                # updates metadata
+                port_server = server_conn.update_file( file_obj, part_number, self.user.primary_servers )
+                self.logger.info("Updating part {} metadata @ {}:{}".format(part_number, self.rpc.ip_server, port_server))
                 if port_server == False:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
                             write. \nTry again.")
-                self.send_file_part( num_part, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath )
+                self.send_file_part( part_number, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath )
                 server_conn = self.rpc.set_server(next(server_cycle))
         else:
             # server return port where will wait a file
-            for num_part in range(file_obj.num_parts):
-                self.logger.info("Send new file: part {} to server {}".format(num_part, self.rpc.ip_server))
-                port_server = server_conn.negotiate_store_part(file_obj, dir_key, num_part, self.user.primary_servers)
+            for part_number in range(file_obj.num_parts):
+                self.logger.info("Sending new file part {} @ {}:{}".format(part_number, self.rpc.ip_server, port_server))
+                port_server = server_conn.negotiate_store_part(file_obj, dir_key, part_number, self.user.primary_servers)
                 if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
-                self.send_file_part(num_part, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath)
+                self.send_file_part(part_number, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath)
                 server_conn = self.rpc.set_server(next(server_cycle))
 
         # remove temp crypt file
         os.remove(file_info.absolute_enc_filepath)
+        return True
 
 
     def receive_file(self, file_info):
@@ -282,6 +291,10 @@ class Client(object):
         cur_dir = self.configs._current_relative_dir
         file_dictionaries = server_conn.list_files(cur_dir, self.user.uid)
 
+        if(not file_dictionaries):
+            print("No files found.")
+            return
+            
         columns = file_dictionaries[0].keys()
         
         all_widths = []
@@ -300,7 +313,7 @@ class Client(object):
         # print info for every file
         for file_dict in file_dictionaries:
             # check if it's within current directory
-            if cur_dir != os.path.dirname(file_dict['name']):
+            if cur_dir != os.path.dirname(file_dict['name']): #and not os.path.dirname(file_dict['name']).startswith(cur_dir):
                 #print("-".ljust(header["create_date"]), end="  ")
                 #print("-".ljust(header["modify_date"]), end="  ")
                 #print("-".ljust(header["size"]), end="  ")
