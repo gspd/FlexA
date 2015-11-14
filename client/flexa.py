@@ -5,6 +5,7 @@ Created on 15/12/2014
 '''
 # import class that set every configs
 from client.config import Config
+import client.path_parser as Path
 import crypto
 import misc
 import os
@@ -143,7 +144,7 @@ class Client(object):
         file.size = os.path.getsize(file_info.absolute_filepath)
 
         # full filepath relative to FlexA file system
-        file_info.relative_filepath = file_info.absolute_filepath.split(self.configs._current_local_dir)[1]
+        file_info.relative_filepath = file_info.absolute_filepath.split(self.configs._data_dir)[1]
 
         file_info.filename = file_info.relative_filepath.split('/')[-1]
 
@@ -216,8 +217,8 @@ class Client(object):
         else:
             # server return port where will wait a file
             for part_number in range(file_obj.num_parts):
-                self.logger.info("Sending new file part {} @ {}:{}".format(part_number, self.rpc.ip_server, port_server))
                 port_server = server_conn.negotiate_store_part(file_obj, dir_key, part_number, self.user.primary_servers)
+                self.logger.info("Sending new file part {} @ {}:{}".format(part_number, self.rpc.ip_server, port_server))
                 if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
                 self.send_file_part(part_number, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath)
@@ -276,6 +277,7 @@ class Client(object):
         #remove temp files from  workstation -> complete
         os.remove(file_info.absolute_enc_filepath)
 
+
     def list_files(self):
         """
         Search every file from verify_key
@@ -296,38 +298,77 @@ class Client(object):
             return
             
         columns = file_dictionaries[0].keys()
+        header = dict.fromkeys(columns, ' ')
+        header['create_date'] = "Created on"
+        header['modify_date'] = "Last modified on"
+        header['size'] = "Size"
+        header['name'] = "Name"
         
+        # creates list of lists with every lenght
         all_widths = []
+        all_widths.append([len(v) for v in header.values()])
         for file_dict in file_dictionaries:
             all_widths.append([len(v) for v in file_dict.values()])
         
+        # checks the max lenght for every column
         widths = [max(row_lenghts) for row_lenghts in zip(*all_widths)]
-        header = dict(zip(columns, widths))
+        #maps the lenghts in the dictionary
+        header_len = dict(zip(columns, widths))
         
+        print(header['create_date'].ljust(header_len["create_date"]), end="  ")
+        print(header['modify_date'].ljust(header_len["modify_date"]), end="  ")
+        print(header['size'].ljust(header_len["size"]), end="  ")
+        print(header['name'].ljust(header_len["name"]))
         
-        print("Created on".ljust(header["create_date"]), end="  ")
-        print("Last modified on".ljust(header["modify_date"]), end="  ")
-        print("Size".ljust(header["size"]), end="  ")
-        print("Name".ljust(header["name"]))
-        
+        sd_list = []
         # print info for every file
         for file_dict in file_dictionaries:
             # check if it's within current directory
-            if cur_dir != os.path.dirname(file_dict['name']): #and not os.path.dirname(file_dict['name']).startswith(cur_dir):
-                #print("-".ljust(header["create_date"]), end="  ")
-                #print("-".ljust(header["modify_date"]), end="  ")
-                #print("-".ljust(header["size"]), end="  ")
-                #print(file_dict["name"].ljust(header["name"])) TODO parse the name
+            if cur_dir != os.path.dirname(file_dict['name']):
+                subdir = self.get_subdir_name(cur_dir, file_dict['name'])
+                
+                # check if it's a subdirectory
+                if subdir != "":
+                    sd = os.path.basename(subdir) + '/'
+                    if sd in sd_list:
+                        continue
+                    print("-".ljust(header_len["create_date"]), end="  ")
+                    print("-".ljust(header_len["modify_date"]), end="  ")
+                    print("-".ljust(header_len["size"]), end="  ")
+                    print(sd.ljust(header_len["name"]))
+                    sd_list.append(sd)
                 continue
 
-            print(file_dict["create_date"].ljust(header["create_date"]), end="  ")
-            print(file_dict["modify_date"].ljust(header["modify_date"]), end="  ")
-            print(file_dict["size"].ljust(header["size"]), end="  ")
-            print(file_dict["name"].ljust(header["name"]))
+            print(file_dict["create_date"].ljust(header_len["create_date"]), end="  ")
+            print(file_dict["modify_date"].ljust(header_len["modify_date"]), end="  ")
+            print(file_dict["size"].ljust(header_len["size"]), end="  ")
+            print(os.path.basename(file_dict["name"]).ljust(header_len["name"]))
             
         #else: # check if current dir is substring at the beginning
         #    if not os.path.dirname(dic_file['name']).startswith(cur_dir):
         #        continue
+
+    
+    def get_subdir_name(self, cur_dir, path):
+        r = ''
+        
+        # if path is (somewhere) inside cur_dir
+        if cur_dir == '/':
+            r = path.split('/')[1]
+        elif path.startswith(cur_dir+'/'):
+            # then remove the prefix and keep the rest
+            dir_rest = path[len(cur_dir)+1:]
+            r = dir_rest.split('/')[1]
+        ''' old version was also working
+        elif path.startswith(cur_dir):
+            # then remove the prefix and keep the rest
+            dir_rest = path[len(cur_dir):]
+            # check if it's a subdirectory
+            if dir_rest[0] == '/':
+                r = dir_rest.split('/')[1]
+        '''
+        return r
+
 
     def delete_file(self, name_file):
         """
