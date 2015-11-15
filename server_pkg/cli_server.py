@@ -137,6 +137,14 @@ class Client_Server(Process):
         #FIXME every rpc call return something - put sent confirmation
         return 0
 
+    def get_salt(self, file_name, user_id):
+        """make a call in data base to find file
+            if exist file return your salt
+            else return 0
+        """
+        self.logger.info("get_salt invoked")
+        return self.db.salt_file(file_name, user_id)
+
     def update_file(self, file_dict, part_number, server_receive_file):
         """
             if exist file, and client wanna send the same file (reference in db)
@@ -146,8 +154,7 @@ class Client_Server(Process):
         self.logger.info("update_file invoked")
 
         file_obj = file.File(dictinary=file_dict)
-
-        if not (self.db.update_file(file_obj)):
+        if not self.db.update_file(file_obj):
             return False
 
         # calls method that does the actual storing
@@ -155,14 +162,6 @@ class Client_Server(Process):
 
         return port
         #TODO: set timout to thread
-
-    def get_salt(self, file_name, user_id):
-        """make a call in data base to find file
-            if exist file return your salt
-            else return 0
-        """
-        self.logger.info("get_salt invoked")
-        return self.db.salt_file(file_name, user_id)
 
     def negotiate_store_part(self, file_dict, directory_key, part_number, server_receive_file):
         """
@@ -182,7 +181,8 @@ class Client_Server(Process):
             return 0
 
         new_file = database.File(file_obj=file_obj)
-        self.db.add(new_file)
+        if not self.db.add(new_file):
+            return False
 
         # calls method that does the actual storing
         port = self.actual_file_storing(file_dict, part_number, server_receive_file)

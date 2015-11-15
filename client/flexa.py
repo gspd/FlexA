@@ -140,22 +140,22 @@ class Client(object):
 
         # if salt has a value then is update. because server return a valid salt
         if salt:
-            for part_number in range( file_obj.num_parts ):
-                # updates metadata
+            for part_number in range(1, file_obj.num_parts+1):
                 port_server = server_conn.update_file( file_obj, part_number, self.user.primary_servers )
                 self.logger.info("Updating part {} metadata @ {}:{}".format(part_number, self.rpc.ip_server, port_server))
-                if port_server == False:
+                if not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to \
                             write. \nTry again.")
                 self.send_file_part( part_number, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath )
                 server_conn = self.rpc.set_server(next(server_cycle))
         else:
             # server return port where will wait a file
-            for part_number in range(file_obj.num_parts):
+            for part_number in range(1, file_obj.num_parts+1):
                 port_server = server_conn.negotiate_store_part(file_obj, dir_key, part_number, self.user.primary_servers)
                 self.logger.info("Sending new file part {} @ {}:{}".format(part_number, self.rpc.ip_server, port_server))
                 if not port_server:
-                    sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
+                    sys.exit("Some error occurred. Maybe you don't have permission to \
+                            write. \nTry again.")
                 self.send_file_part(part_number, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath)
                 server_conn = self.rpc.set_server(next(server_cycle))
 
@@ -185,15 +185,16 @@ class Client(object):
         file_obj = file.File()
         read_key = file_obj.set_keys(self.configs.loaded_config.get("User", "private key"), salt)
 
-        total_parts_file = 3  # FIXME: colocar para descobrir automaticamante numero de partes
+        total_parts_file = file_obj.num_parts
         name_parts_file = []
-        
         for num_part in range(total_parts_file):
             name_file = file_info.absolute_enc_filepath + '.' + str(num_part)
             name_parts_file.append(name_file)
+
             # make a thread that will receive file in socket
             thr = Thread(target=misc.receive_file, args=(sock, name_file))
             thr.start()
+
             # ask to server a file with name (keys[0] = hash)
             # client ip and your port to receive file
             if ( server_conn.give_file( misc.my_ip(),port, file_obj.verify_key, num_part) ):

@@ -218,12 +218,12 @@ class DataBase():
             self.logger.debug("->erro in add func: try to rollback and add again")
             self.handling_rollback(error)
             self.modify_db.release()
-            return 0
+            return False
             
         #unblock semaphore
         self.modify_db.release()
 
-        return 1
+        return True
 
     def update_file(self, file_obj):
 
