@@ -7,7 +7,7 @@ Created on Nov 14, 2015
 import os
 from stat import S_ISREG
 
-def is_file(self, pathname):
+def is_file(pathname):
     return S_ISREG(os.stat(pathname).st_mode)
 
 def set_file_info_to_send(file_info, filename, data_dir):
@@ -40,7 +40,7 @@ def set_file_info_to_send(file_info, filename, data_dir):
                 "File can't be located outside mapped directory")
         return False
     
-    file.size = os.path.getsize(file_info.absolute_filepath)
+    file_info.size = os.path.getsize(file_info.absolute_filepath)
 
     # full filepath relative to FlexA file system
     file_info.relative_filepath = file_info.absolute_filepath.split(data_dir)[1]
@@ -79,17 +79,18 @@ def get_subdir_name(cur_dir, path):
     # if path is (somewhere) inside cur_dir
     if cur_dir == '/':
         r = path.split('/')[1]
-    elif path.startswith(cur_dir+'/'):
-        # then remove the prefix and keep the rest
-        dir_rest = path[len(cur_dir)+1:]
-        r = dir_rest.split('/')[1]
-    ''' old version was also working
     elif path.startswith(cur_dir):
         # then remove the prefix and keep the rest
         dir_rest = path[len(cur_dir):]
         # check if it's a subdirectory
         if dir_rest[0] == '/':
             r = dir_rest.split('/')[1]
+    ''' this won't work, dunno why
+    elif path.startswith(cur_dir+'/'):
+        # then remove the prefix and keep the rest
+        dir_rest = path[len(cur_dir)+1:]
+        r = dir_rest.split('/')[1]
+        print(dir_rest.split('/'))
     '''
     return r
 
@@ -99,52 +100,56 @@ def print_file_list(file_dictionaries, cur_dir):
         print("No files found.")
         return
     
+    # columns come in a different order each call
     columns = file_dictionaries[0].keys()
-    header = dict.fromkeys(columns, ' ')
+    header = dict.fromkeys(columns, '')
     header['create_date'] = "Created on"
     header['modify_date'] = "Last modified on"
     header['size'] = "Size"
     header['name'] = "Name"
     
-    # creates list of lists with every lenght
+    # create a list of lists
+    # each list (row) has the lenghts of each column
     all_widths = []
+    # first the header lenghts
     all_widths.append([len(v) for v in header.values()])
+    # then the lenghts of the remaining rows
     for file_dict in file_dictionaries:
         all_widths.append([len(v) for v in file_dict.values()])
-    
-    # checks the max lenght for every column
+
+    # checks the max lenght for every column iterating between rows
     widths = [max(row_lenghts) for row_lenghts in zip(*all_widths)]
-    #maps the lenghts in the dictionary
+    #maps the lenghts in the dictionary to be accessed together with file info
     header_len = dict(zip(columns, widths))
     
-    print(header['create_date'].ljust(header_len["create_date"]), end="  ")
-    print(header['modify_date'].ljust(header_len["modify_date"]), end="  ")
-    print(header['size'].ljust(header_len["size"]), end="  ")
-    print(header['name'].ljust(header_len["name"]))
+    # ordered header labels (column names)
+    # this is the order things will be shown
+    ord_hl = ['create_date', 'modify_date', 'size', 'name']
 
-    sd_list = []
+    # prints header
+    print("  ".join(header[label].ljust(header_len[label]) for label in ord_hl))
+
+    # a list with subdirectories already shown so they won't be again
+    shown_sd = []
     # print info for every file
     for file_dict in file_dictionaries:
-        # check if it's within current directory
+        
+        # check if it's NOT directly within current directory
         if cur_dir != os.path.dirname(file_dict['name']):
+            # check if it's a direct subdirectory
             subdir = get_subdir_name(cur_dir, file_dict['name'])
-            
-            # check if it's a subdirectory
             if subdir != "":
                 sd = os.path.basename(subdir) + '/'
-                if sd in sd_list:
-                    continue
-                print("-".ljust(header_len["create_date"]), end="  ")
-                print("-".ljust(header_len["modify_date"]), end="  ")
-                print("-".ljust(header_len["size"]), end="  ")
-                print(sd.ljust(header_len["name"]))
-                sd_list.append(sd)
+                if not sd in shown_sd: # it hasn't been shown
+                    print("-"*header_len["create_date"], end="  ")
+                    print("-"*header_len["modify_date"], end="  ")
+                    print("-"*header_len["size"], end="  ")
+                    print(sd.ljust(header_len["name"]))
+                    shown_sd.append(sd) # add it to the shown list 
             continue
-
-        print(file_dict["create_date"].ljust(header_len["create_date"]), end="  ")
-        print(file_dict["modify_date"].ljust(header_len["modify_date"]), end="  ")
-        print(file_dict["size"].ljust(header_len["size"]), end="  ")
-        print(os.path.basename(file_dict["name"]).ljust(header_len["name"]))
+        
+        file_dict['name'] = os.path.basename(file_dict['name'])
+        print("  ".join(file_dict[label].ljust(header_len[label]) for label in ord_hl))
         
     #else: # check if current dir is substring at the beginning
     #    if not os.path.dirname(dic_file['name']).startswith(cur_dir):
