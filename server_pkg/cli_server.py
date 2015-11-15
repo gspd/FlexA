@@ -13,7 +13,7 @@ from itertools import cycle
 import misc
 import database
 import logging
-from entity import file, part
+from entity import file
 from multiprocessing import Process  # @UnresolvedImport
 from xmlrpc.client import ServerProxy
 
