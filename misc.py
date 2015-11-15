@@ -148,13 +148,13 @@ def split_file(file_name, nparts):
 
         try:
             #get parts but not the last
-            for i in range(nparts-1):
+            for i in range(1, nparts):
                 file_part = open( file_name + '.' + str(i), 'wb' )
                 file_part.write( file_pointer.read(chucksize) )
                 file_part.close()
 
             #save last part
-            file_part = open(file_name + '.' + str(nparts-1), 'wb')
+            file_part = open(file_name + '.' + str(nparts), 'wb')
             #get the last part that can has size<chucksize
             file_part.write( file_pointer.read( size - file_pointer.tell() ) )
             file_part.close()

@@ -144,8 +144,7 @@ class Client(object):
                 port_server = server_conn.update_file( file_obj, part_number, self.user.primary_servers )
                 self.logger.info("Updating part {} metadata @ {}:{}".format(part_number, self.rpc.ip_server, port_server))
                 if not port_server:
-                    sys.exit("Some error occurred. Maybe you don't have permission to \
-                            write. \nTry again.")
+                    sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
                 self.send_file_part( part_number, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath )
                 server_conn = self.rpc.set_server(next(server_cycle))
         else:
@@ -154,8 +153,7 @@ class Client(object):
                 port_server = server_conn.negotiate_store_part(file_obj, dir_key, part_number, self.user.primary_servers)
                 self.logger.info("Sending new file part {} @ {}:{}".format(part_number, self.rpc.ip_server, port_server))
                 if not port_server:
-                    sys.exit("Some error occurred. Maybe you don't have permission to \
-                            write. \nTry again.")
+                    sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
                 self.send_file_part(part_number, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath)
                 server_conn = self.rpc.set_server(next(server_cycle))
 
