@@ -160,7 +160,7 @@ class Client_Server(Process):
 
         self.logger.info("update_file invoked")
 
-        file_obj = file.File(dictinary=file_dict)
+        file_obj = file.File(dictionary=file_dict)
         up_file_obj = self.db.update_file(file_obj)
         if not up_file_obj:
             return False
@@ -198,7 +198,7 @@ class Client_Server(Process):
 
         self.logger.info("negotiate_store_part invoked")
 
-        file_obj = file.File(dictinary=file_dict)
+        file_obj = file.File(dictionary=file_dict)
 
         #verify if user is okay
         if(not self.db.get_user_rsa_pub(file_obj.user_id)):
