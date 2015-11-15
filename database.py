@@ -258,8 +258,9 @@ class DataBase():
             return False
 
         #have permission to write
+        file_obj.modify_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
-            file.update({"modify_date":datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            file.update({"modify_date":file_obj.modify_date,
                          "size":file_obj.size})
             self.flushed_updated_obj_list.append(file_obj.verify_key)
             #verify if have more then 10 modifies
@@ -276,7 +277,7 @@ class DataBase():
         #unblock semaphore
         self.modify_db.release()
 
-        return True
+        return file_obj
 
     def get_user_rsa_pub(self, user_id):
 

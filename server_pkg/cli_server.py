@@ -161,12 +161,17 @@ class Client_Server(Process):
         self.logger.info("update_file invoked")
 
         file_obj = file.File(dictinary=file_dict)
-        if not self.db.update_file(file_obj):
+        up_file_obj = self.db.update_file(file_obj)
+        if not up_file_obj:
             return False
-         
-        # update date info calculated at the creation of object
-        file_dict['create_date'] = file_obj.create_date
-        file_dict['modify_date'] = file_obj.modify_date
+        
+        '''
+         update date info calculated by the object,
+         it'll be used to create the new version with
+         its creation date equal to this file modification
+         date
+        '''
+        file_dict['modify_date'] = up_file_obj.modify_date
 
         # compare the current stored file checksum with new file checksum
         stored_file_cs = self.db.get_file_checksum(file_dict['verify_key'])
