@@ -23,7 +23,7 @@ class File(object):
     write_key = None
 
     def __init__(self, name=0, size=0, create_date=0, modify_date=0, user_id=0, num_parts=1,
-                 salt=0, file_db = None, dictinary = None, parse_to_str=False):
+                 salt=0, checksum=0, file_db = None, dictinary = None, parse_to_str=False):
         '''
         Constructor
         You can make obj File put your attributes or put a fatabase.File obj.
@@ -38,6 +38,7 @@ class File(object):
             self.num_parts = file_db.num_parts
             self.verify_key = file_db.verify_key
             self.write_key = file_db.write_key
+            self.checksum = file_db.checksum
         elif(dictinary):
             self.name = dictinary["name"]
             self.size = dictinary["size"]
@@ -48,6 +49,7 @@ class File(object):
             self.salt = dictinary["salt"]
             self.verify_key = dictinary["verify_key"]
             self.write_key = dictinary["write_key"]
+            self.checksum = dictinary["checksum"]
         elif(name):
             self.name = name
             self.size = size
@@ -55,6 +57,7 @@ class File(object):
             self.modify_date = modify_date
             self.user_id = user_id
             self.num_parts = num_parts
+            self.checksum = checksum
 
         # Parses numeric and datetime types to string
         #     * used by list_files

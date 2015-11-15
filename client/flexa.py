@@ -24,6 +24,7 @@ class ClientFile(object):
     relative_filepath = ''
     absolute_filepath = ''
     absolute_enc_filepath = ''
+    checksum = ''
     size=0
 
 class Client(object):
@@ -117,10 +118,12 @@ class Client(object):
 
         # verify if this file exist (same name in this directory)
         dir_key = "/"  # FIXME set where is.... need more discussion
-        f_name = file_info.relative_filepath
-        f_size = file_info.size
-        file_obj = file.File(name=f_name, user_id=self.user.uid,
-                             size=f_size, num_parts=3)
+
+        file_obj = file.File(name=file_info.relative_filepath,
+                             size=file_info.size,
+                             checksum=file_info.checksum,
+                             user_id=self.user.uid,
+                             num_parts=3)
 
         #make list of server ip (without uid) be a circular list
         server_cycle = cycle([item[1] for item in self.user.primary_servers])
@@ -143,7 +146,12 @@ class Client(object):
             for part_number in range(1, file_obj.num_parts+1):
                 port_server = server_conn.update_file( file_obj, part_number, self.user.primary_servers )
                 self.logger.info("Updating part {} metadata @ {}:{}".format(part_number, self.rpc.ip_server, port_server))
-                if not port_server:
+                if port_server == b"do not write":
+                    # it means that the file hasn't changed
+                    #  so it only updates the metadata, without transfering the file
+                    self.logger.info("No data transfer due to no changes on the file content")
+                    continue
+                elif not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
                 self.send_file_part( part_number, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath )
                 server_conn = self.rpc.set_server(next(server_cycle))

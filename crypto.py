@@ -234,4 +234,14 @@ def keys_generator(rsa_location, salt):
 
     return keys_to_string(salt, rsa)
 
+def calc_file_md5(file_path):
+    '''
+        Returns the md5 checksum of a file content
+    '''
+    with open(file_path, 'rb') as f:
+        content = f.read()
+        return hashlib.md5(content).hexdigest()
+        
+        
+
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

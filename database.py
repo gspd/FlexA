@@ -46,9 +46,10 @@ class File(Base):
     size = Column(Integer)
     create_date = Column(DateTime)
     modify_date = Column(DateTime)
+    checksum = Column(String(50))
 
     def __init__(self, verify_key=0, salt=0, write_key=0, file_name=0, dir_key=0, user_id=0,
-                    num_parts=0, size=0, file_obj = None):
+                    num_parts=0, size=0, checksum=0, file_obj = None):
         if(file_obj):
             self.verify_key = file_obj.verify_key
             self.salt = file_obj.salt
@@ -59,6 +60,7 @@ class File(Base):
             self.create_date = datetime.datetime.now()
             self.modify_date = datetime.datetime.now()
             self.size = file_obj.size
+            self.checksum = file_obj.checksum
         else:
             self.verify_key = verify_key
             self.salt = salt
@@ -69,11 +71,12 @@ class File(Base):
             self.create_date = datetime.datetime.now()
             self.modify_date = datetime.datetime.now()
             self.size = size
+            self.checksum = checksum
 
     def __repr__(self):
         return '<File(vfk "{}", salt "{}", wtk "{}", name "{}", user "{}",\
-            num_parts "{}")>'.format(self.verify_key, self.salt, self.write_key, self.file_name,
-            self.user_id, self.num_parts)
+            num_parts "{}", checksum "{}")>'.format(self.verify_key, self.salt, self.write_key, self.file_name,
+            self.user_id, self.num_parts, self.checksum)
 
 
 class Parts(Base):
@@ -83,6 +86,7 @@ class Parts(Base):
     verify_key = Column(String(100), ForeignKey('file.verify_key'), nullable=False)
     server_id = Column(String(40), ForeignKey('server.uid'))
     num_part = Column(Integer, nullable=False)
+    version = Column(Integer)
 
     def __init__(self, verify_key, server_id, num_part):
         self.verify_key = verify_key
@@ -338,6 +342,32 @@ class DataBase():
         return self.session.query(Parts).filter(Parts.verify_key == verify_key).all()
 
     def get_if_part_exists(self, vk, server, part_number):
+        '''
+            Returns True if part's metadata already exists
+            Returns False if it doesn't so it can be created
+        '''
+        self.logger.info("get_if_part_exists")
+
+        (ret, ), = self.session.query(exists().
+                                      where(Parts.verify_key == vk).
+                                      where(Parts.server_id == server).
+                                      where(Parts.num_part == part_number))
+        return ret
+
+    def get_file_checksum(self, vk):
+        '''
+            Returns the md5 sum of file so the server can check if
+            it'll create a new snapshot or just update metadata
+        '''
+        
+        f = self.session.query(File).filter(File.verify_key == vk)
+        try:
+            return f.one().checksum
+        except:
+            #if it doesn't find file.one() it raises an exception
+            return False
+
+    def get_number_of_file_snapshots(self, vk, server, part_number):
         '''
             Returns True if part's metadata already exists
             Returns False if it doesn't so it can be created

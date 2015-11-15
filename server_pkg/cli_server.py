@@ -157,8 +157,19 @@ class Client_Server(Process):
         if not self.db.update_file(file_obj):
             return False
 
-        # calls method that does the actual storing
-        port = self.actual_file_storing(file_dict, part_number, server_receive_file, update=True)
+        # compare the current stored file checksum with new file checksum
+        stored_file_cs = self.db.get_file_checksum(file_dict['verify_key'])
+        new_file_cs = file_dict['checksum']
+        print(stored_file_cs)
+        print(new_file_cs)
+        print(new_file_cs == stored_file_cs)
+        if new_file_cs == stored_file_cs:
+            # file hasn't changed
+            port = b"do not write"
+        else:
+            # it has changed.
+            # calls method that does the actual storing.
+            port = self.actual_file_storing(file_dict, part_number, server_receive_file, update=True)
 
         return port
         #TODO: set timout to thread
@@ -213,7 +224,7 @@ class Client_Server(Process):
                 part_obj = database.Parts(file_dict['verify_key'], server, num_part)
                 self.db.add(part_obj)
             else:
-                self.logger.info("No changes applied to metadata")
+                self.logger.info("No changes applied to parts metadata")
 
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)

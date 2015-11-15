@@ -5,6 +5,7 @@ Created on Nov 14, 2015
 '''
 
 import os
+import crypto
 from stat import S_ISREG
 
 def is_file(pathname):
@@ -40,7 +41,9 @@ def set_file_info_to_send(file_info, filename, data_dir):
                 "File can't be located outside mapped directory")
         return False
     
+    # get some info about the real file (size and hash)
     file_info.size = os.path.getsize(file_info.absolute_filepath)
+    file_info.checksum = crypto.calc_file_md5(file_info.absolute_filepath)
 
     # full filepath relative to FlexA file system
     file_info.relative_filepath = file_info.absolute_filepath.split(data_dir)[1]
