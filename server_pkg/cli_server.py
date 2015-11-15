@@ -207,8 +207,14 @@ class Client_Server(Process):
                 self.logger.info("Updating part {} metadata @ {}".format(num_part, next(servers_iterable)))
             else:
                 self.logger.info("Creating part {} metadata @ {}".format(num_part, next(servers_iterable)))
-            part_obj = database.Parts(file_dict['verify_key'], next(servers_iterable), num_part)
-            self.db.add(part_obj)
+            # create new metadata entry only if it doesn't exist
+            server = next(servers_iterable)
+            if not self.db.get_if_part_exists(file_dict['verify_key'], server, num_part):
+                self.logger.info("Changes applied to metadata")
+                part_obj = database.Parts(file_dict['verify_key'], server, num_part)
+                self.db.add(part_obj)
+            else:
+                self.logger.info("No changes applied to metadata")
 
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)

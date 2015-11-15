@@ -4,7 +4,7 @@ import os
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Sequence, DateTime
+from sqlalchemy import create_engine, exists, func, Column, Integer, String, ForeignKey, Sequence, DateTime
 from threading import Lock, Thread
 import time
 import datetime
@@ -336,5 +336,18 @@ class DataBase():
         self.logger.info("get_all_parts_file_by_vk")
         
         return self.session.query(Parts).filter(Parts.verify_key == verify_key).all()
+
+    def get_if_part_exists(self, vk, server, part_number):
+        '''
+            Returns True if part's metadata already exists
+            Returns False if it doesn't so it can be created
+        '''
+        self.logger.info("get_if_part_exists")
+
+        (ret, ), = self.session.query(exists().
+                                      where(Parts.verify_key == vk).
+                                      where(Parts.server_id == server).
+                                      where(Parts.num_part == part_number))
+        return ret
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
