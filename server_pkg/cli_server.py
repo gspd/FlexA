@@ -203,14 +203,14 @@ class Client_Server(Process):
         #add in database where is the parts in system
         servers_iterable = cycle([item[1] for item in server_receive_file])
         for num_part in range(1, file_dict['num_parts']+1):
-            if update:
-                self.logger.info("Updating part {} metadata @ {}".format(num_part, next(servers_iterable)))
-            else:
-                self.logger.info("Creating part {} metadata @ {}".format(num_part, next(servers_iterable)))
             # create new metadata entry only if it doesn't exist
             server = next(servers_iterable)
             if not self.db.get_if_part_exists(file_dict['verify_key'], server, num_part):
-                self.logger.info("Changes applied to metadata")
+                if update:
+                    self.logger.info("Updating part {} metadata @ {}".format(num_part, server))
+                else:
+                    self.logger.info("Creating part {} metadata @ {}".format(num_part, server))
+                    
                 part_obj = database.Parts(file_dict['verify_key'], server, num_part)
                 self.db.add(part_obj)
             else:
