@@ -76,9 +76,9 @@ class Client(object):
                 file_info = ClientFile()
                 file_info.filename = os.path.normpath(filename)
                 if Path.set_file_info_to_receive(file_info,
-                                                 self.config._current_local_dir,
-                                                 self.config._current_relative_dir,
-                                                 self.config._data_dir):
+                                                 self.configs._current_local_dir,
+                                                 self.configs._current_relative_dir,
+                                                 self.configs._data_dir):
                     self.receive_file(file_info)
 
         if args.list:
