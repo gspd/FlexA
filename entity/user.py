@@ -134,7 +134,7 @@ class User(object):
                         distance_aux = int(current_hash, 16)-int(mapp[index][0], 16)
 
                     index = index-1
-                    # TODO Check if server is already in the map
+                    # Check if server is already in the map
                     #      if it is then do NOT add it!!
                     if not mapp[index] in self.primary_servers:
                         self.primary_servers.append(mapp[index])
