@@ -158,7 +158,7 @@ class Client_Server(Process):
             return False
 
         # calls method that does the actual storing
-        port = self.actual_file_storing(file_dict, part_number, server_receive_file)
+        port = self.actual_file_storing(file_dict, part_number, server_receive_file, update=True)
 
         return port
         #TODO: set timout to thread
