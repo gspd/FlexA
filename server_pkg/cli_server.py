@@ -9,6 +9,7 @@ Created on 23/11/2014
 from rpc import RPCThreadingServer
 from rpc import RPCServerHandler
 from threading import Thread
+from itertools import cycle
 import misc
 import database
 import logging
@@ -149,21 +150,8 @@ class Client_Server(Process):
         if not (self.db.update_file(file_obj)):
             return False
 
-        #add in database in which servers the parts are stored
-        num_part = 0
-        for server_part in server_receive_file:
-            num_part = num_part + 1
-            self.logger.info("Updating part {} metadata @ {}".format(num_part, server_part[1]))
-            part_obj = database.Parts(file_obj.verify_key, server_part[1], num_part)
-            self.db.add(part_obj)
-
-        #get a unusage port and mount a socket
-        port, sockt = misc.port_using(5001)
-
-        self.logger.info("Storing part {} @ {}".format(part_number, server_part[1]))
-        filename_to_save = self.server_info.configs._dir_file + file_obj.verify_key + '.' + str(part_number)
-        thread = Thread(target = misc.receive_file, args = (sockt, filename_to_save ))
-        thread.start()
+        # calls method that does the actual storing
+        port = self.actual_file_storing(file_dict, part_number, server_receive_file)
 
         return port
         #TODO: set timout to thread
@@ -196,24 +184,41 @@ class Client_Server(Process):
         new_file = database.File(file_obj=file_obj)
         self.db.add(new_file)
 
+        # calls method that does the actual storing
+        port = self.actual_file_storing(file_dict, part_number, server_receive_file)
+
+        return port
+        #TODO: set timout to thread
+
+    def actual_file_storing(self, file_dict, part_number, server_receive_file, update=False):
+        '''
+            This method is called by negotiate_store_part and update_file
+
+            It's responsible for the actual storing of file and metadata management
+
+            It'll update file parts metadata cycling throught the list of servers
+            then it'll wait for the data retrieving
+        '''
+
         #add in database where is the parts in system
-        num_part = 0
-        for server_part in server_receive_file:
-            num_part = num_part + 1
-            self.logger.info("Creating part {} metadata @ {}".format(num_part, server_part[1]))
-            part_obj = database.Parts(file_obj.verify_key, server_part[1], num_part)
+        servers_iterable = cycle([item[1] for item in server_receive_file])
+        for num_part in range(1, file_dict['num_parts']+1):
+            if update:
+                self.logger.info("Updating part {} metadata @ {}".format(num_part, next(servers_iterable)))
+            else:
+                self.logger.info("Creating part {} metadata @ {}".format(num_part, next(servers_iterable)))
+            part_obj = database.Parts(file_dict['verify_key'], next(servers_iterable), num_part)
             self.db.add(part_obj)
 
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)
 
-        self.logger.info("Storing part {} @ {}".format(part_number, server_part[1]))
-        file_name_to_get = self.server_info.configs._dir_file + file_obj.verify_key + '.' + str(part_number)
+        self.logger.info("Storing part {} @ {}".format(part_number, next(servers_iterable)))
+        file_name_to_get = self.server_info.configs._dir_file + file_dict['verify_key'] + '.' + str(part_number)
         thread = Thread(target = misc.receive_file, args = (sockt, file_name_to_get))
         thread.start()
 
         return port
-        #TODO: set timout to thread
 
     def get_state(self):
         """
