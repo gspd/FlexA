@@ -13,7 +13,7 @@ from itertools import cycle
 import misc
 import database
 import logging
-from entity import file
+from entity import file, part
 from multiprocessing import Process  # @UnresolvedImport
 from xmlrpc.client import ServerProxy
 
@@ -74,6 +74,7 @@ class Client_Server(Process):
         server.register_function(self.still_alive)
         server.register_function(self.register_user)
         server.register_function(self.update_neighbor)
+        server.register_function(self.get_current_version)
 
     def still_alive(self):
         return 1
@@ -123,7 +124,7 @@ class Client_Server(Process):
 
         return [1]
 
-    def give_file(self, ip, port, verify_key, num_part):
+    def give_file(self, ip, port, verify_key, num_part, version):
         """ give file to client
             ip: string with ip, address of client
             file_name: in a future this is a hash of file
@@ -132,7 +133,7 @@ class Client_Server(Process):
         self.logger.info("give_file invoked")
 
         host = (ip, port)
-        file_name_part = self.server_info.configs._dir_file + verify_key + '.' + str(num_part)
+        file_name_part = self.server_info.configs._dir_file + verify_key + '.v' + str(version) + '.' + str(num_part)
         misc.send_file(host, file_name_part)
         #FIXME every rpc call return something - put sent confirmation
         return 0
@@ -144,8 +145,14 @@ class Client_Server(Process):
         """
         self.logger.info("get_salt invoked")
         return self.db.salt_file(file_name, user_id)
+    
+    def get_current_version(self, verify_key):
+        # discovers which version should be created
+        self.logger.info("get_current_version invoked")
+        vk = verify_key
+        return self.db.get_current_version(vk)
 
-    def update_file(self, file_dict, part_number, server_receive_file):
+    def update_file(self, file_dict, part_number, server_receive_file, version):
         """
             if exist file, and client wanna send the same file (reference in db)
             the server_pkg update file in system
@@ -156,25 +163,27 @@ class Client_Server(Process):
         file_obj = file.File(dictinary=file_dict)
         if not self.db.update_file(file_obj):
             return False
+         
+        # update date info calculated at the creation of object
+        file_dict['create_date'] = file_obj.create_date
+        file_dict['modify_date'] = file_obj.modify_date
 
         # compare the current stored file checksum with new file checksum
         stored_file_cs = self.db.get_file_checksum(file_dict['verify_key'])
         new_file_cs = file_dict['checksum']
-        print(stored_file_cs)
-        print(new_file_cs)
-        print(new_file_cs == stored_file_cs)
         if new_file_cs == stored_file_cs:
             # file hasn't changed
             port = b"do not write"
         else:
             # it has changed.
+
             # calls method that does the actual storing.
-            port = self.actual_file_storing(file_dict, part_number, server_receive_file, update=True)
+            port = self.actual_file_storing(file_dict, part_number, server_receive_file, version)
 
         return port
         #TODO: set timout to thread
 
-    def negotiate_store_part(self, file_dict, directory_key, part_number, server_receive_file):
+    def negotiate_store_part(self, file_dict, part_number, server_receive_file, version=1):
         """
             Negotiate with client to server_pkg receive file part
             
@@ -193,14 +202,20 @@ class Client_Server(Process):
 
         new_file = database.File(file_obj=file_obj)
         self.db.add(new_file)
-
+        # update date info calculated at the creation of object
+        file_dict['create_date'] = new_file.create_date
+        file_dict['modify_date'] = new_file.modify_date
+        
+        # first version to be created
+        version = 1
+        
         # calls method that does the actual storing
-        port = self.actual_file_storing(file_dict, part_number, server_receive_file)
+        port = self.actual_file_storing(file_dict, part_number, server_receive_file, version)
 
         return port
         #TODO: set timout to thread
 
-    def actual_file_storing(self, file_dict, part_number, server_receive_file, update=False):
+    def actual_file_storing(self, file_dict, part_number, server_receive_file, version):
         '''
             This method is called by negotiate_store_part and update_file
 
@@ -215,26 +230,31 @@ class Client_Server(Process):
         for num_part in range(1, file_dict['num_parts']+1):
             # create new metadata entry only if it doesn't exist
             server = next(servers_iterable)
-            if not self.db.get_if_part_exists(file_dict['verify_key'], server, num_part):
-                if update:
-                    self.logger.info("Updating part {} metadata @ {}".format(num_part, server))
-                else:
-                    self.logger.info("Creating part {} metadata @ {}".format(num_part, server))
-                    
-                part_obj = database.Parts(file_dict['verify_key'], server, num_part)
+            if not self.db.get_if_part_exists(file_dict['verify_key'], server, num_part, version):
+                #it's a new version, log to the system
+                self.logger.info("Creating part {} version @ {}".format(num_part, server))
+            
+                part_obj = database.Part(verify_key=file_dict['verify_key'],
+                                      create_date=file_dict['modify_date'],
+                                      server_id=server,
+                                      num_part=num_part,
+                                      version=version)
                 self.db.add(part_obj)
             else:
-                self.logger.info("No changes applied to parts metadata")
+                self.logger.info("Metadata is already at the database @ {}".format(server))
 
         #get a unusage port and mount a socket
         port, sockt = misc.port_using(5001)
 
+        # here is when it really stores the part
         self.logger.info("Storing part {} @ {}".format(part_number, next(servers_iterable)))
-        file_name_to_get = self.server_info.configs._dir_file + file_dict['verify_key'] + '.' + str(part_number)
+        file_name_to_get = self.server_info.configs._dir_file + file_dict['verify_key'] +\
+                                '.v' + str(version) +\
+                                '.' + str(part_number)
         thread = Thread(target = misc.receive_file, args = (sockt, file_name_to_get))
         thread.start()
 
-        return port
+        return port        
 
     def get_state(self):
         """

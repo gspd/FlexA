@@ -63,8 +63,6 @@ class File(object):
         #     * used by list_files
         if(parse_to_str):
             self.size = str(self.size)
-            self.create_date = self.create_date.strftime("%Y-%m-%d %H:%M:%S")
-            self.modify_date = self.modify_date.strftime("%Y-%m-%d %H:%M:%S")
             self.num_parts = str(file_db.num_parts)
 
     def set_keys(self, rsa_private, salt):

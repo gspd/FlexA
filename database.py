@@ -4,7 +4,7 @@ import os
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine, exists, func, Column, Integer, String, ForeignKey, Sequence, DateTime
+from sqlalchemy import create_engine,text, exists, Column, Integer, String, ForeignKey, Sequence
 from threading import Lock, Thread
 import time
 import datetime
@@ -44,9 +44,9 @@ class File(Base):
     user_id = Column(String, ForeignKey('user.uid'), nullable=False)
 
     size = Column(Integer)
-    create_date = Column(DateTime)
-    modify_date = Column(DateTime)
-    checksum = Column(String(50))
+    create_date = Column(String(40))
+    modify_date = Column(String(40))
+    checksum = Column(String(40))
 
     def __init__(self, verify_key=0, salt=0, write_key=0, file_name=0, dir_key=0, user_id=0,
                     num_parts=0, size=0, checksum=0, file_obj = None):
@@ -57,8 +57,8 @@ class File(Base):
             self.file_name = file_obj.name
             self.user_id = file_obj.user_id
             self.num_parts = file_obj.num_parts
-            self.create_date = datetime.datetime.now()
-            self.modify_date = datetime.datetime.now()
+            self.create_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.modify_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.size = file_obj.size
             self.checksum = file_obj.checksum
         else:
@@ -68,8 +68,8 @@ class File(Base):
             self.file_name = file_name
             self.user_id = user_id
             self.num_parts = num_parts
-            self.create_date = datetime.datetime.now()
-            self.modify_date = datetime.datetime.now()
+            self.create_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.modify_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.size = size
             self.checksum = checksum
 
@@ -79,29 +79,40 @@ class File(Base):
             self.user_id, self.num_parts, self.checksum)
 
 
-class Parts(Base):
-    __tablename__ = 'parts'
+class Part(Base):
+    __tablename__ = 'part'
 
     uid = Column(Integer, Sequence('parts_id_seq'), primary_key=True)
     verify_key = Column(String(100), ForeignKey('file.verify_key'), nullable=False)
     server_id = Column(String(40), ForeignKey('server.uid'))
     num_part = Column(Integer, nullable=False)
     version = Column(Integer)
+    create_date = Column(String(40))
 
-    def __init__(self, verify_key, server_id, num_part):
-        self.verify_key = verify_key
-        self.server_id = server_id
-        self.num_part = num_part
+    def __init__(self, verify_key=0, server_id=0, num_part=0, version=0, create_date=0, dictionary=[]):
+        if(dictionary):
+            self.verify_key = dictionary['verify_key']
+            self.server_id = dictionary['server_id']
+            self.num_part = dictionary['num_part']
+            self.version = dictionary['version']
+            self.create_date = dictionary['create_date']
+        else:
+            self.verify_key = verify_key
+            self.server_id = server_id
+            self.num_part = num_part
+            self.version = version
+            self.create_date = create_date
 
     def __repr__(self):
-        return '<Part({})>'.format(self.num_part, self.server_id)
+        return '<Part(num_part "{}", server_id "{}")>'.\
+                format(self.num_part, self.server_id)
 
 class Server(Base):
     __tablename__ = 'server'
 
     uid = Column(String(40), nullable=False, primary_key=True)
     ip = Column(String(15), nullable=False)
-    last_seen = Column(DateTime)
+    last_seen = Column(String(40))
 
     def __init__(self, uid, ip, last_seen):
         self.uid = uid
@@ -183,7 +194,7 @@ class DataBase():
 
         for update_vk in self.flushed_updated_obj_list:
             file = self.session.query(File).filter(File.verify_key == update_vk)
-            file.update({"modify_date":datetime.datetime.now()})
+            file.update({"modify_date":datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
 
         self.flushed_updated_obj_list = []
 
@@ -248,7 +259,7 @@ class DataBase():
 
         #have permission to write
         try:
-            file.update({"modify_date":datetime.datetime.now(),
+            file.update({"modify_date":datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                          "size":file_obj.size})
             self.flushed_updated_obj_list.append(file_obj.verify_key)
             #verify if have more then 10 modifies
@@ -301,6 +312,7 @@ class DataBase():
                 filter(File.user_id == user_id).\
                 filter(File.file_name.like(dirname+'%')).\
                 order_by(File.file_name)
+        #sql count no número de versões pra cada verify key
         """
          this returns everything that has the dirname as substring of its
          file_name, so beware, it's not just the files within it but also
@@ -339,19 +351,21 @@ class DataBase():
         
         self.logger.info("get_all_parts_file_by_vk")
         
-        return self.session.query(Parts).filter(Parts.verify_key == verify_key).all()
+        return self.session.query(Part).filter(Part.verify_key == verify_key).all()
 
-    def get_if_part_exists(self, vk, server, part_number):
+    # TODO REMOVE THIS FUNCTION, IT WON'T BE USED ANYMORE
+    def get_if_part_exists(self, vk, server, part_number, version):
         '''
             Returns True if part's metadata already exists
             Returns False if it doesn't so it can be created
         '''
         self.logger.info("get_if_part_exists")
 
-        (ret, ), = self.session.query(exists().
-                                      where(Parts.verify_key == vk).
-                                      where(Parts.server_id == server).
-                                      where(Parts.num_part == part_number))
+        (ret, ), = self.session.query(exists().\
+                                      where(Part.verify_key == vk).\
+                                      where(Part.server_id == server).\
+                                      where(Part.num_part == part_number).\
+                                      where(Part.version == version))
         return ret
 
     def get_file_checksum(self, vk):
@@ -367,17 +381,31 @@ class DataBase():
             #if it doesn't find file.one() it raises an exception
             return False
 
-    def get_number_of_file_snapshots(self, vk, server, part_number):
-        '''
-            Returns True if part's metadata already exists
-            Returns False if it doesn't so it can be created
-        '''
-        self.logger.info("get_if_part_exists")
+    def get_current_version(self, vk):
+        self.logger.info("get_current_version")
 
-        (ret, ), = self.session.query(exists().
-                                      where(Parts.verify_key == vk).
-                                      where(Parts.server_id == server).
-                                      where(Parts.num_part == part_number))
-        return ret
+        val = []
+        ret = self.session.query(Part.version).from_statement(text("SELECT version FROM part WHERE verify_key=:vk GROUP BY version")).params(vk=vk).all()
+        for r in ret:
+            val.append(list(r)[0])
+
+        try:
+            most_recent_version = max(val)
+        except (ValueError):
+            # ret is an empty list, so there are no versions currently
+            most_recent_version = 0
+
+        return most_recent_version
+
+    def get_versions_total(self, vk):
+        '''
+            Returns the number of versions that are stored in the system
+            Counts a select of a given verify_key grouped by the version number
+        '''
+        self.logger.info("get_total_versions")
+
+        total_of_snapshots = self.session.query(Part.verify_key).group_by(Part.version).count()
+        print(total_of_snapshots)
+        return total_of_snapshots
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
