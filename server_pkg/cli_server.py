@@ -181,8 +181,7 @@ class Client_Server(Process):
             return 0
 
         new_file = database.File(file_obj=file_obj)
-        if not self.db.add(new_file):
-            return False
+        self.db.add(new_file)
 
         # calls method that does the actual storing
         port = self.actual_file_storing(file_dict, part_number, server_receive_file)

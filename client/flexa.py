@@ -183,7 +183,7 @@ class Client(object):
         file_obj = file.File()
         read_key = file_obj.set_keys(self.configs.loaded_config.get("User", "private key"), salt)
 
-        total_parts_file = 3
+        total_parts_file = 3 # TODO discover how many parts
         name_parts_file = []
         for num_part in range(1, total_parts_file+1):
             name_file = file_info.absolute_enc_filepath + '.' + str(num_part)
