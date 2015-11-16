@@ -16,12 +16,13 @@ class User(object):
     uid = None
     name = None
     rsa_pub = None
+    enable_snapshots = None
     #primary_servers -> [ [uid,ip], [uid,ip] ... ]
     primary_servers = []
     #hash md5 -> 128 bits for each file chunk
     server_hash = []
 
-    def __init__(self, uid=None, name=None, rsa_pub=None, primary_server=[], user_db = None, user_dict=None):
+    def __init__(self, uid=None, name=None, rsa_pub=None, enable_snapshots=None, primary_server=[], user_db = None, user_dict=None):
 
         self.logger = logging.getLogger("[User]")
 
@@ -29,6 +30,7 @@ class User(object):
             self.uid = user_dict["user_id"]
             self.name = user_dict["name"]
             self.rsa_pub = user_dict["rsa_pub"]
+            self.enable_snapshots = user_dict["enable_snapshots"]
             self.primary_servers = user_dict["primary_servers"]
         elif(user_db):
             self.uid = user_db.uid
@@ -43,6 +45,7 @@ class User(object):
     def set_attr(self):
         configs = Config()
         self.uid = configs.loaded_config.get("User", "hash client")
+        self.enable_snapshots = configs.loaded_config.get("User", 'enable snapshots')
 
         self.server_hash = []
         self.primary_servers = []

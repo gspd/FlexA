@@ -162,9 +162,12 @@ class Client(object):
         # if salt has a value then is update. because server return a valid salt
         if salt:
             # next version to be created
-            version = server_conn.get_current_version(file_obj.verify_key)+1
+            next_version = server_conn.get_current_version(file_obj.verify_key)
+            if self.user.enable_snapshots == "1":
+                next_version = next_version + 1
+                
             for part_number in range(1, file_obj.num_parts+1):
-                port_server = server_conn.update_file( file_obj, part_number, self.user.primary_servers, version )
+                port_server = server_conn.update_file( file_obj, part_number, self.user.primary_servers, next_version )
                 self.logger.info("Updating part {} metadata @ {}:{}".format(part_number, self.rpc.ip_server, port_server))
                 if port_server == b"do not write":
                     # it means that the file hasn't changed
@@ -173,7 +176,7 @@ class Client(object):
                     continue
                 elif not port_server:
                     sys.exit("Some error occurred. Maybe you don't have permission to write. \nTry again.")
-                self.send_file_part( part_number, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath, version )
+                self.send_file_part( part_number, self.rpc.ip_server, port_server, file_info.absolute_enc_filepath, next_version )
                 server_conn = self.rpc.set_server(next(server_cycle))
         else:
             # server return port where will wait a file
@@ -291,5 +294,10 @@ class Client(object):
             Parameters:
                 name_file - name of file
         """
+        #make list of server ip (without uid) be a circular list
+        server_cycle = cycle([item[1] for item in self.user.primary_servers])
+        #Use variable primary_servers -> [ [uid,ip], [uid,ip] ... ]
+        server_conn = self.rpc.set_server(next(server_cycle))
 
+        #server_conn.delete_file()
         pass

@@ -131,6 +131,7 @@ class Config(object):
         [User]
             private key =
             hash client =
+            enable snapshots =
         """
 
         config = configparser.SafeConfigParser()
@@ -170,6 +171,12 @@ class Config(object):
 
         config = self.load_config()
 
+        if (misc.query_yes_no('Do you want to enable file snapshots?\
+                                This will require more storage space at the servers')):
+            config.set('User', 'enable snapshots', "1")
+        else:
+            config.set('User', 'enable snapshots', "0")
+
         if (misc.query_yes_no('Do you want to create RSA key now?')):
             key_filename = self.generate_new_key()
             config.set('User', 'private key', key_filename)
@@ -190,16 +197,17 @@ class Config(object):
 
             config.set('User', 'hash client', hashe.hexdigest())
             print("Configurations done.")
-
-            #Write configuration file          
-            try:
-                with open(self._config_filepath, mode='w', encoding='utf-8') as outfile:
-                    print("FlexA configuration file is at ", self._config_filepath)
-                    config.write(outfile)
-            except:
-                print("Couldn't write configuration file.")
         else:
             print("Please add the path to your private key in flexa.ini")
+        
+        #Write configuration file
+        try:
+            with open(self._config_filepath, mode='w', encoding='utf-8') as outfile:
+                print("FlexA configuration file is at ", self._config_filepath)
+                config.write(outfile)
+        except:
+            print("Couldn't write configuration file.")
+            
 
         print("Run FlexA again, to start with the system configured.")
         sys.exit(0)
