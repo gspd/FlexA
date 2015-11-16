@@ -282,7 +282,7 @@ class Client(object):
         print("Created on".ljust(widths[0]), end="  ")
         print("Snapshot number".ljust(widths[1]), end="  ")
         print("Size".ljust(widths[2]))
-        print("  ".join(version_list[label].ljust(widths[label]) for label in range(nv)))
+        print("  ".join(version[label].ljust(widths[label]) for version in version_list for label in range(nv)))
 
     def delete_file(self, name_file):
         """
