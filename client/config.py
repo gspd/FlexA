@@ -101,10 +101,10 @@ class Config(object):
         mxg = parser.add_mutually_exclusive_group()
         mxg.add_argument('-p', '--put', metavar='FILE', nargs='+', help='send file to server')
         mxg.add_argument('-g', '--get', metavar='FILE', nargs='+', help='receive file from server')
-        mxg.add_argument('-d', '--delete', metavar='FILE', nargs='+', help='delete file from server')
-        mxg.add_argument('-s', '--snapshots', metavar='FILE', nargs='+', help="shows history of file snapshots")
-        mxg.add_argument('-r', '--recover', metavar=('FILE','VERSION'), nargs=2, help='recovers snapshot VERSION of FILE')
         mxg.add_argument('-l', '--list', action='count', default=0, help="list current directory content at the server")
+        mxg.add_argument('-s', '--snapshots', metavar='FILE', nargs='+', help="list file snapshots")
+        mxg.add_argument('-d', '--delete', metavar=('FILE','VERSION'), nargs='+', help='delete the given version of file from server or all versions if none is given')
+        mxg.add_argument('-r', '--recover', metavar=('FILE','VERSION'), nargs=2, help='recover the given version of file')
 
         #These options can be used in combination with any other
         parser.add_argument('-v', '--verbose', action='count', default=0, help='increase output verbosity')
