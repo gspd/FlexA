@@ -68,7 +68,6 @@ class Client(object):
                         print(filename, " was sent succesfully.")
                     else:
                         print(filename, " couldn't be sent.")
-                    
 
         # Get a file from server
         if args.get:
@@ -115,7 +114,7 @@ class Client(object):
 
         fim = time.time()
         
-        print(fim - self.inicio)
+        #print(fim - self.inicio)
 
     def send_file_part(self, num_part, ip_server, port_server, abs_enc_filepath, version=1):
 
@@ -282,7 +281,8 @@ class Client(object):
         print("Created on".ljust(widths[0]), end="  ")
         print("Snapshot number".ljust(widths[1]), end="  ")
         print("Size".ljust(widths[2]))
-        print("  ".join(version[label].ljust(widths[label]) for version in version_list for label in range(nv)))
+        for version in version_list:
+            print("  ".join(version[label].ljust(widths[label]) for label in range(3)))
 
     def delete_file(self, name_file):
         """
