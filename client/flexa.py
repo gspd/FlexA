@@ -262,11 +262,11 @@ class Client(object):
 
         nv = len(version_list)
         if nv == 0:
-            sys.exit("No snapshots of this file were found.")
+            sys.exit("No snapshots of "+filename+" were found.")
         elif nv == 1:
-            print("1 snapshot of the file was found")
+            print("1 snapshot of "+filename+" was found")
         else:
-            print(str(len(version_list)) + " snapshots were found.")
+            print(str(len(version_list)) + " snapshots of "+filename+" were found.")
         if not version_list:
             print("Nada encontrado")
             
