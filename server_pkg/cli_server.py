@@ -246,6 +246,7 @@ class Client_Server(Process):
             
                 part_obj = database.Part(verify_key=file_dict['verify_key'],
                                       create_date=file_dict['modify_date'],
+                                      size=file_dict['size'],
                                       server_id=server,
                                       num_part=num_part,
                                       version=version)

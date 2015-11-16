@@ -87,21 +87,24 @@ class Part(Base):
     server_id = Column(String(40), ForeignKey('server.uid'))
     num_part = Column(Integer, nullable=False)
     version = Column(Integer)
+    size = Column(Integer)
     create_date = Column(String(40))
 
-    def __init__(self, verify_key=0, server_id=0, num_part=0, version=0, create_date=0, dictionary=[]):
+    def __init__(self, verify_key=0, server_id=0, num_part=0, version=0, create_date=0, size=0, dictionary=[]):
         if(dictionary):
             self.verify_key = dictionary['verify_key']
             self.server_id = dictionary['server_id']
             self.num_part = dictionary['num_part']
             self.version = dictionary['version']
             self.create_date = dictionary['create_date']
+            self.size = dictionary['size']
         else:
             self.verify_key = verify_key
             self.server_id = server_id
             self.num_part = num_part
             self.version = version
             self.create_date = create_date
+            self.size = size
 
     def __repr__(self):
         return '<Part(num_part "{}", server_id "{}")>'.\
@@ -332,11 +335,11 @@ class DataBase():
         
         vk = self.session.query(File.verify_key).filter(File.file_name == filename,
                                                         File.user_id == user_id)
-        parts = self.session.query(Part.create_date, Part.version).filter(Part.verify_key == vk).group_by(Part.version)
+        parts = self.session.query(Part.create_date, Part.version, Part.size).filter(Part.verify_key == vk).group_by(Part.version)
         ret = []
         try:
             for p in parts.all():
-                ret.append([p.create_date, str(p.version)])
+                ret.append([p.create_date, str(p.version), str(p.size)])
             return ret
         except:
             #if it doesn't find parts.all() it raises an exception

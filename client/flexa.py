@@ -277,16 +277,12 @@ class Client(object):
             print("1 snapshot of "+filename+" was found")
         else:
             print(str(len(version_list)) + " snapshots of "+filename+" were found.")
-        if not version_list:
-            print("Nada encontrado")
-            
-        widths = [len("9999-99-99 99:99:99"), len("Snapshot number")]
-        print("Created on".ljust(widths[0]), end="  ")
-        print("Snapshot number".ljust(widths[1]))
-        for version in version_list:
-                print(version[0].ljust(widths[0]), end="  ")
-                print(version[1].ljust(widths[1]))
 
+        widths = [len("9999-99-99 99:99:99"), len("Snapshot number"), 10]
+        print("Created on".ljust(widths[0]), end="  ")
+        print("Snapshot number".ljust(widths[1]), end="  ")
+        print("Size".ljust(widths[2]))
+        print("  ".join(version_list[label].ljust(widths[label]) for label in range(nv)))
 
     def delete_file(self, name_file):
         """
