@@ -75,6 +75,7 @@ class Client_Server(Process):
         server.register_function(self.register_user)
         server.register_function(self.update_neighbor)
         server.register_function(self.get_current_version)
+        server.register_function(self.get_snapshots_list)
 
     def still_alive(self):
         return 1
@@ -151,6 +152,10 @@ class Client_Server(Process):
         self.logger.info("get_current_version invoked")
         vk = verify_key
         return self.db.get_current_version(vk)
+
+    def get_snapshots_list(self, filename, user_id):
+        self.logger.info("get_snapshots_list")
+        return self.db.get_snapshots_list(filename, user_id)
 
     def update_file(self, file_dict, part_number, server_receive_file, version):
         """

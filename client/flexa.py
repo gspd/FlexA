@@ -85,6 +85,16 @@ class Client(object):
         if args.list:
             self.logger = logging.getLogger("[Flexa_cli - list_file]")
             self.list_files()
+        
+        if args.snapshots:
+            self.logger = logging.getLogger("[Flexa_cli - history_file]")
+            for filename in args.snapshots:
+                self.list_file_snapshots(filename)
+
+        if args.recover:
+            self.logger = logging.getLogger("[Flexa_cli - recover_file]")
+            print("R")
+            #self.history_files()
 
         if args.delete:
             for filename in args.delete:
@@ -226,10 +236,6 @@ class Client(object):
 
 
     def list_files(self):
-        """
-        Search every file from verify_key
-            verify_key is directory where called this operation - answer is a dictionary of files and yours attributes 
-        """
         #server_conn = self.rpc.get_next_server()
         #make list of server ip (without uid) be a circular list
         server_cycle = cycle([item[1] for item in self.user.primary_servers])
@@ -241,7 +247,36 @@ class Client(object):
         file_dictionaries = server_conn.list_files(cur_dir, self.user.uid)
         
         Path.print_file_list(file_dictionaries, cur_dir)
-        
+
+    def list_file_snapshots(self, filename):
+        #server_conn = self.rpc.get_next_server()
+        #make list of server ip (without uid) be a circular list
+        server_cycle = cycle([item[1] for item in self.user.primary_servers])
+        #Use variable primary_servers -> [ [uid,ip], [uid,ip] ... ]
+        server_conn = self.rpc.set_server(next(server_cycle))
+
+        # join current directory and filename
+        relative_filepath = os.path.join(self.configs._current_relative_dir, filename)
+
+        version_list = server_conn.get_snapshots_list(relative_filepath, self.user.uid)
+
+        nv = len(version_list)
+        if nv == 0:
+            sys.exit("No snapshots of this file were found.")
+        elif nv == 1:
+            print("1 snapshot of the file was found")
+        else:
+            print(str(len(version_list)) + " snapshots were found.")
+        if not version_list:
+            print("Nada encontrado")
+            
+        widths = [len("9999-99-99 99:99:99"), len("Snapshot number")]
+        print("Created on".ljust(widths[0]), end="  ")
+        print("Snapshot number".ljust(widths[1]))
+        for version in version_list:
+                print(version[0].ljust(widths[0]), end="  ")
+                print(version[1].ljust(widths[1]))
+
 
     def delete_file(self, name_file):
         """

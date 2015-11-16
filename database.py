@@ -326,6 +326,30 @@ class DataBase():
             /foo/subfoo/*
         """
         return files.all()
+    
+    def get_snapshots_list(self, filename, user_id):
+        self.logger.info("get_snapshots_list")
+        
+        vk = self.session.query(File.verify_key).filter(File.file_name == filename,
+                                                        File.user_id == user_id)
+        parts = self.session.query(Part.create_date, Part.version).filter(Part.verify_key == vk).group_by(Part.version)
+        ret = []
+        try:
+            for p in parts.all():
+                ret.append([p.create_date, str(p.version)])
+            return ret
+        except:
+            #if it doesn't find parts.all() it raises an exception
+            return False
+        ''' This should be enough but I couldn't managed to use join on sqlalchemy
+        "select p.create_date, f.file_name, p.version from part p"
+        "join file f"
+        "on f.verify_key = p.verify_key"
+        "where "
+        "f.file_name like 'filename' and"
+        "f.user_id = 'user_id'"
+        "group by p.version"
+        '''
 
     def get_all_users(self):
         """
@@ -406,7 +430,7 @@ class DataBase():
         self.logger.info("get_total_versions")
 
         total_of_snapshots = self.session.query(Part.verify_key).group_by(Part.version).count()
-        print(total_of_snapshots)
+        #print(total_of_snapshots)
         return total_of_snapshots
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

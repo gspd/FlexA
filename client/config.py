@@ -101,9 +101,10 @@ class Config(object):
         mxg = parser.add_mutually_exclusive_group()
         mxg.add_argument('-p', '--put', metavar='FILE', nargs='+', help='send file to server')
         mxg.add_argument('-g', '--get', metavar='FILE', nargs='+', help='receive file from server')
-        mxg.add_argument('-l', '--list', action='count', default=0, help='list current directory\'s files from server')
-        mxg.add_argument('-L', '--recursive-list', action='count', default=0, help='list current directory\'s tree from server')
         mxg.add_argument('-d', '--delete', metavar='FILE', nargs='+', help='delete file from server')
+        mxg.add_argument('-s', '--snapshots', metavar='FILE', nargs='+', help="shows history of file snapshots")
+        mxg.add_argument('-r', '--recover', metavar=('FILE','N'), nargs=2, help='recovers snapshot N of FILE')
+        mxg.add_argument('-l', '--list', action='count', default=0, help="list current directory content at the server")
 
         #These options can be used in combination with any other
         parser.add_argument('-v', '--verbose', action='count', default=0, help='increase output verbosity')
