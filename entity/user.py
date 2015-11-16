@@ -139,7 +139,7 @@ class User(object):
                     index = index-1
                     # Check if server is already in the map
                     #      if it is then do NOT add it!!
-                    if not mapp[index] in self.primary_servers:
+                    if not mapp[index] in self.primary_servers and mapp[index][1] != 0:
                         self.primary_servers.append(mapp[index])
 
                     #stop first while -> stop search the correct mapp

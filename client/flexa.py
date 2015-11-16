@@ -295,9 +295,9 @@ class Client(object):
                 name_file - name of file
         """
         #make list of server ip (without uid) be a circular list
-        server_cycle = cycle([item[1] for item in self.user.primary_servers])
+        #server_cycle = cycle([item[1] for item in self.user.primary_servers])
         #Use variable primary_servers -> [ [uid,ip], [uid,ip] ... ]
-        server_conn = self.rpc.set_server(next(server_cycle))
+        #server_conn = self.rpc.set_server(next(server_cycle))
 
         #server_conn.delete_file()
         pass
