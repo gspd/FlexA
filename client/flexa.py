@@ -93,8 +93,17 @@ class Client(object):
 
         if args.recover:
             self.logger = logging.getLogger("[Flexa_cli - recover_file]")
-            print("R")
-            #self.history_files()
+            '''
+                args.recover[0] - filename
+                args.recover[1] - version of file to be recovered
+            '''
+            file_info = ClientFile()
+            file_info.filename = os.path.normpath(args.recover[0])
+            if Path.set_file_info_to_receive(file_info,
+                                             self.configs._current_local_dir,
+                                             self.configs._current_relative_dir,
+                                             self.configs._data_dir):
+                self.receive_file(file_info, args.recover[1])
 
         if args.delete:
             for filename in args.delete:
@@ -182,7 +191,7 @@ class Client(object):
         return True
 
 
-    def receive_file(self, file_info):
+    def receive_file(self, file_info, version=0):
         """
         receive file from server
         """
@@ -203,8 +212,9 @@ class Client(object):
         file_obj = file.File()
         read_key = file_obj.set_keys(self.configs.loaded_config.get("User", "private key"), salt)
 
-        # discover is which version the file is at the moment
-        version = server_conn.get_current_version(file_obj.verify_key)
+        if version == 0:
+            # discover is which version the file is at the moment
+            version = server_conn.get_current_version(file_obj.verify_key)
 
         total_parts_file = 3 # TODO discover how many parts
         name_parts_file = []
